@@ -55,6 +55,19 @@ You will see:
 The **confidence badge** tells you how many real babies stand behind the
 numbers — more babies, more trust.
 
+You also get **two charts**:
+
+- **Expected length of stay in context** — the shaded band is the middle 50% of
+  all infants at each birth weight; the red dot is *your* infant. It answers
+  "is this baby typical, or an outlier?" at a glance.
+- **Nurse staffing forecast across the stay** — a day-by-day line showing the
+  nursing requirement stepping down from 1 nurse per baby, through 1:2, to 1:3
+  as the infant recovers. Hover any day to see the care phase and the minimum
+  nurse competency level that day needs.
+
+And a **nurse competency requirement** panel naming the minimum level of nurse
+for this infant at admission, and for each phase of the stay.
+
 ### 🗓️ Scheduling — *"How many nurses does the unit need tonight?"*
 
 1. Press **Load sample unit (8 infants)** to see it work instantly, or add
@@ -67,6 +80,27 @@ numbers — more babies, more trust.
    nurse) and total daily nurse-shifts.
 
 Remove any row with ✕ and the numbers update immediately.
+
+**The skill-mix panel** then answers the harder question — *which* nurses:
+
+| Level | Stage | Experience |
+|:---:|---|---|
+| 1 | Novice / Advanced Beginner | 0–1 year |
+| 2 | Competent | 1–3 years |
+| 3 | Proficient | 3–5 years |
+| 4 | Expert | 5+ years |
+
+Every infant row shows the **minimum nurse level** it requires, and the panel
+recommends how many nurses of each level the shift needs. Three safety rules are
+applied and will raise a warning if broken:
+
+1. The **charge nurse must be an Expert** (level 4).
+2. **Novices are capped at 30%** of the bedside team.
+3. **Every novice is paired** with a proficient or expert preceptor.
+
+The **effective care capacity** figure is experience-weighted, so a shift with
+the right headcount but too many junior nurses is visible as a risk instead of
+looking adequate.
 
 ### ⏱️ Timeline — *"How does care change hour by hour?"*
 

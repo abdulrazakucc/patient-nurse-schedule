@@ -57,6 +57,7 @@ def representative_infants(limit: int = 30) -> list[dict]:
     cols = [
         "infant_id", "birth_weight_g", "gestational_age_weeks", "birth_weight_band",
         "length_of_stay_days", "disposition", "admission_condition", "respiratory_support",
+        "required_nurse_level",
     ]
     return out[cols].to_dict("records")
 
@@ -79,6 +80,7 @@ def infant_series(infant_id: str) -> dict:
             "disposition": meta["disposition"],
             "admission_condition": meta["admission_condition"],
             "respiratory_support": meta["respiratory_support"],
+            "required_nurse_level": int(meta.get("required_nurse_level", 1)),
         },
         "points": [
             {

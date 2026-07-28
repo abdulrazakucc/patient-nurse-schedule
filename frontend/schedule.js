@@ -55,6 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (census.length === 0) {
       document.getElementById("roster").hidden = true;
       document.getElementById("rosterEmpty").hidden = false;
+      document.getElementById("skillMixCard").hidden = true;
       setMetrics({ census: 0, nurses_per_shift: 0, daily_nurse_shifts: 0, total_demand: 0 });
       document.getElementById("schedNote").textContent = "";
       return;
@@ -62,6 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const r = NeoEngine.scheduleUnit(census, shifts);
     setMetrics(r);
     document.getElementById("schedNote").textContent = r.note;
+    renderSkillMix(r.skill_mix);
 
     document.getElementById("rosterEmpty").hidden = true;
     const table = document.getElementById("roster");
@@ -78,6 +80,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <td>${RESP_LABEL[inf.resp_support] || inf.resp_support}</td>
         <td><span class="pill pill-${inf.acuity}">${inf.acuity}</span></td>
         <td>${inf.nurses_required.toFixed(2)}</td>
+        <td><span class="lvl lvl-${inf.required_level}">L${inf.required_level} ${inf.required_level_name}</span></td>
         <td><button class="rm" data-i="${i}" title="Remove" aria-label="Remove infant ${inf.index}">✕</button></td>`;
       body.appendChild(tr);
     });
@@ -87,6 +90,39 @@ document.addEventListener("DOMContentLoaded", () => {
         refresh();
       })
     );
+  }
+
+  function renderSkillMix(mix) {
+    const card = document.getElementById("skillMixCard");
+    card.hidden = false;
+
+    document.getElementById("mixWarnings").innerHTML = (mix.warnings || [])
+      .map((w) => `<div class="mix-warn"><span>⚠</span><span>${w}</span></div>`)
+      .join("");
+
+    document.getElementById("mixGrid").innerHTML = mix.levels
+      .map(
+        (l) => `<div class="mix-card${l.recommended === 0 ? " is-zero" : ""}">
+          <span class="mix-n">${l.recommended}</span>
+          <span class="mix-lab">L${l.level} · ${l.short}</span>
+          <span class="mix-yrs">${l.years_label}</span>
+        </div>`
+      )
+      .join("");
+
+    const charge = mix.charge_nurse_level;
+    document.getElementById("mixMeta").innerHTML = `
+      <span>Bedside nurses: <b>${mix.bedside_nurses}</b></span>
+      <span>Charge nurse: <b>level ${charge} (Expert)</b></span>
+      <span>Effective care capacity: <b>${fmt(mix.effective_capacity, 2)}</b></span>
+      <span>Preceptors needed: <b>${mix.preceptors_needed}</b></span>`;
+
+    document.getElementById("mixNote").textContent =
+      "A nurse may always cover an assignment below their level, never above it, so " +
+      "requirements accumulate from the expert tier downward. Novices are capped at 30% " +
+      "of the bedside team and each is paired with a proficient or expert preceptor. " +
+      "Experience weightings are a planning assumption based on Benner's novice-to-expert " +
+      "framework, not values from a validated dataset.";
   }
 
   function setMetrics(r) {

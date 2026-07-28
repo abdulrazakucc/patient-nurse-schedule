@@ -67,6 +67,44 @@ Every number is **traceable to the underlying dataset**, and each forecast
 displays how many similar infants stand behind it (the confidence signal):
 ≥50 babies → *high*, 20–49 → *moderate*, 5–19 → *low*.
 
+## 👩‍⚕️ Nurse experience & competency
+
+Staffing is not just *how many* nurses, but *who*. NeoStay grades nurses using
+**Benner's novice-to-expert stages** (1984) — the framework behind most NICU
+clinical-ladder programmes.
+
+| Level | Stage | Experience | Typical assignment |
+|:---:|---|---|---|
+| **1** | Novice / Advanced Beginner | 0–1 year | Convalescent feeder-growers; intermediate care with a preceptor |
+| **2** | Competent | 1–3 years | Intermediate / special care; stable intensive with support |
+| **3** | Proficient | 3–5 years | Intensive 1:1, including ventilated infants; precepts novices |
+| **4** | Expert | 5+ years | Most unstable infants; **charge nurse**; precepting |
+
+```mermaid
+flowchart LR
+    A["👶 Infant acuity<br/>severity + ventilation<br/>+ admission condition"] --> B{"Minimum<br/>nurse level"}
+    B -->|"convalescent"| L1["Level 1 · Novice"]
+    B -->|"intermediate"| L2["Level 2 · Competent"]
+    B -->|"intensive"| L3["Level 3 · Proficient"]
+    B -->|"unstable / ventilated<br/>+ critical"| L4["Level 4 · Expert"]
+    L1 --> M["🗓️ Shift skill mix<br/>novices capped at 30%<br/>each paired with a preceptor<br/>charge nurse must be Expert"]
+    L2 --> M
+    L3 --> M
+    L4 --> M
+```
+
+A nurse may always cover an assignment **below** their level, never above it, so
+a shift's requirements accumulate downward from the expert tier. NeoStay also
+reports an **effective care capacity** (experience-weighted), so a roster that
+is numerically adequate but too junior shows up as a risk rather than passing
+silently.
+
+> **Provenance.** The stages and year bands are the published Benner framework.
+> The experience weightings, the 30% novice cap and the preceptor rule are
+> transparent **modelling assumptions** for planning discussion — no validated
+> nurse-scheduling dataset underlies them, and they are easy to change once real
+> rostering data exists.
+
 ### The three phases of a NICU stay
 
 ```mermaid

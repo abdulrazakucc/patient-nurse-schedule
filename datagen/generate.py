@@ -43,6 +43,11 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
 
 from app.data_loader import DATASET, WEIGHT_BINS  # noqa: E402
+from app.nursing import (  # noqa: E402
+    LEVEL_BY_ID,
+    level_for_years,
+    required_level,
+)
 
 OUT_DIR = ROOT / "generated_data"
 OUT_DIR.mkdir(exist_ok=True)
@@ -177,6 +182,7 @@ def build_infants():
                     "admission_condition": cond,
                     "respiratory_support": resp,
                     "acuity_severity": round(sev, 3),
+                    "required_nurse_level": required_level(sev, cond, resp),
                 }
             )
             infant_id += 1
@@ -195,30 +201,81 @@ LAST = ["Okafor", "Sharma", "Rossi", "Nguyen", "Cohen", "Silva", "Khan", "Meyer"
         "Ivanov", "Haddad", "Adeyemi", "Costa", "Park", "Dubois", "Bauer", "Mensah"]
 CREDENTIALS = ["RN", "RN, BSN", "RN, NNP", "RN, MSN"]
 
+# Target shape of the nursing workforce by Benner competency level. Real NICUs
+# run a pyramid: a modest novice intake, a large competent/proficient core, and
+# a senior expert group who precept and take charge. Shares are a planning
+# assumption, chosen to be realistic rather than drawn from a published census.
+LEVEL_SHARES = [
+    (1, 0.19),  # Novice / Advanced Beginner  (0-1 yr)
+    (2, 0.29),  # Competent                   (1-3 yr)
+    (3, 0.26),  # Proficient                  (3-5 yr)
+    (4, 0.26),  # Expert                      (5+ yr)
+]
+
+# Years of experience sampled inside each level's band.
+LEVEL_YEARS_RANGE = {1: (0.2, 0.9), 2: (1.0, 2.9), 3: (3.0, 4.9), 4: (5.0, 24.0)}
+
+# Higher levels carry the specialist credentials and the sickest assignments.
+LEVEL_CREDENTIALS = {
+    1: ["RN", "RN, BSN"],
+    2: ["RN", "RN, BSN", "RN, BSN"],
+    3: ["RN, BSN", "RN, MSN"],
+    4: ["RN, BSN", "RN, MSN", "RN, NNP"],
+}
+LEVEL_SPECIALTY = {
+    1: ["Feeder-Grower", "Special Care Nursery"],
+    2: ["Special Care Nursery", "Neonatal Intensive Care"],
+    3: ["Neonatal Intensive Care", "Special Care Nursery"],
+    4: ["Neonatal Intensive Care"],
+}
+
 
 def build_nurses(n=42):
+    """Build a workforce with a realistic competency pyramid (Benner levels 1-4)."""
+    # Resolve the target headcount per level, giving any rounding remainder to L2.
+    counts = {lv: int(round(n * share)) for lv, share in LEVEL_SHARES}
+    counts[2] += n - sum(counts.values())
+
+    roster_levels = []
+    for lv, c in counts.items():
+        roster_levels.extend([lv] * max(0, c))
+    random.shuffle(roster_levels)
+
     nurses = []
     used = set()
-    for i in range(1, n + 1):
+    for i, level in enumerate(roster_levels, start=1):
         while True:
             name = f"{random.choice(FIRST)} {random.choice(LAST)}"
             if name not in used:
                 used.add(name)
                 break
-        hire = START - timedelta(days=random.randint(0, 3650))
+
+        lo, hi = LEVEL_YEARS_RANGE[level]
+        years = round(random.uniform(lo, hi), 1)
+        # Hire date follows from experience, so the two never contradict.
+        hire = START - timedelta(days=int(years * 365.25))
+        info = LEVEL_BY_ID[level]
+
         nurses.append(
             {
                 "nurse_id": f"RN-{i:03d}",
                 "full_name": name,
-                "credential": random.choice(CREDENTIALS),
-                "specialty": random.choice(
-                    ["Neonatal Intensive Care", "Special Care Nursery", "Feeder-Grower"]
-                ),
-                "years_experience": random.randint(1, 25),
+                "credential": random.choice(LEVEL_CREDENTIALS[level]),
+                "specialty": random.choice(LEVEL_SPECIALTY[level]),
+                "years_experience": years,
+                "experience_level": level,
+                "competency_stage": info["name"],
+                "level_band": info["years_label"],
+                "care_capacity": info["capacity"],
+                "can_precept": "yes" if level >= 3 else "no",
+                "charge_eligible": "yes" if level == 4 else "no",
                 "hire_date": hire.strftime("%Y-%m-%d"),
                 "employment": random.choice(["Full-time", "Full-time", "Part-time"]),
             }
         )
+    nurses.sort(key=lambda r: (-r["experience_level"], r["full_name"]))
+    for i, nurse in enumerate(nurses, start=1):
+        nurse["nurse_id"] = f"RN-{i:03d}"
     return nurses
 
 
@@ -255,6 +312,10 @@ def build_timeseries(infants, nurses):
                     "day_of_stay": round(day, 2),
                     "care_phase": phase,
                     "nurses_required": round(npi_noise, 3),
+                    "required_nurse_level": (
+                        inf["required_nurse_level"] if phase == "intensive"
+                        else (2 if phase == "intermediate" else 1)
+                    ),
                 }
             )
 
@@ -297,8 +358,17 @@ def build_timeseries(infants, nurses):
 # 4. Nurse shift roster (daily day/night shifts)
 # ---------------------------------------------------------------------------
 def build_shifts(nurses, unit_rows):
-    """Assign named nurses to day/night shifts on days the unit was staffed."""
-    # Determine per-day peak on-duty need from the unit series.
+    """Assign named nurses to day/night shifts on days the unit was staffed.
+
+    Rostering respects the competency model rather than picking at random:
+
+    * the charge nurse is always an expert (level 4);
+    * every shift keeps at least one further expert or proficient nurse free to
+      precept, and novices are capped at ~30% of the bedside team;
+    * each novice on shift is paired with a named preceptor (level 3+).
+    """
+    by_level = {lv: [n for n in nurses if n["experience_level"] == lv] for lv in (1, 2, 3, 4)}
+
     per_day = {}
     for r in unit_rows:
         date = r["timestamp"][:10]
@@ -310,8 +380,42 @@ def build_shifts(nurses, unit_rows):
     for date in sorted(per_day):
         for shift_name, need in per_day[date].items():
             need = max(1, need)
-            roster = random.sample(nurses, min(need, len(nurses)))
-            for j, nurse in enumerate(roster):
+            bedside_need = max(0, need - 1)  # one slot is the charge nurse
+
+            # Charge nurse: expert, falling back to proficient only if unavoidable.
+            charge_pool = by_level[4] or by_level[3]
+            charge = random.choice(charge_pool)
+
+            # Compose the bedside team: cap novices, then fill with the senior core.
+            max_novice = int(bedside_need * 0.30)
+            n_novice = min(max_novice, len(by_level[1]), random.randint(0, max(0, max_novice)))
+            remaining = bedside_need - n_novice
+            senior_pool = [n for n in by_level[3] + by_level[4] if n["nurse_id"] != charge["nurse_id"]]
+            # At least one senior stays on the floor to precept the novices.
+            n_senior = min(len(senior_pool), max(n_novice, remaining // 2))
+            n_competent = max(0, remaining - n_senior)
+
+            team = []
+            team += random.sample(by_level[1], min(n_novice, len(by_level[1])))
+            team += random.sample(senior_pool, min(n_senior, len(senior_pool)))
+            comp_pool = by_level[2]
+            team += random.sample(comp_pool, min(n_competent, len(comp_pool)))
+
+            # Top up from anyone left if the pools ran short.
+            if len(team) < bedside_need:
+                ids = {n["nurse_id"] for n in team} | {charge["nurse_id"]}
+                spare = [n for n in nurses if n["nurse_id"] not in ids]
+                team += random.sample(spare, min(bedside_need - len(team), len(spare)))
+
+            preceptors = [n for n in team if n["experience_level"] >= 3]
+            preceptor_cycle = 0
+
+            for nurse in [charge] + team:
+                is_charge = nurse["nurse_id"] == charge["nurse_id"] and nurse is charge
+                assigned_preceptor = ""
+                if not is_charge and nurse["experience_level"] == 1 and preceptors:
+                    assigned_preceptor = preceptors[preceptor_cycle % len(preceptors)]["full_name"]
+                    preceptor_cycle += 1
                 shift_rows.append(
                     {
                         "shift_id": f"SH-{shift_id:06d}",
@@ -319,7 +423,11 @@ def build_shifts(nurses, unit_rows):
                         "shift": shift_name,
                         "nurse_id": nurse["nurse_id"],
                         "nurse_name": nurse["full_name"],
-                        "role": "Charge Nurse" if j == 0 else "Bedside Nurse",
+                        "experience_level": nurse["experience_level"],
+                        "competency_stage": nurse["competency_stage"],
+                        "years_experience": nurse["years_experience"],
+                        "role": "Charge Nurse" if is_charge else "Bedside Nurse",
+                        "precepted_by": assigned_preceptor,
                     }
                 )
             shift_id += 1

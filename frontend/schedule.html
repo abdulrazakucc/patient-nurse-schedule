@@ -80,6 +80,14 @@
             <div><span id="mDemand">0</span><label>Acuity demand</label></div>
           </div>
 
+          <div class="card" style="padding:26px" id="skillMixCard" hidden>
+            <div class="disp-head" data-icon="sparkle">Recommended skill mix per shift</div>
+            <div id="mixWarnings"></div>
+            <div class="mix-grid" id="mixGrid"></div>
+            <div class="mix-meta" id="mixMeta"></div>
+            <p class="staff-note" id="mixNote"></p>
+          </div>
+
           <div class="card" style="padding:26px">
             <div class="disp-head" data-icon="calendar">Census roster</div>
             <div id="rosterEmpty" class="roster-empty">
@@ -89,7 +97,7 @@
             <div class="table-scroll">
               <table class="roster" id="roster" hidden>
                 <thead>
-                  <tr><th>#</th><th>Weight</th><th>GA</th><th>Condition</th><th>Support</th><th>Acuity</th><th>Nurses</th><th></th></tr>
+                  <tr><th>#</th><th>Weight</th><th>GA</th><th>Condition</th><th>Support</th><th>Acuity</th><th>Nurses</th><th>Min. nurse level</th><th></th></tr>
                 </thead>
                 <tbody id="rosterBody"></tbody>
               </table>

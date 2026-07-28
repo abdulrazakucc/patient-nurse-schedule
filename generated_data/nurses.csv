@@ -1,43 +1,43 @@
-nurse_id,full_name,credential,specialty,years_experience,hire_date,employment
-RN-001,Diego Costa,RN,Feeder-Grower,11,2015-11-11,Full-time
-RN-002,Mei Mensah,"RN, NNP",Feeder-Grower,5,2009-09-26,Full-time
-RN-003,Tom Dubois,"RN, NNP",Neonatal Intensive Care,14,2011-03-03,Part-time
-RN-004,Sara Adeyemi,"RN, NNP",Special Care Nursery,2,2010-08-12,Full-time
-RN-005,Zara Sharma,"RN, BSN",Neonatal Intensive Care,1,2007-02-24,Part-time
-RN-006,Mei Sharma,"RN, NNP",Neonatal Intensive Care,2,2006-01-23,Full-time
-RN-007,Sam Khan,"RN, MSN",Special Care Nursery,12,2006-04-28,Part-time
-RN-008,Leo Sharma,"RN, MSN",Neonatal Intensive Care,23,2006-12-29,Full-time
-RN-009,Amara Bauer,"RN, MSN",Feeder-Grower,4,2014-03-21,Part-time
-RN-010,Priya Park,RN,Special Care Nursery,10,2015-12-29,Part-time
-RN-011,Mei Okafor,"RN, BSN",Neonatal Intensive Care,20,2011-03-23,Full-time
-RN-012,Zara Okafor,"RN, BSN",Feeder-Grower,22,2010-09-19,Full-time
-RN-013,Mei Meyer,"RN, MSN",Feeder-Grower,13,2010-03-01,Full-time
-RN-014,Sofia Mensah,"RN, MSN",Special Care Nursery,15,2014-06-22,Full-time
-RN-015,Leo Adeyemi,"RN, NNP",Feeder-Grower,21,2012-04-11,Part-time
-RN-016,Ivan Adeyemi,"RN, MSN",Feeder-Grower,22,2014-04-01,Part-time
-RN-017,Sam Meyer,"RN, BSN",Feeder-Grower,18,2014-02-07,Part-time
-RN-018,Omar Ivanov,RN,Feeder-Grower,24,2008-07-08,Part-time
-RN-019,Sam Costa,"RN, MSN",Special Care Nursery,7,2011-11-08,Part-time
-RN-020,Ana Silva,"RN, MSN",Neonatal Intensive Care,22,2007-11-17,Full-time
-RN-021,Ben Rossi,RN,Neonatal Intensive Care,1,2014-07-15,Full-time
-RN-022,Diego Bauer,RN,Neonatal Intensive Care,9,2012-02-06,Part-time
-RN-023,Sam Okafor,"RN, MSN",Special Care Nursery,15,2007-11-01,Full-time
-RN-024,Priya Okafor,RN,Special Care Nursery,24,2013-01-10,Part-time
-RN-025,Lena Meyer,"RN, BSN",Neonatal Intensive Care,19,2006-12-29,Full-time
-RN-026,Jack Silva,"RN, NNP",Special Care Nursery,16,2010-02-23,Part-time
-RN-027,Maya Okafor,"RN, MSN",Neonatal Intensive Care,25,2007-03-19,Full-time
-RN-028,Kofi Mensah,"RN, BSN",Special Care Nursery,12,2010-12-12,Part-time
-RN-029,Omar Adeyemi,"RN, MSN",Special Care Nursery,4,2011-01-29,Full-time
-RN-030,Tom Nguyen,"RN, BSN",Special Care Nursery,19,2012-03-08,Part-time
-RN-031,Diego Khan,"RN, MSN",Special Care Nursery,5,2011-08-04,Part-time
-RN-032,Priya Khan,"RN, BSN",Feeder-Grower,19,2015-05-05,Full-time
-RN-033,Sam Adeyemi,"RN, BSN",Special Care Nursery,11,2012-09-08,Full-time
-RN-034,Priya Rossi,"RN, NNP",Special Care Nursery,12,2014-09-29,Full-time
-RN-035,Maya Costa,"RN, NNP",Neonatal Intensive Care,14,2006-05-06,Full-time
-RN-036,Ana Bauer,RN,Special Care Nursery,7,2009-04-27,Full-time
-RN-037,Diego Meyer,RN,Neonatal Intensive Care,19,2012-03-26,Full-time
-RN-038,Lena Rossi,"RN, MSN",Special Care Nursery,19,2009-05-27,Part-time
-RN-039,Grace Dubois,RN,Special Care Nursery,21,2008-11-21,Part-time
-RN-040,Hana Meyer,"RN, NNP",Special Care Nursery,1,2014-12-19,Full-time
-RN-041,Yara Okafor,RN,Feeder-Grower,4,2006-12-29,Part-time
-RN-042,Priya Mensah,"RN, BSN",Feeder-Grower,10,2012-12-07,Full-time
+nurse_id,full_name,credential,specialty,years_experience,experience_level,competency_stage,level_band,care_capacity,can_precept,charge_eligible,hire_date,employment
+RN-001,Amara Rossi,"RN, NNP",Neonatal Intensive Care,9.9,4,Expert,5+ years,1.1,yes,yes,2006-02-07,Part-time
+RN-002,Ana Okafor,"RN, BSN",Neonatal Intensive Care,18.8,4,Expert,5+ years,1.1,yes,yes,1997-03-15,Full-time
+RN-003,Ivan Okafor,"RN, NNP",Neonatal Intensive Care,17.7,4,Expert,5+ years,1.1,yes,yes,1998-04-21,Full-time
+RN-004,Jack Costa,"RN, MSN",Neonatal Intensive Care,12.0,4,Expert,5+ years,1.1,yes,yes,2004-01-01,Full-time
+RN-005,Kofi Sharma,"RN, MSN",Neonatal Intensive Care,10.8,4,Expert,5+ years,1.1,yes,yes,2005-03-15,Full-time
+RN-006,Maya Costa,"RN, NNP",Neonatal Intensive Care,23.1,4,Expert,5+ years,1.1,yes,yes,1992-11-25,Full-time
+RN-007,Ruth Meyer,"RN, MSN",Neonatal Intensive Care,16.1,4,Expert,5+ years,1.1,yes,yes,1999-11-26,Part-time
+RN-008,Sara Silva,"RN, MSN",Neonatal Intensive Care,16.4,4,Expert,5+ years,1.1,yes,yes,1999-08-08,Full-time
+RN-009,Sofia Bauer,"RN, MSN",Neonatal Intensive Care,12.8,4,Expert,5+ years,1.1,yes,yes,2003-03-15,Full-time
+RN-010,Sofia Khan,"RN, NNP",Neonatal Intensive Care,9.0,4,Expert,5+ years,1.1,yes,yes,2007-01-01,Part-time
+RN-011,Yara Silva,"RN, NNP",Neonatal Intensive Care,18.8,4,Expert,5+ years,1.1,yes,yes,1997-03-15,Full-time
+RN-012,Ben Dubois,"RN, BSN",Neonatal Intensive Care,4.3,3,Proficient,3-5 years,1.0,yes,no,2011-09-14,Full-time
+RN-013,Grace Adeyemi,"RN, MSN",Special Care Nursery,4.0,3,Proficient,3-5 years,1.0,yes,no,2012-01-01,Full-time
+RN-014,Ivan Nguyen,"RN, MSN",Neonatal Intensive Care,3.6,3,Proficient,3-5 years,1.0,yes,no,2012-05-27,Full-time
+RN-015,Liam Dubois,"RN, MSN",Neonatal Intensive Care,4.2,3,Proficient,3-5 years,1.0,yes,no,2011-10-20,Full-time
+RN-016,Mei Adeyemi,"RN, BSN",Special Care Nursery,4.6,3,Proficient,3-5 years,1.0,yes,no,2011-05-27,Part-time
+RN-017,Priya Khan,"RN, BSN",Special Care Nursery,3.1,3,Proficient,3-5 years,1.0,yes,no,2012-11-25,Full-time
+RN-018,Priya Nguyen,"RN, BSN",Special Care Nursery,3.5,3,Proficient,3-5 years,1.0,yes,no,2012-07-02,Full-time
+RN-019,Ruth Ivanov,"RN, MSN",Neonatal Intensive Care,3.4,3,Proficient,3-5 years,1.0,yes,no,2012-08-08,Full-time
+RN-020,Ruth Silva,"RN, MSN",Neonatal Intensive Care,4.3,3,Proficient,3-5 years,1.0,yes,no,2011-09-14,Full-time
+RN-021,Tom Nguyen,"RN, BSN",Neonatal Intensive Care,4.2,3,Proficient,3-5 years,1.0,yes,no,2011-10-20,Part-time
+RN-022,Yara Rossi,"RN, MSN",Special Care Nursery,3.2,3,Proficient,3-5 years,1.0,yes,no,2012-10-20,Full-time
+RN-023,Diego Costa,"RN, BSN",Neonatal Intensive Care,1.1,2,Competent,1-3 years,0.9,no,no,2014-11-26,Full-time
+RN-024,Diego Khan,"RN, BSN",Special Care Nursery,1.7,2,Competent,1-3 years,0.9,no,no,2014-04-21,Part-time
+RN-025,Diego Mensah,RN,Special Care Nursery,1.9,2,Competent,1-3 years,0.9,no,no,2014-02-07,Full-time
+RN-026,Lena Dubois,RN,Special Care Nursery,2.0,2,Competent,1-3 years,0.9,no,no,2014-01-01,Full-time
+RN-027,Lena Haddad,"RN, BSN",Special Care Nursery,2.3,2,Competent,1-3 years,0.9,no,no,2013-09-13,Part-time
+RN-028,Lena Rossi,"RN, BSN",Neonatal Intensive Care,2.1,2,Competent,1-3 years,0.9,no,no,2013-11-25,Part-time
+RN-029,Maya Sharma,RN,Neonatal Intensive Care,2.1,2,Competent,1-3 years,0.9,no,no,2013-11-25,Full-time
+RN-030,Noah Dubois,"RN, BSN",Special Care Nursery,1.7,2,Competent,1-3 years,0.9,no,no,2014-04-21,Full-time
+RN-031,Noah Okafor,RN,Neonatal Intensive Care,2.8,2,Competent,1-3 years,0.9,no,no,2013-03-15,Full-time
+RN-032,Omar Khan,"RN, BSN",Special Care Nursery,1.9,2,Competent,1-3 years,0.9,no,no,2014-02-07,Part-time
+RN-033,Yara Ivanov,RN,Neonatal Intensive Care,1.1,2,Competent,1-3 years,0.9,no,no,2014-11-26,Part-time
+RN-034,Zara Okafor,"RN, BSN",Special Care Nursery,1.8,2,Competent,1-3 years,0.9,no,no,2014-03-15,Part-time
+RN-035,Emma Haddad,"RN, BSN",Feeder-Grower,0.6,1,Novice / Advanced Beginner,0-1 year,0.75,no,no,2015-05-27,Full-time
+RN-036,Kofi Mensah,RN,Special Care Nursery,0.5,1,Novice / Advanced Beginner,0-1 year,0.75,no,no,2015-07-03,Full-time
+RN-037,Leo Bauer,"RN, BSN",Special Care Nursery,0.7,1,Novice / Advanced Beginner,0-1 year,0.75,no,no,2015-04-21,Part-time
+RN-038,Leo Park,RN,Feeder-Grower,0.3,1,Novice / Advanced Beginner,0-1 year,0.75,no,no,2015-09-14,Part-time
+RN-039,Liam Sharma,"RN, BSN",Feeder-Grower,0.7,1,Novice / Advanced Beginner,0-1 year,0.75,no,no,2015-04-21,Full-time
+RN-040,Noah Silva,"RN, BSN",Special Care Nursery,0.8,1,Novice / Advanced Beginner,0-1 year,0.75,no,no,2015-03-15,Full-time
+RN-041,Omar Haddad,RN,Special Care Nursery,0.7,1,Novice / Advanced Beginner,0-1 year,0.75,no,no,2015-04-21,Part-time
+RN-042,Sam Khan,"RN, BSN",Special Care Nursery,0.8,1,Novice / Advanced Beginner,0-1 year,0.75,no,no,2015-03-15,Full-time

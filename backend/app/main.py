@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from .data_loader import DATASET, GA_BINS, WEIGHT_BINS
-from .nursing import estimate_staffing, schedule_unit
+from .nursing import NURSE_LEVELS, estimate_staffing, schedule_unit
 from .predictor import TOTAL_LOS, predict
 from . import timeseries
 
@@ -78,6 +78,7 @@ def meta() -> dict:
             {"label": b.label, "low": b.low, "high": b.high, "midpoint": b.midpoint}
             for b in GA_BINS
         ],
+        "nurse_levels": NURSE_LEVELS,
     }
 
 
