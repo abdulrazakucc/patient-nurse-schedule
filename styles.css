@@ -351,6 +351,56 @@ input[type="range"]::-moz-range-thumb {
 .phase-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--teal), var(--gold)); transition: width 0.7s cubic-bezier(0.22, 0.9, 0.3, 1); }
 .staff-note { font-size: 11.5px; color: var(--muted); margin-top: 16px; line-height: 1.6; }
 
+/* ---------------- nurse competency ---------------- */
+.lvl {
+  display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px;
+  border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap;
+}
+.lvl::before {
+  content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor;
+}
+.lvl-1 { background: #e8eef2; color: #40606f; }
+.lvl-2 { background: var(--teal-soft); color: var(--teal-deep); }
+.lvl-3 { background: var(--gold-soft); color: #a76f1e; }
+.lvl-4 { background: var(--rose-soft); color: #b5445f; }
+
+.level-callout {
+  display: flex; align-items: center; gap: 16px; padding: 18px 20px;
+  border-radius: var(--radius); background: var(--surface-2);
+  border: 1px solid var(--border); margin-bottom: 18px; flex-wrap: wrap;
+}
+.level-callout .lvl { font-size: 12.5px; padding: 5px 13px; }
+.level-callout b { display: block; font-size: 15px; color: var(--ink); margin-bottom: 3px; }
+.level-callout span { font-size: 13px; color: var(--ink-soft); line-height: 1.6; }
+.level-phases { display: flex; flex-direction: column; gap: 10px; }
+.level-phase-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  font-size: 13px; color: var(--ink-soft); padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+.level-phase-row:first-child { border-top: none; }
+
+/* skill-mix panel */
+.mix-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
+.mix-card {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px 14px; text-align: center;
+}
+.mix-card .mix-n {
+  font-family: var(--font-display); font-size: 30px; font-weight: 600;
+  color: var(--teal-deep); display: block; line-height: 1.1; font-variant-numeric: tabular-nums;
+}
+.mix-card .mix-lab { font-size: 11px; font-weight: 700; color: var(--ink); margin-top: 6px; display: block; }
+.mix-card .mix-yrs { font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; }
+.mix-card.is-zero .mix-n { color: var(--border-strong); }
+.mix-warn {
+  display: flex; align-items: flex-start; gap: 9px; padding: 12px 16px; border-radius: 12px;
+  background: var(--gold-soft); color: #8a5d18; font-size: 12.5px; line-height: 1.6;
+  margin-bottom: 12px;
+}
+.mix-meta { display: flex; gap: 20px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink-soft); margin-top: 4px; }
+.mix-meta b { color: var(--ink); }
+
 /* ---------------- analytics ---------------- */
 .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
 .chart-card { padding: 24px; min-width: 0; }
