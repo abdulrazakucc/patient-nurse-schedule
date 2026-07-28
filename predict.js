@@ -141,7 +141,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     renderCompetency(r, s);
     renderLosChart(r);
-    renderStaffingChart(s);
+    renderStaffingChart(r, s);
 
     els.results.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
@@ -237,47 +237,155 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  /* ---------------- chart 2: staffing across the stay ---------------- */
-  function renderStaffingChart(s) {
+  /* ---------------- chart 2: staffing across the stay ----------------
+     Uses a linear day axis so the discharge window and phase-transition
+     markers can be positioned by day rather than by data index. */
+
+  // Nurse:patient ratio labels - how staffing is actually discussed on the unit.
+  const RATIO_TICKS = [
+    { value: 1, label: "1 : 1" },
+    { value: 0.5, label: "1 : 2" },
+    { value: 1 / 3, label: "1 : 3" },
+    { value: 0, label: "0" },
+  ];
+
+  function ratioLabel(v) {
+    const hit = RATIO_TICKS.find((t) => Math.abs(t.value - v) < 0.02);
+    return hit ? hit.label : "";
+  }
+
+  function renderStaffingChart(r, s) {
     if (!window.Chart) return;
     const pts = s.timeline;
-    const total = pts.length ? pts[pts.length - 1].day : 0;
+    const los = r.length_of_stay.blended;
+    const median = los.median || (pts.length ? pts[pts.length - 1].day : 1);
+    const q1 = los.q1, q3 = los.q3;
+    const hasWindow = q1 != null && q3 != null && q3 > q1;
+    const xMax = hasWindow ? Math.max(q3, median) : median;
+
+    // Phase boundaries (cumulative days) for the transition markers.
+    const boundaries = [];
+    let run = 0;
+    s.phases.forEach((p, i) => {
+      run += p.days;
+      if (i < s.phases.length - 1) {
+        boundaries.push({ day: run, next: s.phases[i + 1] });
+      }
+    });
+
     document.getElementById("staffChartSub").textContent =
-      `Nursing requirement day by day across the expected ${fmt(total, 0)}-day stay, ` +
-      `shaded by care phase and annotated with the competency level each phase needs.`;
+      `Nursing requirement day by day. The solid line is the expected ${fmt(median, 0)}-day stay; ` +
+      (hasWindow
+        ? `the shaded band shows the likely discharge window (${fmt(q1, 0)}–${fmt(q3, 0)} days), ` +
+          "because the length of stay is a forecast, not a fixed date. "
+        : "") +
+      "Dashed markers show where care steps down to a lower ratio.";
+
+    /* Custom plugin: discharge window, expected-discharge line, phase markers. */
+    const annotations = {
+      id: "neoStaffAnnotations",
+      afterDatasetsDraw(chart) {
+        const { ctx, chartArea, scales } = chart;
+        const x = scales.x;
+        const top = chartArea.top, bottom = chartArea.bottom;
+        ctx.save();
+
+        // 1. Likely discharge window (uncertainty).
+        if (hasWindow) {
+          const xa = x.getPixelForValue(q1), xb = x.getPixelForValue(q3);
+          ctx.fillStyle = "rgba(181, 68, 95, 0.09)";
+          ctx.fillRect(xa, top, xb - xa, bottom - top);
+          ctx.strokeStyle = "rgba(181, 68, 95, 0.35)";
+          ctx.setLineDash([3, 3]);
+          ctx.lineWidth = 1;
+          [xa, xb].forEach((px) => {
+            ctx.beginPath(); ctx.moveTo(px, top); ctx.lineTo(px, bottom); ctx.stroke();
+          });
+          ctx.setLineDash([]);
+          ctx.fillStyle = "#b5445f";
+          ctx.font = "600 10px Inter, sans-serif";
+          ctx.textAlign = "center";
+          const mid = (xa + xb) / 2;
+          if (xb - xa > 90) ctx.fillText("likely discharge window", mid, bottom - 6);
+        }
+
+        // 2. Expected discharge (the median).
+        const xm = x.getPixelForValue(median);
+        ctx.strokeStyle = "#b5445f";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(xm, top); ctx.lineTo(xm, bottom); ctx.stroke();
+        ctx.fillStyle = "#b5445f";
+        ctx.font = "700 10px Inter, sans-serif";
+        // Flip the label to the left of the line when it would overflow the plot.
+        const dischargeText = `expected discharge · day ${Math.round(median)}`;
+        const flip = xm + 5 + ctx.measureText(dischargeText).width > chartArea.right;
+        ctx.textAlign = flip ? "right" : "left";
+        ctx.fillText(dischargeText, xm + (flip ? -5 : 5), top + 11);
+
+        // 3. Phase step-downs.
+        ctx.font = "600 10px Inter, sans-serif";
+        boundaries.forEach((b, i) => {
+          const px = x.getPixelForValue(b.day);
+          ctx.strokeStyle = "rgba(14,43,54,0.35)";
+          ctx.setLineDash([4, 4]);
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(px, top); ctx.lineTo(px, bottom); ctx.stroke();
+          ctx.setLineDash([]);
+          const ratio = b.next.nurses_per_infant >= 0.5 ? "1 : 2" : "1 : 3";
+          const text = `day ${Math.round(b.day)} → ${ratio}`;
+          ctx.fillStyle = "#3d5763";
+          const flipPhase = px + 5 + ctx.measureText(text).width > chartArea.right;
+          ctx.textAlign = flipPhase ? "right" : "left";
+          ctx.fillText(text, px + (flipPhase ? -5 : 5), top + 28 + i * 15);
+        });
+        ctx.restore();
+      },
+    };
 
     if (staffChart) staffChart.destroy();
     staffChart = new Chart(document.getElementById("chartStaffing"), {
       type: "line",
       data: {
-        labels: pts.map((p) => p.day),
         datasets: [
           {
             label: "Nurses required for this infant",
-            data: pts.map((p) => p.nurses_required),
+            data: pts.map((p) => ({ x: p.day, y: p.nurses_required })),
             segment: {
-              borderColor: (ctx) =>
-                PHASE_COLOR[pts[ctx.p0DataIndex].phase] || "#74909c",
+              borderColor: (ctx) => PHASE_COLOR[pts[ctx.p0DataIndex].phase] || "#74909c",
             },
             borderColor: "#0e8a8f",
             backgroundColor: "rgba(14,138,143,0.10)",
             fill: true, stepped: true, pointRadius: 0, borderWidth: 3,
           },
+          // If the stay runs long, convalescent care simply continues.
+          {
+            label: "If the stay runs longer",
+            data: hasWindow && q3 > median
+              ? [{ x: median, y: 1 / 3 }, { x: q3, y: 1 / 3 }]
+              : [],
+            borderColor: "rgba(16,153,138,0.75)",
+            borderDash: [5, 4], borderWidth: 2, pointRadius: 0, fill: false,
+          },
         ],
       },
+      plugins: [annotations],
       options: {
         responsive: true, maintainAspectRatio: false,
-        interaction: { mode: "index", intersect: false },
+        layout: { padding: { top: 4 } },
+        interaction: { mode: "nearest", axis: "x", intersect: false },
         plugins: {
           legend: { display: false },
           tooltip: {
             callbacks: {
-              title: (t) => `Day ${Number(t[0].label).toFixed(0)} of stay`,
+              title: (t) => `Day ${Math.round(t[0].parsed.x)} of stay`,
               label: (t) => {
+                if (t.datasetIndex === 1) return "Care continues at 1 : 3 if discharge is later";
                 const p = pts[t.dataIndex];
+                if (!p) return "";
                 const lvl = NeoEngine.levelInfo(p.required_level);
+                const ratio = ratioLabel(p.nurses_required) || p.nurses_required.toFixed(2);
                 return [
-                  `${p.phase} care · ${p.nurses_required.toFixed(2)} nurses`,
+                  `${p.phase} care · ${ratio} nurse to babies`,
                   `Needs level ${lvl.level} (${lvl.short}) or above`,
                 ];
               },
@@ -286,14 +394,19 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         scales: {
           x: {
+            type: "linear", min: 0, max: xMax,
             grid: { color: GRID },
             title: { display: true, text: "Day of stay" },
-            ticks: { maxTicksLimit: 12, callback: (v, i) => Math.round(pts[i].day) },
+            ticks: { maxTicksLimit: 10, callback: (v) => Math.round(v) },
           },
           y: {
-            grid: { color: GRID }, min: 0, max: 1.15,
-            title: { display: true, text: "Nurses per baby" },
-            ticks: { stepSize: 0.25 },
+            min: 0, max: 1.15,
+            grid: { color: GRID },
+            title: { display: true, text: "Nurse-to-baby ratio" },
+            afterBuildTicks: (axis) => {
+              axis.ticks = RATIO_TICKS.map((t) => ({ value: t.value }));
+            },
+            ticks: { callback: (v) => ratioLabel(v), autoSkip: false },
           },
         },
       },

@@ -520,6 +520,12 @@ code {
 .chip-died { background: var(--rose-soft); color: #b5445f; border-color: transparent; }
 .phase-key { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 16px; font-size: 12.5px; color: var(--ink-soft); }
 .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+.key-swatch { display: inline-block; width: 16px; height: 10px; margin-right: 6px; vertical-align: middle; }
+.key-window { background: rgba(181, 68, 95, 0.14); border: 1px dashed rgba(181, 68, 95, 0.55); }
+.key-dash {
+  height: 0; border-top: 2px dashed rgba(14, 43, 54, 0.45);
+  transform: translateY(-2px);
+}
 
 /* ---------------- toast ---------------- */
 .toast {
