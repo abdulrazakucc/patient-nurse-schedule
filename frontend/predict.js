@@ -241,6 +241,19 @@ document.addEventListener("DOMContentLoaded", () => {
      Uses a linear day axis so the discharge window and phase-transition
      markers can be positioned by day rather than by data index. */
 
+  // Competency level colours, matching the .lvl-N badges in the stylesheet.
+  const LEVEL_COLOR = {
+    1: { fill: "#e8eef2", ink: "#40606f" },
+    2: { fill: "#e3f4f4", ink: "#0a6d72" },
+    3: { fill: "#f7efdd", ink: "#a76f1e" },
+    4: { fill: "#fbe7ec", ink: "#b5445f" },
+  };
+
+  // Headroom above the 1:1 line, reserved for the competency ribbon and labels.
+  const Y_MAX = 1.7;
+  const RIBBON_LO = 1.36;
+  const RIBBON_HI = 1.62;
+
   // Nurse:patient ratio labels - how staffing is actually discussed on the unit.
   const RATIO_TICKS = [
     { value: 1, label: "1 : 1" },
@@ -263,10 +276,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const hasWindow = q1 != null && q3 != null && q3 > q1;
     const xMax = hasWindow ? Math.max(q3, median) : median;
 
-    // Phase boundaries (cumulative days) for the transition markers.
+    // Phase spans (for the competency ribbon) and boundaries (for the markers).
+    const spans = [];
     const boundaries = [];
     let run = 0;
     s.phases.forEach((p, i) => {
+      spans.push({
+        start: run, end: run + p.days,
+        level: p.required_level, levelName: p.required_level_name,
+      });
       run += p.days;
       if (i < s.phases.length - 1) {
         boundaries.push({ day: run, next: s.phases[i + 1] });
@@ -286,9 +304,48 @@ document.addEventListener("DOMContentLoaded", () => {
       id: "neoStaffAnnotations",
       afterDatasetsDraw(chart) {
         const { ctx, chartArea, scales } = chart;
-        const x = scales.x;
+        const x = scales.x, yS = scales.y;
         const top = chartArea.top, bottom = chartArea.bottom;
         ctx.save();
+
+        // 0. Competency ribbon - which level of nurse each phase needs, drawn in
+        //    the headroom above the ratio line so it is readable without tapping.
+        const ribTop = yS.getPixelForValue(RIBBON_HI);
+        const ribBot = yS.getPixelForValue(RIBBON_LO);
+        spans.forEach((sp) => {
+          const xa = x.getPixelForValue(sp.start);
+          const xb = x.getPixelForValue(Math.min(sp.end, xMax));
+          if (xb <= xa) return;
+          const col = LEVEL_COLOR[sp.level] || LEVEL_COLOR[1];
+          ctx.fillStyle = col.fill;
+          ctx.fillRect(xa, ribTop, xb - xa, ribBot - ribTop);
+          ctx.strokeStyle = col.ink;
+          ctx.globalAlpha = 0.35;
+          ctx.lineWidth = 1;
+          ctx.strokeRect(xa + 0.5, ribTop + 0.5, xb - xa - 1, ribBot - ribTop - 1);
+          ctx.globalAlpha = 1;
+
+          ctx.fillStyle = col.ink;
+          ctx.font = "700 10px Inter, sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          const full = `L${sp.level} ${sp.levelName}`;
+          const short = `L${sp.level}`;
+          const w = xb - xa;
+          const label = ctx.measureText(full).width + 10 < w
+            ? full
+            : (ctx.measureText(short).width + 6 < w ? short : "");
+          if (label) ctx.fillText(label, (xa + xb) / 2, (ribTop + ribBot) / 2);
+        });
+        ctx.textBaseline = "alphabetic";
+
+        // Caption for the ribbon, in the left margin when there is room.
+        ctx.fillStyle = "#74909c";
+        ctx.font = "600 9px Inter, sans-serif";
+        ctx.textAlign = "left";
+        if (ribBot - ribTop > 10) {
+          ctx.fillText("nurse level needed", chartArea.left + 3, ribTop - 4);
+        }
 
         // 1. Likely discharge window (uncertainty).
         if (hasWindow) {
@@ -320,7 +377,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const dischargeText = `expected discharge · day ${Math.round(median)}`;
         const flip = xm + 5 + ctx.measureText(dischargeText).width > chartArea.right;
         ctx.textAlign = flip ? "right" : "left";
-        ctx.fillText(dischargeText, xm + (flip ? -5 : 5), top + 11);
+        // Sits low in the plot, clear of the phase labels below the ribbon.
+        ctx.fillText(dischargeText, xm + (flip ? -5 : 5), bottom - 20);
 
         // 3. Phase step-downs.
         ctx.font = "600 10px Inter, sans-serif";
@@ -336,7 +394,7 @@ document.addEventListener("DOMContentLoaded", () => {
           ctx.fillStyle = "#3d5763";
           const flipPhase = px + 5 + ctx.measureText(text).width > chartArea.right;
           ctx.textAlign = flipPhase ? "right" : "left";
-          ctx.fillText(text, px + (flipPhase ? -5 : 5), top + 28 + i * 15);
+          ctx.fillText(text, px + (flipPhase ? -5 : 5), ribBot + 13 + i * 13);
         });
         ctx.restore();
       },
@@ -400,7 +458,7 @@ document.addEventListener("DOMContentLoaded", () => {
             ticks: { maxTicksLimit: 10, callback: (v) => Math.round(v) },
           },
           y: {
-            min: 0, max: 1.15,
+            min: 0, max: Y_MAX,
             grid: { color: GRID },
             title: { display: true, text: "Nurse-to-baby ratio" },
             afterBuildTicks: (axis) => {

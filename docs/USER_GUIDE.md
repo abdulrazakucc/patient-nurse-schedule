@@ -62,8 +62,18 @@ You also get **two charts**:
   "is this baby typical, or an outlier?" at a glance.
 - **Nurse staffing forecast across the stay** — a day-by-day line showing the
   nursing requirement stepping down from 1 nurse per baby, through 1:2, to 1:3
-  as the infant recovers. Hover any day to see the care phase and the minimum
-  nurse competency level that day needs.
+  as the infant recovers.
+
+How to read that second chart:
+
+| What you see | What it means |
+|---|---|
+| Y axis `1 : 1`, `1 : 2`, `1 : 3` | How many babies one nurse covers. `1:1` = a nurse devoted to this baby alone |
+| Coloured band along the **top** | The minimum nurse level each phase needs — `L4 Expert` early, `L1 Novice` by discharge |
+| Dashed vertical markers | The day care steps down to a lower ratio, e.g. *"day 57 → 1 : 2"* |
+| Pink shaded area | The **likely discharge window** — the stay is a forecast, not a fixed date |
+| Red line | Expected (median) discharge day |
+| Dashed tail | Care simply continues at 1:3 if the stay runs longer than expected |
 
 And a **nurse competency requirement** panel naming the minimum level of nurse
 for this infant at admission, and for each phase of the stay.
@@ -101,6 +111,19 @@ applied and will raise a warning if broken:
 The **effective care capacity** figure is experience-weighted, so a shift with
 the right headcount but too many junior nurses is visible as a risk instead of
 looking adequate.
+
+**The coverage chart** makes that concrete. Three bars, all measured in nurses
+and broken down by level:
+
+1. **Acuity demand** — what the babies need, at the level each one requires
+2. **Recommended roster** — whole nurses, after the novice cap is applied
+3. **Effective capacity** — what that roster actually delivers once experience
+   is weighted
+
+If bar 3 is shorter than bar 1, the shift is staffed *by the numbers* but too
+junior to carry the work, and a plain-language verdict says so. Try adding nine
+stable 1650 g feeder-growers: three nurses covers the count on paper, but an
+all-Competent team delivers only 2.7 against 3.0 of demand.
 
 ### ⏱️ Timeline — *"How does care change hour by hour?"*
 

@@ -99,6 +99,13 @@ reports an **effective care capacity** (experience-weighted), so a roster that
 is numerically adequate but too junior shows up as a risk rather than passing
 silently.
 
+The Scheduling page plots this as three bars — *acuity demand*, *recommended
+roster*, and *effective capacity* — each broken down by level. When the third
+bar falls short of the first, the shift is staffed by headcount but not by
+experience, and the app says so in plain language. The Predict page shows the
+same idea per infant, as a competency band running along the top of the staffing
+chart (Expert early in the stay, Novice by discharge).
+
 > **Provenance.** The stages and year bands are the published Benner framework.
 > The experience weightings, the 30% novice cap and the preceptor rule are
 > transparent **modelling assumptions** for planning discussion — no validated
