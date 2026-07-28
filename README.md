@@ -74,9 +74,9 @@ gantt
     dateFormat X
     axisFormat %s
     section A typical VLBW stay
-    Intensive (1 nurse : 1 baby)      :crit, 0, 40
-    Intermediate (1 nurse : 2 babies) :active, 40, 75
-    Convalescent (1 nurse : 3 babies) :done, 75, 103
+    Intensive — one nurse per baby         :crit, 0, 40
+    Intermediate — one nurse per 2 babies  :active, 40, 75
+    Convalescent — one nurse per 3 babies  :done, 75, 103
 ```
 
 Sicker or smaller babies spend proportionally longer in the intensive phase —
