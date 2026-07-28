@@ -3,6 +3,12 @@
 document.addEventListener("DOMContentLoaded", () => {
   const census = [];
 
+  // Competency colours, aligned with the .lvl-N badges.
+  const LEVEL_FILL = { 1: "#8aa4b0", 2: "#0e8a8f", 3: "#c9a24b", 4: "#d5637a" };
+  const GRID = "rgba(14,43,54,0.07)";
+  if (window.Chart) Chart.defaults.font.family = "Inter";
+  let mixChart;
+
   const bind = (rangeId, labelId, unit) => {
     const r = document.getElementById(rangeId);
     const l = document.getElementById(labelId);
@@ -117,12 +123,94 @@ document.addEventListener("DOMContentLoaded", () => {
       <span>Effective care capacity: <b>${fmt(mix.effective_capacity, 2)}</b></span>
       <span>Preceptors needed: <b>${mix.preceptors_needed}</b></span>`;
 
+    renderMixChart(mix);
+
     document.getElementById("mixNote").textContent =
       "A nurse may always cover an assignment below their level, never above it, so " +
       "requirements accumulate from the expert tier downward. Novices are capped at 30% " +
       "of the bedside team and each is paired with a proficient or expert preceptor. " +
       "Experience weightings are a planning assumption based on Benner's novice-to-expert " +
       "framework, not values from a validated dataset.";
+  }
+
+  /* Three bars, all in nurses, stacked by competency level:
+       1. what the infants' acuity demands, at the level each infant requires
+       2. the roster this recommends (whole nurses, novice cap applied)
+       3. what that roster actually delivers once experience is weighted
+     Bar 3 shorter than bar 1 means the shift is numerically staffed but
+     too junior to carry the workload. */
+  function renderMixChart(mix) {
+    if (!window.Chart) return;
+
+    const demand = {}, roster = {}, capacity = {};
+    mix.levels.forEach((l) => {
+      demand[l.level] = l.demand;
+      roster[l.level] = l.recommended;
+      capacity[l.level] = +(l.recommended * l.capacity).toFixed(2);
+    });
+
+    const totalDemand = mix.levels.reduce((s, l) => s + l.demand, 0);
+    const totalCapacity = mix.effective_capacity;
+
+    const datasets = [4, 3, 2, 1].map((lv) => {
+      const info = mix.levels.find((l) => l.level === lv);
+      return {
+        label: `L${lv} ${info.short}`,
+        data: [demand[lv], roster[lv], capacity[lv]],
+        backgroundColor: LEVEL_FILL[lv],
+        borderRadius: 3,
+        borderSkipped: false,
+      };
+    });
+
+    if (mixChart) mixChart.destroy();
+    mixChart = new Chart(document.getElementById("chartSkillMix"), {
+      type: "bar",
+      data: {
+        labels: ["Acuity demand", "Recommended roster", "Effective capacity"],
+        datasets,
+      },
+      options: {
+        indexAxis: "y",
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: "bottom", labels: { usePointStyle: true, boxWidth: 8 } },
+          tooltip: {
+            callbacks: {
+              label: (t) => `${t.dataset.label}: ${Number(t.raw).toFixed(2)} nurses`,
+              footer: (items) => {
+                const total = items.reduce((s, i) => s + Number(i.raw), 0);
+                return `Total: ${total.toFixed(2)} nurses`;
+              },
+            },
+          },
+        },
+        scales: {
+          x: {
+            stacked: true, beginAtZero: true, grid: { color: GRID },
+            title: { display: true, text: "Nurses" },
+          },
+          y: { stacked: true, grid: { display: false } },
+        },
+      },
+    });
+
+    // Plain-language verdict, so the comparison is not left to the eye alone.
+    const gap = totalCapacity - totalDemand;
+    const verdict = document.getElementById("mixVerdict");
+    if (gap >= 0) {
+      verdict.className = "mix-verdict ok";
+      verdict.textContent =
+        `Covered — this roster delivers ${fmt(totalCapacity, 2)} nurses of effective care ` +
+        `against ${fmt(totalDemand, 2)} of demand (${fmt(gap, 2)} in hand).`;
+    } else {
+      verdict.className = "mix-verdict short";
+      verdict.textContent =
+        `Short by ${fmt(Math.abs(gap), 2)} nurses — the headcount meets the count, but once ` +
+        `experience is weighted the team delivers ${fmt(totalCapacity, 2)} against ` +
+        `${fmt(totalDemand, 2)} of demand. Consider a more senior mix.`;
+    }
   }
 
   function setMetrics(r) {
