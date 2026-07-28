@@ -149,7 +149,7 @@ def _parse_file(path: Path) -> dict[str, dict[str, Stat]]:
 
 @dataclass
 class Dataset:
-    center: str = "Center 267"
+    center: str = "Center 1"
     period: str = "2016–2026"
     survival_by_weight: dict[str, dict[str, Stat]] = field(default_factory=dict)
     los_by_weight: dict[str, dict[str, Stat]] = field(default_factory=dict)

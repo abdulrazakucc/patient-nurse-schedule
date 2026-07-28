@@ -56,7 +56,7 @@ function renderChrome() {
         (n) => `<a href="${n.href}" class="${n.id === page ? "active" : ""}" ${n.id === page ? 'aria-current="page"' : ""}>${n.label}</a>`
       ).join("")}
     </nav>
-    <div class="center-pill" id="centerPill">Center 267 · 2016–2026</div>
+    <div class="center-pill" id="centerPill">Center 1 · 2016–2026</div>
   `;
 
   const footer = document.createElement("footer");
@@ -77,7 +77,11 @@ function renderChrome() {
       in your browser — no data is sent to any server.</span>
       <span class="badge-warn">${icon("shield", 14)} Decision support only — not for clinical use</span>
     </div>
-    <div class="footer-credit">Prepared by Abdul Razak, PhD</div>
+    <div class="footer-credit">
+      <span>© 2026 Waseem Altaf, MD — Pediatric &amp; Adolescent Medicine / Neonatal-Perinatal
+      Medicine. All rights reserved.</span>
+      <span>Prepared by Abdul Razak, PhD</span>
+    </div>
   `;
 
   const aurora = document.createElement("div");

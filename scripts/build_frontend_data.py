@@ -48,7 +48,8 @@ def build_dataset() -> None:
     payload = {
         "center": DATASET.center,
         "period": DATASET.period,
-        "centers": ["Center 267", "Center 1"],
+        # Single center today; more centers (names TBD) will be added here later.
+        "centers": [DATASET.center],
         "weight_bins": _bins(WEIGHT_BINS),
         "ga_bins": _bins(GA_BINS),
         "survival_by_weight": _metrics(DATASET.survival_by_weight),

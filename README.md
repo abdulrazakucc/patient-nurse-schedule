@@ -210,6 +210,14 @@ Share the link with reviewers; it renders beautifully on mobile and desktop.
 - Persisting a unit census between sessions (local storage)
 - Multi-center comparison once per-center data is available
 
+## 👥 Credits
+
+- **Waseem Altaf, MD** — project lead. Specialist in *Pediatric & Adolescent
+  Medicine / Neonatal-Perinatal Medicine*; clinical direction and outcome data
+  stewardship.
+- **Abdul Razak, PhD** — prepared the application.
+
 ## License
 
-See [LICENSE](LICENSE).
+Copyright © 2026 **Waseem Altaf, MD**. All rights reserved.
+Licensed under the Apache License 2.0 — see [LICENSE](LICENSE).

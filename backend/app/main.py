@@ -36,7 +36,7 @@ app.add_middleware(
 class PredictionRequest(BaseModel):
     weight_g: float = Field(..., ge=200, le=2500, description="Birth weight in grams")
     ga_weeks: float = Field(..., ge=20, le=42, description="Gestational age in weeks")
-    center: str = Field("Center 267", description="Center identifier")
+    center: str = Field("Center 1", description="Center identifier")
     condition: str = Field("stable", description="Admission condition: stable|guarded|serious|critical")
     resp_support: str = Field("room_air", description="room_air|nasal_cannula|cpap|ventilator")
     notes: str = Field("", description="Free-text expert admission notes")
@@ -68,7 +68,8 @@ def meta() -> dict:
     return {
         "center": DATASET.center,
         "period": DATASET.period,
-        "centers": ["Center 267", "Center 1"],
+        # Single center today; more centers (names TBD) will be added here later.
+        "centers": [DATASET.center],
         "weight_bins": [
             {"label": b.label, "low": b.low, "high": b.high, "midpoint": b.midpoint}
             for b in WEIGHT_BINS

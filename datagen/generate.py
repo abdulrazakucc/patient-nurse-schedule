@@ -166,7 +166,7 @@ def build_infants():
             infants.append(
                 {
                     "infant_id": f"INF-{infant_id:04d}",
-                    "center": "Center 267",
+                    "center": "Center 1",
                     "birth_weight_g": weight,
                     "gestational_age_weeks": ga,
                     "birth_weight_band": b.label,
