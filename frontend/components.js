@@ -41,6 +41,12 @@ function icon(name, size) {
 function renderChrome() {
   const page = document.body.dataset.page || "home";
 
+  // Charts should honour the same reduced-motion preference as the rest of the UI.
+  if (window.Chart && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    Chart.defaults.animation = false;
+    Chart.defaults.animations = {};
+  }
+
   const strip = document.createElement("div");
   strip.className = "credit-strip";
   strip.innerHTML = `
