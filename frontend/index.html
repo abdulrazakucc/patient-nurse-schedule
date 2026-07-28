@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NeoStay · Infant NICU Outcome & Staffing Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="components.js" defer></script>
+</head>
+<body data-page="home">  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow">Very Low Birth Weight (VLBW) Neonatal Analytics</div>
+        <h2>Anticipate the journey of every <em>fragile newborn</em>.</h2>
+        <p>
+          NeoStay turns a decade of real center outcomes into clear, bedside-ready
+          intelligence - forecasting length of stay, disposition, survival and the
+          nursing resources each infant will require, from admission to discharge.
+        </p>
+        <div class="hero-stats" id="heroStats">
+          <div class="hs"><span class="hs-num" data-k="infants">-</span><span class="hs-label">Infants analysed</span></div>
+          <div class="hs"><span class="hs-num" data-k="los">-</span><span class="hs-label">Median LOS (days)</span></div>
+          <div class="hs"><span class="hs-num" data-k="survival">-</span><span class="hs-label">Overall survival</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h3>Explore the platform</h3>
+        <p>Everything you need to plan care for the smallest patients</p>
+      </div>
+      <div class="feature-grid">
+        <a class="card feature" href="predict.html">
+          <div class="feature-ic ic-teal">🔬</div>
+          <h4>Outcome &amp; Staffing Predictor</h4>
+          <p>Forecast length of stay, disposition, survival and per-infant nursing demand from weight, gestational age and admission condition.</p>
+          <span class="feature-go">Open predictor →</span>
+        </a>
+        <a class="card feature" href="schedule.html">
+          <div class="feature-ic ic-gold">🗓️</div>
+          <h4>Unit Nurse Scheduling</h4>
+          <p>Build a live census of admitted infants and compute acuity-based nurses per shift and daily staffing demand.</p>
+          <span class="feature-go">Plan staffing →</span>
+        </a>
+        <a class="card feature" href="analytics.html">
+          <div class="feature-ic ic-rose">📊</div>
+          <h4>Population Analytics</h4>
+          <p>Interactive charts of length of stay and disposition across 10 birth-weight bands and every gestational week.</p>
+          <span class="feature-go">View analytics →</span>
+        </a>
+      </div>
+    </section>
+  </main>
+  <script src="home.js" defer></script>
+</body>
+</html>

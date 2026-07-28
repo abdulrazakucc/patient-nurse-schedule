@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scheduling · NeoStay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="components.js" defer></script>
+</head>
+<body data-page="schedule">
+  <main>
+    <section class="panel">
+      <div class="panel-head">
+        <h3>Unit Nurse Scheduling</h3>
+        <p>Build a live census and compute acuity-based staffing per shift</p>
+      </div>
+
+      <div class="schedule-grid">
+        <form class="predict-form card" id="addForm">
+          <div class="disp-head" style="margin-bottom:4px">Add infant to census</div>
+          <label class="field">
+            <span>Birth weight <em id="sWeightVal">900 g</em></span>
+            <input type="range" id="sWeight" min="300" max="2000" step="10" value="900" />
+          </label>
+          <label class="field">
+            <span>Gestational age <em id="sGaVal">28 weeks</em></span>
+            <input type="range" id="sGa" min="22" max="40" step="1" value="28" />
+          </label>
+          <label class="field">
+            <span>Admission condition</span>
+            <select id="sCondition">
+              <option value="stable">Stable</option>
+              <option value="guarded">Guarded</option>
+              <option value="serious">Serious</option>
+              <option value="critical">Critical</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Respiratory support</span>
+            <select id="sResp">
+              <option value="room_air">Room air</option>
+              <option value="nasal_cannula">Nasal cannula</option>
+              <option value="cpap">CPAP</option>
+              <option value="ventilator">Ventilator</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Shifts per day</span>
+            <select id="sShifts">
+              <option value="2" selected>2 (12h shifts)</option>
+              <option value="3">3 (8h shifts)</option>
+            </select>
+          </label>
+          <button type="submit" class="btn-primary"><span>+ Add to census</span></button>
+        </form>
+
+        <div class="results">
+          <div class="staff-metrics card" style="padding:26px">
+            <div><span id="mCensus">0</span><label>Census</label></div>
+            <div><span id="mNurses">0</span><label>Nurses / shift</label></div>
+            <div><span id="mDaily">0</span><label>Daily nurse-shifts</label></div>
+            <div><span id="mDemand">0</span><label>Acuity demand</label></div>
+          </div>
+
+          <div class="card" style="padding:26px">
+            <div class="disp-head">Census roster</div>
+            <div id="rosterEmpty" class="roster-empty">No infants added yet. Use the form to build the unit census.</div>
+            <table class="roster" id="roster" hidden>
+              <thead>
+                <tr><th>#</th><th>Weight</th><th>GA</th><th>Condition</th><th>Support</th><th>Acuity</th><th>Nurses</th><th></th></tr>
+              </thead>
+              <tbody id="rosterBody"></tbody>
+            </table>
+            <p class="staff-note" id="schedNote"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="schedule.js" defer></script>
+</body>
+</html>
