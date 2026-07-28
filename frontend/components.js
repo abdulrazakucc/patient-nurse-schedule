@@ -77,6 +77,7 @@ function renderChrome() {
       in your browser — no data is sent to any server.</span>
       <span class="badge-warn">${icon("shield", 14)} Decision support only — not for clinical use</span>
     </div>
+    <div class="footer-credit">Prepared by Abdul Razak, PhD</div>
   `;
 
   const aurora = document.createElement("div");
