@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; base-uri 'self'; form-action 'self'" />
+  <title>Timeline · NeoStay</title>
+  <meta name="description" content="Hourly timeline of infant care phases and unit nursing demand." />
+  <meta name="theme-color" content="#0e8a8f" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="vendor/chart.umd.min.js" defer></script>
+  <script src="data/neostay-data.js" defer></script>
+  <script src="data/neostay-timeseries.js" defer></script>
+  <script src="engine.js" defer></script>
+  <script src="components.js" defer></script>
+</head>
+<body data-page="timeline">
+  <main>
+    <section class="panel">
+      <div class="panel-head">
+        <h3>Hourly Timeline Analysis</h3>
+        <p>How each infant's care and the whole unit's nursing demand change hour by hour</p>
+      </div>
+
+      <p class="lead-note">
+        These charts follow a simulated year of unit activity, anchored to the real length
+        of stay and outcome figures from the center, then expanded to an hour-by-hour view
+        so staffing can be planned and explained clearly.
+      </p>
+
+      <div class="ts-metrics" id="tsMetrics"></div>
+
+      <div class="card chart-card" style="margin-top:24px">
+        <div class="ts-head">
+          <div>
+            <h4>Single infant journey</h4>
+            <p class="ts-sub">Nursing need across the stay, coloured by care phase</p>
+          </div>
+          <select id="infantSelect" class="ts-select" aria-label="Choose an infant"></select>
+        </div>
+        <div id="infantMeta" class="infant-meta"></div>
+        <div class="chart-box"><canvas id="chartInfant" aria-label="Single infant nursing timeline"></canvas></div>
+        <div class="phase-key">
+          <span><i class="dot" style="background:#0e8a8f"></i>Intensive care (one nurse per baby)</span>
+          <span><i class="dot" style="background:#c9a24b"></i>Intermediate care (one nurse per two)</span>
+          <span><i class="dot" style="background:#10998a"></i>Convalescent care (one nurse per three)</span>
+        </div>
+      </div>
+
+      <div class="chart-grid" style="margin-top:24px">
+        <div class="card chart-card wide">
+          <h4>Busiest week: unit staffing hour by hour</h4>
+          <p class="ts-sub" id="weekLabel">Loading the busiest seven day window…</p>
+          <div class="chart-box"><canvas id="chartWeek" aria-label="Busiest week unit staffing"></canvas></div>
+        </div>
+        <div class="card chart-card">
+          <h4>Average nurse demand by hour of day</h4>
+          <p class="ts-sub">Neonatal care runs around the clock</p>
+          <div class="chart-box"><canvas id="chartHourly" aria-label="Average nurse demand by hour"></canvas></div>
+        </div>
+        <div class="card chart-card">
+          <h4>Time spent in each care phase</h4>
+          <p class="ts-sub">Across every infant hour recorded</p>
+          <div class="chart-box"><canvas id="chartPhase" aria-label="Care phase mix"></canvas></div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="timeline.js" defer></script>
+</body>
+</html>
