@@ -29,6 +29,7 @@ const ICONS = {
   shield: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7.5 3v5.5c0 4.7-3.2 8-7.5 9.5-4.3-1.5-7.5-4.8-7.5-9.5V6z"/><path d="M9 12l2.2 2.2L15.5 9.9"/></svg>',
   clock: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
   sparkle: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l1.8 4.6L18.5 10l-4.7 1.4L12 16l-1.8-4.6L5.5 10l4.7-1.4z"/><path d="M18.5 15.5l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9z"/></svg>',
+  medic: '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v5a4 4 0 0 0 8 0V3"/><path d="M10 12v3.5a4.5 4.5 0 0 0 9 0V13"/><circle cx="19" cy="10.5" r="2"/></svg>',
 };
 
 function icon(name, size) {
@@ -39,6 +40,14 @@ function icon(name, size) {
 
 function renderChrome() {
   const page = document.body.dataset.page || "home";
+
+  const strip = document.createElement("div");
+  strip.className = "credit-strip";
+  strip.innerHTML = `
+    ${icon("medic", 15)}
+    <span>A project of <b>Waseem Altaf,&nbsp;MD</b> · Pediatric &amp; Adolescent Medicine /
+    Neonatal-Perinatal Medicine</span>
+  `;
 
   const header = document.createElement("header");
   header.className = "topbar";
@@ -88,6 +97,7 @@ function renderChrome() {
   aurora.className = "aurora";
 
   document.body.prepend(header);
+  document.body.prepend(strip);
   document.body.prepend(aurora);
   document.body.appendChild(footer);
 
