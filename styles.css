@@ -42,6 +42,10 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
 
+/* The browser hides [hidden] via `display: none`, which any author `display`
+   rule below would silently override. Keep the attribute authoritative. */
+[hidden] { display: none !important; }
+
 body {
   font-family: var(--font-body);
   color: var(--ink);
