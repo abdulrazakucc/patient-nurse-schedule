@@ -3,12 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; base-uri 'self'; form-action 'self'" />
   <title>Analytics · NeoStay</title>
+  <meta name="description" content="Population analytics: NICU length of stay and disposition across birth weight and gestational age." />
+  <meta name="theme-color" content="#0e8a8f" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="vendor/chart.umd.min.js" defer></script>
+  <script src="data/neostay-data.js" defer></script>
+  <script src="engine.js" defer></script>
   <script src="components.js" defer></script>
 </head>
 <body data-page="analytics">
@@ -16,20 +22,23 @@
     <section class="panel">
       <div class="panel-head">
         <h3>Population Analytics</h3>
-        <p>A decade of VLBW outcomes across the center</p>
+        <p>A decade of Very Low Birth Weight outcomes across the center. Bars show the realistic range (middle 50% of infants); the dark line follows the median.</p>
       </div>
       <div class="chart-grid">
         <div class="card chart-card">
           <h4>Length of stay by birth weight</h4>
-          <canvas id="chartLosWeight"></canvas>
+          <p class="chart-sub">Smaller babies stay dramatically longer</p>
+          <div class="chart-box"><canvas id="chartLosWeight" aria-label="Length of stay by birth weight"></canvas></div>
         </div>
         <div class="card chart-card">
           <h4>Length of stay by gestational age</h4>
-          <canvas id="chartLosGa"></canvas>
+          <p class="chart-sub">Every extra week of gestation shortens the stay</p>
+          <div class="chart-box"><canvas id="chartLosGa" aria-label="Length of stay by gestational age"></canvas></div>
         </div>
         <div class="card chart-card wide">
           <h4>Disposition mix by birth weight</h4>
-          <canvas id="chartDisposition"></canvas>
+          <p class="chart-sub">How admissions end — home, transfer, or death — for each weight band</p>
+          <div class="chart-box tall"><canvas id="chartDisposition" aria-label="Disposition mix by birth weight"></canvas></div>
         </div>
       </div>
     </section>

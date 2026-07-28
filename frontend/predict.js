@@ -1,102 +1,136 @@
 "use strict";
-
-const els = {
-  center: document.getElementById("center"),
-  weight: document.getElementById("weight"),
-  weightNum: document.getElementById("weightNum"),
-  weightVal: document.getElementById("weightVal"),
-  ga: document.getElementById("ga"),
-  gaNum: document.getElementById("gaNum"),
-  gaVal: document.getElementById("gaVal"),
-  form: document.getElementById("predictForm"),
-  results: document.getElementById("results"),
-};
-
-function sync(rangeEl, numEl, labelEl, unit) {
-  const update = (source) => {
-    const v = source.value;
-    if (source === rangeEl) numEl.value = v;
-    else rangeEl.value = v;
-    labelEl.textContent = `${v} ${unit}`;
+/* Predictor page: runs the client-side engine (engine.js) — no server round-trip. */
+document.addEventListener("DOMContentLoaded", () => {
+  const els = {
+    center: document.getElementById("center"),
+    weight: document.getElementById("weight"),
+    weightNum: document.getElementById("weightNum"),
+    weightVal: document.getElementById("weightVal"),
+    ga: document.getElementById("ga"),
+    gaNum: document.getElementById("gaNum"),
+    gaVal: document.getElementById("gaVal"),
+    form: document.getElementById("predictForm"),
+    results: document.getElementById("results"),
+    placeholder: document.getElementById("resultsPlaceholder"),
   };
-  rangeEl.addEventListener("input", () => update(rangeEl));
-  numEl.addEventListener("input", () => update(numEl));
-}
-sync(els.weight, els.weightNum, els.weightVal, "g");
-sync(els.ga, els.gaNum, els.gaVal, "weeks");
 
-(async function init() {
-  const meta = await loadMeta();
-  if (meta) {
-    meta.centers.forEach((c) => {
-      const o = document.createElement("option");
-      o.value = c;
-      o.textContent = c;
-      els.center.appendChild(o);
-    });
-    els.center.value = meta.center;
+  function sync(rangeEl, numEl, labelEl, unit) {
+    const update = (source) => {
+      const v = source.value;
+      if (source === rangeEl) numEl.value = v;
+      else rangeEl.value = v;
+      labelEl.textContent = `${v} ${unit}`;
+    };
+    rangeEl.addEventListener("input", () => update(rangeEl));
+    numEl.addEventListener("input", () => update(numEl));
   }
-})();
+  sync(els.weight, els.weightNum, els.weightVal, "g");
+  sync(els.ga, els.gaNum, els.gaVal, "weeks");
 
-els.form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const payload = {
-    weight_g: Number(els.weightNum.value),
-    ga_weeks: Number(els.gaNum.value),
-    center: els.center.value,
-    condition: document.getElementById("condition").value,
-    resp_support: document.getElementById("respSupport").value,
-    notes: document.getElementById("notes").value,
-  };
-  try {
-    const r = await getJSON("/api/predict", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    render(r);
-  } catch (err) {
-    alert("Prediction failed: " + err.message);
-  }
-});
+  const meta = NeoEngine.meta();
+  meta.centers.forEach((c) => {
+    const o = document.createElement("option");
+    o.value = c;
+    o.textContent = c;
+    els.center.appendChild(o);
+  });
+  els.center.value = meta.center;
 
-function render(r) {
-  els.results.hidden = false;
-  const los = r.length_of_stay.blended;
-  document.getElementById("losMedian").textContent = fmt(los.median);
-  document.getElementById("losIqr").textContent = `${fmt(los.q1)} – ${fmt(los.q3)} days`;
-  document.getElementById("survival").textContent = fmt(r.survival_probability, 1);
-  document.getElementById("sampleN").textContent = r.sample_size ?? "-";
-  document.getElementById("confidence").textContent = r.confidence;
-
-  const d = r.disposition;
-  const home = d.home ?? 0, transfer = d.transfer ?? 0, died = d.died ?? 0;
-  const setRing = (ringId, pctId, pct) => {
-    const ring = document.getElementById(ringId);
-    ring.style.setProperty("--pct", pct);
-    document.getElementById(pctId).textContent = fmt(pct, 1);
-  };
-  setRing("ringHome", "pHome", home);
-  setRing("ringTransfer", "pTransfer", transfer);
-  setRing("ringDied", "pDied", died);
-
-  const s = r.staffing;
-  document.getElementById("nhppd").textContent = fmt(s.avg_nhppd, 1);
-  document.getElementById("peakNurse").textContent = fmt(s.peak_nurses_per_infant, 2);
-  document.getElementById("nurseHours").textContent = fmt(s.total_nurse_hours);
-  document.getElementById("shifts").textContent = fmt(s.total_12h_shifts);
-  document.getElementById("staffNote").textContent = s.note;
-
-  const list = document.getElementById("phaseList");
-  list.innerHTML = "";
-  const maxDays = Math.max(...s.phases.map((p) => p.days), 1);
-  s.phases.forEach((p) => {
-    const row = document.createElement("div");
-    row.className = "phase-row";
-    row.innerHTML = `<span>${p.name}</span><span>${fmt(p.days, 1)} d · ${fmt(p.nurse_hours)} h</span>
-      <div class="phase-track"><div class="phase-fill" style="width:${(p.days / maxDays) * 100}%"></div></div>`;
-    list.appendChild(row);
+  els.form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const weight = Number(els.weightNum.value);
+    const ga = Number(els.gaNum.value);
+    if (!weight || !ga) {
+      toast("Please provide both birth weight and gestational age.");
+      return;
+    }
+    try {
+      const r = NeoEngine.predict(weight, ga);
+      r.staffing = NeoEngine.estimateStaffing(
+        weight,
+        ga,
+        r.length_of_stay.blended.median || 0,
+        document.getElementById("condition").value,
+        document.getElementById("respSupport").value
+      );
+      render(r);
+    } catch (err) {
+      toast("Prediction failed: " + err.message);
+    }
   });
 
-  els.results.scrollIntoView({ behavior: "smooth", block: "nearest" });
-}
+  function render(r) {
+    els.placeholder.hidden = true;
+    els.results.hidden = false;
+
+    const los = r.length_of_stay.blended;
+    countUp(document.getElementById("losMedian"), los.median, { decimals: 0 });
+    document.getElementById("losIqr").textContent = `${fmt(los.q1)} – ${fmt(los.q3)} days`;
+    countUp(document.getElementById("survival"), r.survival_probability, { decimals: 1 });
+    document.getElementById("sampleN").textContent = r.sample_size ?? "–";
+
+    const conf = document.getElementById("confidence");
+    conf.textContent = r.confidence + " confidence";
+    conf.className = "conf-badge conf-" + String(r.confidence).replace(/\s+/g, "-");
+
+    const d = r.disposition;
+    const setRing = (ringId, pctId, pct) => {
+      const ring = document.getElementById(ringId);
+      const label = document.getElementById(pctId);
+      const target = pct ?? 0;
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (reduced) {
+        ring.style.setProperty("--pct", target);
+        label.textContent = fmt(target, 1);
+        return;
+      }
+      const start = performance.now();
+      const stepFn = (now) => {
+        const t = Math.min(1, (now - start) / 700);
+        const eased = 1 - Math.pow(1 - t, 3);
+        const v = target * eased;
+        ring.style.setProperty("--pct", v);
+        label.textContent = fmt(v, 1);
+        if (t < 1) requestAnimationFrame(stepFn);
+      };
+      requestAnimationFrame(stepFn);
+    };
+    setRing("ringHome", "pHome", d.home);
+    setRing("ringTransfer", "pTransfer", d.transfer);
+    setRing("ringDied", "pDied", d.died);
+
+    const dispLosText = (key, elId) => {
+      const est = r.disposition_los[key];
+      const el = document.getElementById(elId);
+      el.textContent = est && est.median !== null ? `Typical stay ~${fmt(est.median)} days` : "";
+    };
+    dispLosText("home", "losHome");
+    dispLosText("transfer", "losTransfer");
+    dispLosText("died", "losDied");
+
+    const s = r.staffing;
+    countUp(document.getElementById("nhppd"), s.avg_nhppd, { decimals: 1 });
+    countUp(document.getElementById("peakNurse"), s.peak_nurses_per_infant, { decimals: 2 });
+    countUp(document.getElementById("nurseHours"), s.total_nurse_hours, { decimals: 0 });
+    countUp(document.getElementById("shifts"), s.total_12h_shifts, { decimals: 0 });
+    document.getElementById("staffNote").textContent = s.note;
+
+    const list = document.getElementById("phaseList");
+    list.innerHTML = "";
+    const maxDays = Math.max(...s.phases.map((p) => p.days), 1);
+    s.phases.forEach((p) => {
+      const row = document.createElement("div");
+      row.className = "phase-row";
+      row.innerHTML = `<span>${p.name}</span><span>${fmt(p.days, 1)} d · ${fmt(p.nurse_hours)} h</span>
+        <div class="phase-track"><div class="phase-fill" style="width:0%"></div></div>`;
+      list.appendChild(row);
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          row.querySelector(".phase-fill").style.width = `${(p.days / maxDays) * 100}%`;
+        })
+      );
+    });
+
+    els.results.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+});

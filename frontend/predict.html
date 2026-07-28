@@ -3,11 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; base-uri 'self'; form-action 'self'" />
   <title>Predict · NeoStay</title>
+  <meta name="description" content="Per-infant forecast of NICU length of stay, disposition, survival and nurse staffing." />
+  <meta name="theme-color" content="#0e8a8f" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+  <script src="data/neostay-data.js" defer></script>
+  <script src="engine.js" defer></script>
   <script src="components.js" defer></script>
 </head>
 <body data-page="predict">
@@ -15,11 +21,13 @@
     <section class="panel">
       <div class="panel-head">
         <h3>Outcome &amp; Staffing Predictor</h3>
-        <p>Individual infant risk and resource forecast</p>
+        <p>Enter what is known at admission — NeoStay forecasts the stay, the outcome and the nursing effort, instantly and privately in your browser.</p>
       </div>
 
       <div class="predict-grid">
         <form class="predict-form card" id="predictForm">
+          <div class="section-label form-title" data-icon="baby">Admission details</div>
+
           <label class="field">
             <span>Center</span>
             <select id="center" name="center"></select>
@@ -27,14 +35,16 @@
 
           <label class="field">
             <span>Birth weight <em id="weightVal">750 g</em></span>
-            <input type="range" id="weight" min="300" max="2000" step="10" value="750" />
-            <input type="number" id="weightNum" min="300" max="2500" step="10" value="750" />
+            <input type="range" id="weight" min="300" max="2000" step="10" value="750" aria-label="Birth weight in grams" />
+            <div class="range-scale"><span>300 g</span><span>2000 g</span></div>
+            <input type="number" id="weightNum" min="300" max="2500" step="10" value="750" aria-label="Birth weight (exact)" />
           </label>
 
           <label class="field">
             <span>Gestational age <em id="gaVal">26 weeks</em></span>
-            <input type="range" id="ga" min="22" max="40" step="1" value="26" />
-            <input type="number" id="gaNum" min="20" max="42" step="1" value="26" />
+            <input type="range" id="ga" min="22" max="40" step="1" value="26" aria-label="Gestational age in weeks" />
+            <div class="range-scale"><span>22 wk</span><span>40 wk</span></div>
+            <input type="number" id="gaNum" min="20" max="42" step="1" value="26" aria-label="Gestational age (exact)" />
           </label>
 
           <label class="field">
@@ -58,65 +68,73 @@
           </label>
 
           <label class="field">
-            <span>Expert admission notes <em style="background:none;color:var(--muted);font-weight:500">optional</em></span>
+            <span>Expert admission notes <em class="optional">optional</em></span>
             <textarea id="notes" rows="3" placeholder="Initial clinical impression, findings, plan…"></textarea>
           </label>
 
-          <button type="submit" class="btn-primary"><span>Generate Forecast</span></button>
+          <button type="submit" class="btn-primary"><span>Generate forecast</span></button>
           <p class="disclaimer">Decision-support only. Not a substitute for clinical judgment.</p>
         </form>
 
-        <div class="results" id="results" hidden>
-          <div class="result-cards">
-            <div class="rc rc-los">
-              <div class="rc-label">Expected length of stay</div>
-              <div class="rc-value"><span id="losMedian">-</span><small>days</small></div>
-              <div class="rc-sub">IQR <span id="losIqr">-</span></div>
-            </div>
-            <div class="rc rc-survival">
-              <div class="rc-label">Survival probability</div>
-              <div class="rc-value"><span id="survival">-</span><small>%</small></div>
-              <div class="rc-sub">Sample N=<span id="sampleN">-</span> · <span id="confidence">-</span> confidence</div>
-            </div>
+        <div class="results">
+          <div class="results-placeholder" id="resultsPlaceholder">
+            <span data-icon="pulse" data-icon-size="44"></span>
+            <span><b>Ready when you are.</b><br />Set the admission details and generate a forecast — results appear here.</span>
           </div>
 
-          <div class="disp-block card">
-            <div class="disp-head">Disposition likelihood</div>
-            <div class="disp-cards">
-              <div class="disp-card">
-                <div class="ring" id="ringHome" style="--ring-color:var(--home);--pct:0">
-                  <div class="ring-inner"><span id="pHome">0</span><small>%</small></div>
-                </div>
-                <div class="disp-card-label"><span class="disp-icon">🏠</span>Discharged home</div>
-                <div class="disp-card-desc">Recovered enough to go home with family</div>
+          <div class="results" id="results" hidden>
+            <div class="result-cards">
+              <div class="rc rc-los">
+                <div class="rc-label">Expected length of stay</div>
+                <div class="rc-value"><span id="losMedian">–</span><small>days</small></div>
+                <div class="rc-sub">Realistic range (IQR): <b id="losIqr">–</b></div>
               </div>
-              <div class="disp-card">
-                <div class="ring" id="ringTransfer" style="--ring-color:var(--transfer);--pct:0">
-                  <div class="ring-inner"><span id="pTransfer">0</span><small>%</small></div>
-                </div>
-                <div class="disp-card-label"><span class="disp-icon">🚑</span>Transferred</div>
-                <div class="disp-card-desc">Moved to another unit or hospital for care</div>
-              </div>
-              <div class="disp-card">
-                <div class="ring" id="ringDied" style="--ring-color:var(--died);--pct:0">
-                  <div class="ring-inner"><span id="pDied">0</span><small>%</small></div>
-                </div>
-                <div class="disp-card-label"><span class="disp-icon">🕊️</span>Died</div>
-                <div class="disp-card-desc">Did not survive the admission</div>
+              <div class="rc rc-survival">
+                <div class="rc-label">Survival probability</div>
+                <div class="rc-value"><span id="survival">–</span><small>%</small></div>
+                <div class="rc-sub">Based on <b id="sampleN">–</b> similar infants ·
+                  <span id="confidence" class="conf-badge">–</span></div>
               </div>
             </div>
-          </div>
 
-          <div class="staffing card">
-            <div class="disp-head">Nurse staffing forecast</div>
-            <div class="staff-metrics">
-              <div><span id="nhppd">-</span><label>Avg NHPPD</label></div>
-              <div><span id="peakNurse">-</span><label>Peak nurse:infant</label></div>
-              <div><span id="nurseHours">-</span><label>Total nurse-hours</label></div>
-              <div><span id="shifts">-</span><label>12h shifts</label></div>
+            <div class="disp-block card">
+              <div class="disp-head" data-icon="chart">Disposition likelihood</div>
+              <div class="disp-cards">
+                <div class="disp-card">
+                  <div class="ring" id="ringHome" style="--ring-color:var(--home);--pct:0">
+                    <div class="ring-inner"><span id="pHome">0</span><small>%</small></div>
+                  </div>
+                  <div class="disp-card-label" data-icon="home">Discharged home</div>
+                  <div class="disp-card-desc">Recovered enough to go home with family<br /><span id="losHome"></span></div>
+                </div>
+                <div class="disp-card">
+                  <div class="ring" id="ringTransfer" style="--ring-color:var(--transfer);--pct:0">
+                    <div class="ring-inner"><span id="pTransfer">0</span><small>%</small></div>
+                  </div>
+                  <div class="disp-card-label" data-icon="transfer">Transferred</div>
+                  <div class="disp-card-desc">Moved to another unit or hospital for care<br /><span id="losTransfer"></span></div>
+                </div>
+                <div class="disp-card">
+                  <div class="ring" id="ringDied" style="--ring-color:var(--died);--pct:0">
+                    <div class="ring-inner"><span id="pDied">0</span><small>%</small></div>
+                  </div>
+                  <div class="disp-card-label" data-icon="dove">Died</div>
+                  <div class="disp-card-desc">Did not survive the admission<br /><span id="losDied"></span></div>
+                </div>
+              </div>
             </div>
-            <div id="phaseList" class="phase-list"></div>
-            <p class="staff-note" id="staffNote"></p>
+
+            <div class="staffing card">
+              <div class="disp-head" data-icon="nurse">Nurse staffing forecast</div>
+              <div class="staff-metrics">
+                <div><span id="nhppd">–</span><label>Avg NHPPD</label></div>
+                <div><span id="peakNurse">–</span><label>Peak nurse:infant</label></div>
+                <div><span id="nurseHours">–</span><label>Total nurse-hours</label></div>
+                <div><span id="shifts">–</span><label>12h shifts</label></div>
+              </div>
+              <div id="phaseList" class="phase-list"></div>
+              <p class="staff-note" id="staffNote"></p>
+            </div>
           </div>
         </div>
       </div>

@@ -3,11 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; base-uri 'self'; form-action 'self'" />
   <title>About · NeoStay</title>
+  <meta name="description" content="How NeoStay turns aggregated NICU outcomes into bedside intelligence." />
+  <meta name="theme-color" content="#0e8a8f" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
+  <script src="data/neostay-data.js" defer></script>
+  <script src="engine.js" defer></script>
   <script src="components.js" defer></script>
 </head>
 <body data-page="about">
@@ -19,28 +25,59 @@
       </div>
       <div class="about-grid">
         <div class="card about-card">
+          <div class="about-ic" data-icon="chart" data-icon-size="22"></div>
           <h4>Data foundation</h4>
-          <p>Built on aggregated 2016–2026 outcomes for Very Low Birth Weight infants - median and interquartile length of stay, disposition and survival - stratified across 10 birth-weight bands and gestational age week by week.</p>
+          <p>Built on aggregated 2016–2026 outcomes for Very Low Birth Weight infants — median and interquartile length of stay, disposition and survival — stratified across 10 birth-weight bands and gestational age week by week.</p>
         </div>
         <div class="card about-card">
+          <div class="about-ic" data-icon="flask" data-icon-size="22"></div>
           <h4>How predictions work</h4>
           <p>Inputs are matched to the relevant weight and gestational-age bins, then linearly interpolated between neighbouring bins so each gram and week matters. Weight- and GA-based estimates are blended; disposition and survival derive from empirical case counts.</p>
         </div>
         <div class="card about-card">
+          <div class="about-ic" data-icon="pulse" data-icon-size="22"></div>
           <h4>Admission condition</h4>
           <p>Admission condition (stable → critical) and respiratory support (room air → ventilator) raise the modelled acuity, sharpening the nursing forecast beyond weight and gestational age alone.</p>
         </div>
         <div class="card about-card">
+          <div class="about-ic" data-icon="nurse" data-icon-size="22"></div>
           <h4>Staffing intelligence</h4>
           <p>Nurse workload follows AAP / AWHONN acuity-based nurse-to-patient ratios, modelling the stay as intensive (1:1), intermediate (1:2) and convalescent (1:3) phases to project nurse-hours, NHPPD and shift demand.</p>
         </div>
         <div class="card about-card">
+          <div class="about-ic" data-icon="calendar" data-icon-size="22"></div>
           <h4>Unit scheduling</h4>
           <p>The scheduling view aggregates a live census into an immediate acuity-based demand, recommending bedside nurses plus a charge nurse per shift and total daily nurse-shifts.</p>
         </div>
         <div class="card about-card">
-          <h4>Safe by design</h4>
-          <p>A decision-support prototype - not a substitute for clinical judgment. Every figure is traceable to the underlying dataset and runs entirely on local infrastructure.</p>
+          <div class="about-ic" data-icon="shield" data-icon-size="22"></div>
+          <h4>Safe &amp; private by design</h4>
+          <p>A decision-support prototype — not a substitute for clinical judgment. Every figure is traceable to the underlying dataset, and every calculation runs inside your browser: nothing you type is ever transmitted or stored.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h3>Anatomy of a forecast</h3>
+        <p>What happens between pressing “Generate forecast” and seeing the numbers</p>
+      </div>
+      <div class="flow">
+        <div class="card flow-step">
+          <h5>Locate the bins</h5>
+          <p>A 720&nbsp;g, 25-week infant falls in the “701–800&nbsp;g” and “25 Weeks” bands of the historical outcome tables.</p>
+        </div>
+        <div class="card flow-step">
+          <h5>Interpolate</h5>
+          <p>Statistics are blended smoothly between neighbouring bands, so 720&nbsp;g is treated differently from 799&nbsp;g.</p>
+        </div>
+        <div class="card flow-step">
+          <h5>Blend weight &amp; age</h5>
+          <p>The weight-based and gestational-age-based estimates are averaged into one length-of-stay forecast with its realistic range.</p>
+        </div>
+        <div class="card flow-step">
+          <h5>Attach confidence</h5>
+          <p>Every result reports how many similar infants stand behind it — more infants, higher confidence in the forecast.</p>
         </div>
       </div>
     </section>
