@@ -78,7 +78,6 @@ function renderChrome() {
       </div>
       <div class="footer-links">
         ${NAV.map((n) => `<a href="${n.href}">${n.label}</a>`).join("")}
-        <a href="https://github.com/abdulrazakucc/patient-nurse-schedule" rel="noopener" target="_blank">Source code</a>
       </div>
     </div>
     <div class="footer-note">
