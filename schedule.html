@@ -74,11 +74,41 @@
         </form>
 
         <div class="results">
+          <div class="status-banner" id="statusBanner" hidden></div>
+
+          <div class="card avail-card">
+            <div class="disp-head" data-icon="nurse" style="margin-bottom:6px">Nurses available on the unit</div>
+            <p class="chart-sub" style="margin-bottom:16px">
+              Your staff in hand, across the whole day. Each nurse works one shift, so this pool
+              is split between shifts. Coverage updates the moment you change it — or the census.
+            </p>
+            <div class="avail-grid" id="availGrid"></div>
+            <div class="avail-actions">
+              <button type="button" class="preset" id="availAuto">Auto-fill to meet demand</button>
+              <button type="button" class="preset" id="availReset">Reset</button>
+              <span class="avail-total" id="availTotal"></span>
+            </div>
+          </div>
+
           <div class="staff-metrics card" style="padding:26px">
             <div><span id="mCensus">0</span><label>Census</label></div>
             <div><span id="mNurses">0</span><label>Nurses / shift</label></div>
             <div><span id="mDaily">0</span><label>Daily nurse-shifts</label></div>
             <div><span id="mDemand">0</span><label>Acuity demand</label></div>
+          </div>
+
+          <div class="card" style="padding:26px" id="rosterCard" hidden>
+            <div class="disp-head" data-icon="clock">The 24-hour roster</div>
+            <p class="chart-sub" id="rosterSub"></p>
+            <div class="chart-box" id="rosterChartBox" style="height:340px">
+              <canvas id="chartRoster" aria-label="How each nurse's day is allocated to infants"></canvas>
+            </div>
+            <div class="phase-key">
+              <span><i class="key-swatch" style="background:#0e8a8f"></i>Committed to infants</span>
+              <span><i class="key-swatch" style="background:#dbe7ec"></i>On duty, spare capacity</span>
+              <span><i class="key-swatch" style="background:#d5637a"></i>Uncovered — no qualified nurse</span>
+            </div>
+            <p class="staff-note" id="rosterNote"></p>
           </div>
 
           <div class="card" style="padding:26px" id="skillMixCard" hidden>

@@ -58,11 +58,13 @@
     return 4;
   }
 
+  /* Level 4 is reserved for the genuinely unstable infant - both critically ill
+     *and* ventilated. Proficient nurses routinely care for ventilated VLBW
+     infants, and a unit cannot roster an expert to a third of its cots. */
   function requiredLevel(severity, condition, respSupport) {
     let lvl = 1;
     if (severity >= 0.35) lvl = 2;
     if (severity >= 0.6) lvl = 3;
-    if (severity >= 0.78) lvl = 4;
     const cond = (condition || "").toLowerCase();
     const resp = (respSupport || "").toLowerCase();
     if (resp === "ventilator" || cond === "critical") lvl = Math.max(lvl, 3);
@@ -397,6 +399,169 @@
     };
   }
 
+  /* ---------------- rostering the nurses actually available ---------------- */
+
+  function distributeNurses(availableByLevel, shiftsPerDay) {
+    const shifts = Array.from({ length: Math.max(1, shiftsPerDay) }, () => []);
+    let seq = 0;
+    for (const lv of [4, 3, 2, 1]) {
+      const n = Number(availableByLevel[lv] || 0);
+      for (let i = 0; i < n; i++) {
+        shifts[seq % shifts.length].push(lv);
+        seq++;
+      }
+    }
+    return shifts;
+  }
+
+  function assignShift(infants, nurseLevels, shiftIndex) {
+    const nurses = nurseLevels.map((lv, i) => ({
+      id: `S${shiftIndex + 1}-N${i + 1}`,
+      level: lv, load: 0, infants: [], is_charge: false,
+    }));
+    nurses.sort((a, b) => b.level - a.level || a.id.localeCompare(b.id));
+
+    let charge = null;
+    if (nurses.length >= 2) {
+      nurses[0].is_charge = true;
+      charge = nurses[0];
+    }
+    const bedside = nurses.filter((n) => !n.is_charge);
+
+    const queue = infants.slice().sort(
+      (a, b) =>
+        b.required_level - a.required_level ||
+        b.nurses_required - a.nurses_required ||
+        a.index - b.index
+    );
+
+    const unassigned = [];
+    for (const inf of queue) {
+      const eligible = bedside.filter(
+        (n) => n.level >= inf.required_level && n.load + inf.nurses_required <= 1.0 + 1e-9
+      );
+      if (!eligible.length) {
+        unassigned.push(inf);
+        continue;
+      }
+      // Least senior qualified nurse, then the tightest fit.
+      eligible.sort((a, b) => a.level - b.level || b.load - a.load || a.id.localeCompare(b.id));
+      const pick = eligible[0];
+      pick.load = round(pick.load + inf.nurses_required, 6);
+      pick.infants.push(inf.index);
+    }
+
+    // Last resort: rather than leave an infant with nobody, the charge nurse
+    // picks up an assignment. Real units do this when cover is thin - but it
+    // leaves no one free to coordinate, so it is reported as a warning.
+    let chargeCarrying = false;
+    if (unassigned.length && charge) {
+      const still = [];
+      for (const inf of unassigned) {
+        if (charge.level >= inf.required_level &&
+            charge.load + inf.nurses_required <= 1.0 + 1e-9) {
+          charge.load = round(charge.load + inf.nurses_required, 6);
+          charge.infants.push(inf.index);
+          chargeCarrying = true;
+        } else {
+          still.push(inf);
+        }
+      }
+      unassigned.length = 0;
+      unassigned.push(...still);
+    }
+
+    return { nurses, unassigned, charge_carrying_bedside: chargeCarrying };
+  }
+
+  function shiftLabel(idx, shiftsPerDay) {
+    const hours = Math.floor(24 / Math.max(1, shiftsPerDay));
+    const pad = (h) => String(h).padStart(2, "0");
+    const start = (7 + idx * hours) % 24;
+    const end = (start + hours) % 24;
+    return `${pad(start)}:00-${pad(end)}:00`;
+  }
+
+  function buildRoster(infants, availableByLevel, shiftsPerDay = 2) {
+    shiftsPerDay = Math.max(1, Number(shiftsPerDay) || 2);
+    const shiftHours = 24 / shiftsPerDay;
+    const pools = distributeNurses(availableByLevel, shiftsPerDay);
+
+    const shifts = [];
+    let totalUnassigned = 0;
+    const worstGap = {};
+
+    pools.forEach((pool, idx) => {
+      const result = assignShift(infants, pool, idx);
+      const rows = result.nurses.map((n) => {
+        const allocated = round(n.load * shiftHours, 2);
+        return {
+          id: n.id,
+          level: n.level,
+          level_name: LEVEL_BY_ID[n.level].short,
+          is_charge: n.is_charge,
+          infants: n.infants,
+          load: round(n.load, 3),
+          shift_start: round(idx * shiftHours, 2),
+          shift_end: round((idx + 1) * shiftHours, 2),
+          allocated_hours: allocated,
+          spare_hours: round(shiftHours - allocated, 2),
+          day_percent: round((allocated / 24) * 100, 1),
+        };
+      });
+
+      const gap = {};
+      result.unassigned.forEach((inf) => {
+        gap[inf.required_level] = (gap[inf.required_level] || 0) + inf.nurses_required;
+      });
+      Object.keys(gap).forEach((lv) => {
+        worstGap[lv] = Math.max(worstGap[lv] || 0, gap[lv]);
+      });
+
+      totalUnassigned += result.unassigned.length;
+      const bedsideRows = rows.filter((r) => !r.is_charge);
+      shifts.push({
+        index: idx,
+        label: shiftLabel(idx, shiftsPerDay),
+        start_hour: round(idx * shiftHours, 2),
+        end_hour: round((idx + 1) * shiftHours, 2),
+        nurses: rows,
+        nurse_count: rows.length,
+        bedside_count: bedsideRows.length,
+        has_charge: rows.some((r) => r.is_charge),
+        unassigned: result.unassigned.map((i) => i.index),
+        charge_carrying_bedside: result.charge_carrying_bedside,
+        committed_hours: round(rows.reduce((s, r) => s + r.allocated_hours, 0), 2),
+        capacity_hours: round(rows.length * shiftHours, 2),
+        mean_load: round(
+          bedsideRows.reduce((s, r) => s + r.load, 0) / Math.max(1, bedsideRows.length), 3
+        ),
+      });
+    });
+
+    const needed = {};
+    Object.keys(worstGap).forEach((lv) => {
+      if (worstGap[lv] > 0) needed[lv] = Math.ceil(worstGap[lv] - 1e-9);
+    });
+    const totalAvailable = [1, 2, 3, 4].reduce(
+      (s, lv) => s + Number(availableByLevel[lv] || 0), 0
+    );
+
+    return {
+      shifts_per_day: shiftsPerDay,
+      shift_hours: shiftHours,
+      shifts,
+      total_available: totalAvailable,
+      unassigned_total: totalUnassigned,
+      covered: totalUnassigned === 0,
+      charge_carrying_bedside: shifts.some((s) => s.charge_carrying_bedside),
+      additional_nurses_needed: needed,
+      note:
+        "Each nurse works one shift per day and carries at most one full " +
+        "assignment. Charge nurses are held free of a bedside load.",
+    };
+  }
+
   function scheduleUnit(infants, shiftsPerDay = 2) {
     const rows = [];
     let totalDemand = 0;
@@ -493,6 +658,7 @@
     estimateStaffing,
     staffingTimeline,
     scheduleUnit,
+    buildRoster,
     analytics,
     nurseLevels: () => NURSE_LEVELS.map((l) => ({ ...l })),
     levelForYears,

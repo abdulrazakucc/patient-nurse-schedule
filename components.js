@@ -127,6 +127,47 @@ function renderChrome() {
   document.querySelectorAll("[data-icon]").forEach((el) => {
     el.insertAdjacentHTML("afterbegin", icon(el.dataset.icon, el.dataset.iconSize));
   });
+
+  initPageTransitions();
+}
+
+/* Cross-page transition: fade the current page out, run a slim progress bar,
+   then navigate. The incoming page fades its sections in via CSS. Skipped
+   entirely when the visitor prefers reduced motion, and never applied to
+   modified clicks, new tabs, downloads or external links. */
+function initPageTransitions() {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  const bar = document.createElement("div");
+  bar.className = "page-progress";
+  document.body.appendChild(bar);
+
+  document.addEventListener("click", (e) => {
+    if (e.defaultPrevented || e.button !== 0) return;
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
+    const link = e.target.closest("a");
+    if (!link) return;
+    const href = link.getAttribute("href");
+    if (!href || href.startsWith("#") || href.startsWith("mailto:")) return;
+    if (link.target && link.target !== "_self") return;
+    if (link.hasAttribute("download")) return;
+
+    const url = new URL(href, window.location.href);
+    if (url.origin !== window.location.origin) return;
+    if (url.pathname === window.location.pathname) return;
+
+    e.preventDefault();
+    document.body.classList.add("page-leaving");
+    bar.classList.add("run");
+    setTimeout(() => { window.location.href = url.href; }, 180);
+  });
+
+  // Restore visibility when returning through the back/forward cache.
+  window.addEventListener("pageshow", () => {
+    document.body.classList.remove("page-leaving");
+    bar.classList.remove("run");
+  });
 }
 
 const fmt = (v, d = 0) => (v === null || v === undefined ? "–" : Number(v).toFixed(d));
