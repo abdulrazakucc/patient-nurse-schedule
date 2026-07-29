@@ -26,17 +26,17 @@
       </div>
       <div class="chart-grid">
         <div class="card chart-card">
-          <h4>Length of stay by birth weight</h4>
+          <h4 data-tip="Each bar is the middle 50% of infants in that weight band; the dark line tracks the median. Hover any point on the chart for exact figures.">Length of stay by birth weight</h4>
           <p class="chart-sub">Smaller babies stay dramatically longer</p>
           <div class="chart-box"><canvas id="chartLosWeight" aria-label="Length of stay by birth weight"></canvas></div>
         </div>
         <div class="card chart-card">
-          <h4>Length of stay by gestational age</h4>
+          <h4 data-tip="The same view across weeks of pregnancy. Every additional week completed before birth shortens the expected stay.">Length of stay by gestational age</h4>
           <p class="chart-sub">Every extra week of gestation shortens the stay</p>
           <div class="chart-box"><canvas id="chartLosGa" aria-label="Length of stay by gestational age"></canvas></div>
         </div>
         <div class="card chart-card wide">
-          <h4>Disposition mix by birth weight</h4>
+          <h4 data-tip="How admissions ended in each weight band, as a percentage. The smallest bands carry the highest mortality — the app shows this rather than hiding it.">Disposition mix by birth weight</h4>
           <p class="chart-sub">How admissions end — home, transfer, or death — for each weight band</p>
           <div class="chart-box tall"><canvas id="chartDisposition" aria-label="Disposition mix by birth weight"></canvas></div>
         </div>

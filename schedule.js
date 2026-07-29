@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function buildAvailability() {
     document.getElementById("availGrid").innerHTML = LEVELS.map(
       (l) => `
-      <div class="avail-item">
+      <div class="avail-item" data-tip="${l.name} — ${l.years_label} of NICU experience. ${l.scope} Counts ${l.capacity.toFixed(2)} toward effective care capacity.">
         <span class="lvl lvl-${l.level}">L${l.level} ${l.short}</span>
         <div class="avail-stepper">
           <button type="button" data-step="-1" data-lv="${l.level}" aria-label="One fewer ${l.short} nurse">−</button>
@@ -194,7 +194,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById("mixGrid").innerHTML = mix.levels
       .map(
-        (l) => `<div class="mix-card${l.recommended === 0 ? " is-zero" : ""}">
+        (l) => `<div class="mix-card${l.recommended === 0 ? " is-zero" : ""}" data-tip="${l.recommended} ${l.short} nurse${l.recommended === 1 ? "" : "s"} recommended. ${l.demand.toFixed(2)} nurses of demand require this level specifically; ${l.min_required} nurse${l.min_required === 1 ? "" : "s"} at this level or above are needed in total.">
           <span class="mix-n">${l.recommended}</span>
           <span class="mix-lab">L${l.level} · ${l.short}</span>
           <span class="mix-yrs">${l.years_label}</span>
@@ -204,10 +204,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const charge = mix.charge_nurse_level;
     document.getElementById("mixMeta").innerHTML = `
-      <span>Bedside nurses: <b>${mix.bedside_nurses}</b></span>
-      <span>Charge nurse: <b>level ${charge} (Expert)</b></span>
-      <span>Effective care capacity: <b>${fmt(mix.effective_capacity, 2)}</b></span>
-      <span>Preceptors needed: <b>${mix.preceptors_needed}</b></span>`;
+      <span data-tip="Nurses taking infant assignments, excluding the charge nurse.">Bedside nurses: <b>${mix.bedside_nurses}</b></span>
+      <span data-tip="Every shift needs an Expert coordinating the unit, free of a bedside assignment.">Charge nurse: <b>level ${charge} (Expert)</b></span>
+      <span data-tip="Headcount weighted by experience: a novice carries 0.75 of an assignment, an expert 1.10. Below the acuity demand means the team is too junior.">Effective care capacity: <b>${fmt(mix.effective_capacity, 2)}</b></span>
+      <span data-tip="Each novice on shift needs a proficient or expert nurse supervising them.">Preceptors needed: <b>${mix.preceptors_needed}</b></span>`;
 
     renderMixChart(mix);
 
@@ -299,6 +299,27 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  /* Flash the census rows for a set of infants and scroll them into view. */
+  function highlightCensusRows(ids) {
+    if (!ids || !ids.length) return;
+    const body = document.getElementById("rosterBody");
+    let first = null;
+    [...body.rows].forEach((tr) => {
+      const idx = Number(tr.cells[0].textContent);
+      tr.classList.remove("row-flash");
+      if (ids.includes(idx)) {
+        // Restart the animation even if the row was flashed a moment ago.
+        void tr.offsetWidth;
+        tr.classList.add("row-flash");
+        if (!first) first = tr;
+      }
+    });
+    if (first) first.scrollIntoView({ behavior: "smooth", block: "center" });
+    setTimeout(() => {
+      [...body.rows].forEach((tr) => tr.classList.remove("row-flash"));
+    }, 2400);
+  }
+
   function updateAvailTotal() {
     const total = LEVELS.reduce((s, l) => s + available[l.level], 0);
     const shifts = Number(document.getElementById("sShifts").value);
@@ -384,10 +405,22 @@ document.addEventListener("DOMContentLoaded", () => {
      side by side on a 24-hour axis with no wrap around midnight. Each block
      splits into hours committed to infants and spare capacity, and any infant
      nobody could take gets its own red row. */
+  const RESP_SHORT = { room_air: "air", nasal_cannula: "cannula", cpap: "CPAP", ventilator: "vent" };
+
   function renderRosterChart(roster, sched) {
     const card = document.getElementById("rosterCard");
     card.hidden = false;
     if (!window.Chart) return;
+
+    // Look up each infant so bars and tooltips can name who is being cared for.
+    const byIndex = {};
+    sched.infants.forEach((inf) => { byIndex[inf.index] = inf; });
+
+    const describe = (idx) => {
+      const inf = byIndex[idx];
+      if (!inf) return `#${idx}`;
+      return `#${idx} ${CONDITION_LABEL[inf.condition] || inf.condition} · ${RESP_SHORT[inf.resp_support] || inf.resp_support}`;
+    };
 
     const rows = [];
     roster.shifts.forEach((s) => {
@@ -457,10 +490,47 @@ document.addEventListener("DOMContentLoaded", () => {
       },
     };
 
+    /* Write who each nurse is caring for straight onto their bar, so the
+       assignment is readable without hovering. Falls back to shorter forms,
+       then to nothing, as the bar narrows. */
+    const barLabels = {
+      id: "neoRosterLabels",
+      afterDatasetsDraw(chart) {
+        const meta = chart.getDatasetMeta(0);
+        const { ctx } = chart;
+        ctx.save();
+        ctx.font = "700 10px Inter, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        rows.forEach((r, i) => {
+          const el = meta.data[i];
+          if (!el) return;
+          const ids = r.nurse.infants;
+          if (!ids.length) return;
+
+          // On a horizontal floating bar, x is the far end and base the near
+          // end, so the centre has to be derived from both.
+          const { x, base, y, height } = el.getProps(["x", "base", "y", "height"], true);
+          const w = Math.abs(x - base);
+          if (w < 30 || Math.abs(height) < 9) return;
+
+          const candidates = ids.length === 1
+            ? [describe(ids[0]), `#${ids[0]}`]
+            : [ids.map((n) => `#${n}`).join("  "), `${ids.length} infants`, `×${ids.length}`];
+          const text = candidates.find((t) => ctx.measureText(t).width + 14 < w);
+          if (!text) return;
+
+          ctx.fillStyle = "rgba(255,255,255,0.97)";
+          ctx.fillText(text, (x + base) / 2, y);
+        });
+        ctx.restore();
+      },
+    };
+
     if (rosterChart) rosterChart.destroy();
     rosterChart = new Chart(document.getElementById("chartRoster"), {
       type: "bar",
-      plugins: [shiftBands],
+      plugins: [shiftBands, barLabels],
       data: {
         labels,
         datasets: [
@@ -488,6 +558,18 @@ document.addEventListener("DOMContentLoaded", () => {
         indexAxis: "y",
         responsive: true,
         maintainAspectRatio: false,
+        // Clicking a nurse jumps to the infants they hold, in the census below.
+        onClick: (evt, elements) => {
+          if (!elements.length) return;
+          const i = elements[0].index;
+          const ids = rows[i]
+            ? rows[i].nurse.infants
+            : (uncoveredRows[i - rows.length] ? [uncoveredRows[i - rows.length].infant] : []);
+          highlightCensusRows(ids);
+        },
+        onHover: (evt, elements) => {
+          evt.native.target.style.cursor = elements.length ? "pointer" : "default";
+        },
         plugins: {
           legend: { display: false },
           tooltip: {
@@ -497,18 +579,31 @@ document.addEventListener("DOMContentLoaded", () => {
                 const r = rows[t.dataIndex];
                 if (!r) {
                   const u = uncoveredRows[t.dataIndex - rows.length];
-                  return u ? `No qualified nurse free on ${u.shift}` : "";
+                  if (!u) return "";
+                  const inf = byIndex[u.infant];
+                  return [
+                    `No qualified nurse free on ${u.shift}`,
+                    inf ? `${describe(u.infant)} — ${inf.weight_g} g, ${inf.ga_weeks} wk` : "",
+                    inf ? `Needs level ${inf.required_level} (${inf.required_level_name}) or above` : "",
+                  ].filter(Boolean);
                 }
                 const n = r.nurse;
                 if (t.datasetIndex === 0) {
-                  const who = n.infants.length
-                    ? `infants #${n.infants.join(", #")}`
-                    : (n.is_charge ? "charge nurse — no bedside assignment" : "no assignment");
-                  return [
-                    `${r.shift} · ${n.level_name}`,
-                    `${who}`,
-                    `${fmt(n.allocated_hours, 1)} h committed = ${fmt(n.day_percent, 1)}% of the day`,
-                  ];
+                  // The row label already names the nurse, shift and level.
+                const head = `On duty ${r.shift}`;
+                  if (!n.infants.length) {
+                    return [head, n.is_charge
+                      ? "Coordinating the unit — no bedside assignment"
+                      : "Free — no infant assigned"];
+                  }
+                  const who = n.infants.map((idx) => {
+                    const inf = byIndex[idx];
+                    return inf
+                      ? `${describe(idx)} · ${inf.weight_g} g · ${inf.acuity}`
+                      : `#${idx}`;
+                  });
+                  return [head, ...who,
+                    `${fmt(n.allocated_hours, 1)} h committed = ${fmt(n.day_percent, 1)}% of the day`];
                 }
                 if (t.datasetIndex === 1) {
                   return `${fmt(n.spare_hours, 1)} h spare (${fmt(100 - n.load * 100, 0)}% of the shift)`;

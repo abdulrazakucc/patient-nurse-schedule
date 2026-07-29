@@ -29,17 +29,17 @@
         <form class="predict-form card" id="addForm">
           <div class="section-label form-title" data-icon="baby">Add infant to census</div>
           <label class="field">
-            <span>Birth weight <em id="sWeightVal">900 g</em></span>
+            <span data-tip="Weight at birth in grams. Smaller infants need more intensive nursing for longer.">Birth weight <em id="sWeightVal">900 g</em></span>
             <input type="range" id="sWeight" min="300" max="2000" step="10" value="900" aria-label="Birth weight in grams" />
             <div class="range-scale"><span>300 g</span><span>2000 g</span></div>
           </label>
           <label class="field">
-            <span>Gestational age <em id="sGaVal">28 weeks</em></span>
+            <span data-tip="Weeks of pregnancy completed before birth. Full term is about 40 weeks.">Gestational age <em id="sGaVal">28 weeks</em></span>
             <input type="range" id="sGa" min="22" max="40" step="1" value="28" aria-label="Gestational age in weeks" />
             <div class="range-scale"><span>22 wk</span><span>40 wk</span></div>
           </label>
           <label class="field">
-            <span>Admission condition</span>
+            <span data-tip="How sick this infant is right now. Critical plus ventilated is the only combination that requires an Expert nurse.">Admission condition</span>
             <select id="sCondition">
               <option value="stable">Stable</option>
               <option value="guarded">Guarded</option>
@@ -48,7 +48,7 @@
             </select>
           </label>
           <label class="field">
-            <span>Respiratory support</span>
+            <span data-tip="Breathing help currently needed. Ventilation raises the minimum nurse level to Proficient.">Respiratory support</span>
             <select id="sResp">
               <option value="room_air">Room air</option>
               <option value="nasal_cannula">Nasal cannula</option>
@@ -57,18 +57,18 @@
             </select>
           </label>
           <label class="field">
-            <span>Shifts per day</span>
+            <span data-tip="How the 24 hours are divided. Two 12-hour shifts is the common NICU pattern; three 8-hour shifts spreads the same nurses more thinly.">Shifts per day</span>
             <select id="sShifts">
               <option value="2" selected>2 (12h shifts)</option>
               <option value="3">3 (8h shifts)</option>
             </select>
           </label>
-          <button type="submit" class="btn-primary"><span>+ Add to census</span></button>
+          <button type="submit" class="btn-primary" data-tip="Admit an infant with these characteristics. Staffing, skill mix and the 24-hour roster all recalculate immediately."><span>+ Add to census</span></button>
           <div class="field">
             <span>Quick start</span>
             <div class="preset-row">
-              <button type="button" class="preset" id="presetSample">Load sample unit (8 infants)</button>
-              <button type="button" class="preset" id="presetClear">Clear census</button>
+              <button type="button" class="preset" id="presetSample" data-tip="Fill the census with eight infants spanning every acuity level, from a ventilated 620 g baby to a stable feeder-grower.">Load sample unit (8 infants)</button>
+              <button type="button" class="preset" id="presetClear" data-tip="Discharge every infant and start again.">Clear census</button>
             </div>
           </div>
         </form>
@@ -77,28 +77,28 @@
           <div class="status-banner" id="statusBanner" hidden></div>
 
           <div class="card avail-card">
-            <div class="disp-head" data-icon="nurse" style="margin-bottom:6px">Nurses available on the unit</div>
+            <div class="disp-head" data-icon="nurse" style="margin-bottom:6px" data-tip="The staff you actually have, across the whole day. Change these numbers to test what a thinner or more senior team would mean.">Nurses available on the unit</div>
             <p class="chart-sub" style="margin-bottom:16px">
               Your staff in hand, across the whole day. Each nurse works one shift, so this pool
               is split between shifts. Coverage updates the moment you change it — or the census.
             </p>
             <div class="avail-grid" id="availGrid"></div>
             <div class="avail-actions">
-              <button type="button" class="preset" id="availAuto">Auto-fill to meet demand</button>
-              <button type="button" class="preset" id="availReset">Reset</button>
+              <button type="button" class="preset" id="availAuto" data-tip="Raise staffing level by level until every infant in the census has a qualified nurse on every shift.">Auto-fill to meet demand</button>
+              <button type="button" class="preset" id="availReset" data-tip="Return the available nurses to the default mid-sized unit: 4 novice, 6 competent, 6 proficient, 4 expert.">Reset</button>
               <span class="avail-total" id="availTotal"></span>
             </div>
           </div>
 
           <div class="staff-metrics card" style="padding:26px">
-            <div><span id="mCensus">0</span><label>Census</label></div>
-            <div><span id="mNurses">0</span><label>Nurses / shift</label></div>
-            <div><span id="mDaily">0</span><label>Daily nurse-shifts</label></div>
-            <div><span id="mDemand">0</span><label>Acuity demand</label></div>
+            <div data-tip="How many infants are currently admitted to the unit."><span id="mCensus">0</span><label>Census</label></div>
+            <div data-tip="Bedside nurses needed to cover the current acuity, plus one charge nurse. This is the requirement, not what you have."><span id="mNurses">0</span><label>Nurses / shift</label></div>
+            <div data-tip="Nurses per shift multiplied by the number of shifts in a day — the total staffing the unit consumes over 24 hours."><span id="mDaily">0</span><label>Daily nurse-shifts</label></div>
+            <div data-tip="Summed nursing requirement across all infants, in nurses. An intensive baby counts 1.00, intermediate 0.50, convalescent 0.33."><span id="mDemand">0</span><label>Acuity demand</label></div>
           </div>
 
           <div class="card" style="padding:26px" id="rosterCard" hidden>
-            <div class="disp-head" data-icon="clock">The 24-hour roster</div>
+            <div class="disp-head" data-icon="clock" data-tip="Your available nurses laid out across the day. Hover any bar to see which infants that nurse holds and how much of the day they are committed.">The 24-hour roster</div>
             <p class="chart-sub" id="rosterSub"></p>
             <div class="chart-box" id="rosterChartBox" style="height:340px">
               <canvas id="chartRoster" aria-label="How each nurse's day is allocated to infants"></canvas>
@@ -112,7 +112,7 @@
           </div>
 
           <div class="card" style="padding:26px" id="skillMixCard" hidden>
-            <div class="disp-head" data-icon="sparkle">Recommended skill mix per shift</div>
+            <div class="disp-head" data-icon="sparkle" data-tip="How the bedside team should be composed by experience. A nurse can always cover an assignment below their level, never above it.">Recommended skill mix per shift</div>
             <div id="mixWarnings"></div>
             <div class="mix-grid" id="mixGrid"></div>
             <div class="mix-meta" id="mixMeta"></div>
@@ -130,7 +130,7 @@
           </div>
 
           <div class="card" style="padding:26px">
-            <div class="disp-head" data-icon="calendar">Census roster</div>
+            <div class="disp-head" data-icon="calendar" data-tip="Every admitted infant with its acuity band and the minimum nurse level it requires. Rows turn red when nobody qualified is free.">Census roster</div>
             <div id="rosterEmpty" class="roster-empty">
               <span data-icon="nurse" data-icon-size="40"></span>
               <span>No infants added yet.<br />Use the form — or load the sample unit — to build the census.</span>
