@@ -37,10 +37,10 @@
       <div class="card chart-card" style="margin-top:24px">
         <div class="ts-head">
           <div>
-            <h4>Single infant journey</h4>
+            <h4 data-tip="One infant's whole admission, hour by hour. Colour marks the care phase; the height is how much of a nurse that infant needs.">Single infant journey</h4>
             <p class="ts-sub">Nursing need across the stay, coloured by care phase</p>
           </div>
-          <select id="infantSelect" class="ts-select" aria-label="Choose an infant"></select>
+          <select id="infantSelect" class="ts-select" aria-label="Choose an infant" data-tip="Pick any infant to trace their journey. The list spans every birth-weight band and all three outcomes."></select>
         </div>
         <div id="infantMeta" class="infant-meta"></div>
         <div class="chart-box"><canvas id="chartInfant" aria-label="Single infant nursing timeline"></canvas></div>
@@ -53,17 +53,17 @@
 
       <div class="chart-grid" style="margin-top:24px">
         <div class="card chart-card wide">
-          <h4>Busiest week: unit staffing hour by hour</h4>
+          <h4 data-tip="The seven-day window with the highest average census. Compare nurses on duty against the demand the infants actually generated.">Busiest week: unit staffing hour by hour</h4>
           <p class="ts-sub" id="weekLabel">Loading the busiest seven day window…</p>
           <div class="chart-box"><canvas id="chartWeek" aria-label="Busiest week unit staffing"></canvas></div>
         </div>
         <div class="card chart-card">
-          <h4>Average nurse demand by hour of day</h4>
+          <h4 data-tip="Averaged across the whole simulated year. Neonatal intensive care barely dips overnight — the workload is genuinely round-the-clock.">Average nurse demand by hour of day</h4>
           <p class="ts-sub">Neonatal care runs around the clock</p>
           <div class="chart-box"><canvas id="chartHourly" aria-label="Average nurse demand by hour"></canvas></div>
         </div>
         <div class="card chart-card">
-          <h4>Time spent in each care phase</h4>
+          <h4 data-tip="Every recorded infant-hour, split by phase. Most hours are intensive or intermediate, which is what drives the staffing bill.">Time spent in each care phase</h4>
           <p class="ts-sub">Across every infant hour recorded</p>
           <div class="chart-box"><canvas id="chartPhase" aria-label="Care phase mix"></canvas></div>
         </div>

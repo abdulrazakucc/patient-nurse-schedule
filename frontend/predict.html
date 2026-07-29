@@ -29,27 +29,27 @@
         <form class="predict-form card" id="predictForm">
           <div class="section-label form-title" data-icon="baby">Admission details</div>
 
-          <label class="field">
+          <label class="field" data-tip="Which hospital center's historical outcomes to compare this infant against. Only Center 1 has data loaded today.">
             <span>Center</span>
             <select id="center" name="center"></select>
           </label>
 
           <label class="field">
-            <span>Birth weight <em id="weightVal">750 g</em></span>
+            <span data-tip="Weight at birth in grams. The single strongest predictor of how long a very low birth weight infant stays in hospital.">Birth weight <em id="weightVal">750 g</em></span>
             <input type="range" id="weight" min="300" max="2000" step="10" value="750" aria-label="Birth weight in grams" />
             <div class="range-scale"><span>300 g</span><span>2000 g</span></div>
             <input type="number" id="weightNum" min="300" max="2500" step="10" value="750" aria-label="Birth weight (exact)" />
           </label>
 
           <label class="field">
-            <span>Gestational age <em id="gaVal">26 weeks</em></span>
+            <span data-tip="How many weeks the pregnancy lasted before birth. Full term is about 40 weeks; every extra week shortens the expected stay.">Gestational age <em id="gaVal">26 weeks</em></span>
             <input type="range" id="ga" min="22" max="40" step="1" value="26" aria-label="Gestational age in weeks" />
             <div class="range-scale"><span>22 wk</span><span>40 wk</span></div>
             <input type="number" id="gaNum" min="20" max="42" step="1" value="26" aria-label="Gestational age (exact)" />
           </label>
 
           <label class="field">
-            <span>Admission condition</span>
+            <span data-tip="How sick the infant is on arrival. Raises the modelled acuity, which lengthens the intensive phase and the nursing effort.">Admission condition</span>
             <select id="condition">
               <option value="stable">Stable</option>
               <option value="guarded">Guarded</option>
@@ -59,7 +59,7 @@
           </label>
 
           <label class="field">
-            <span>Respiratory support</span>
+            <span data-tip="Breathing help needed at admission, from room air through to a ventilator. A ventilated infant needs a Proficient nurse at minimum.">Respiratory support</span>
             <select id="respSupport">
               <option value="room_air">Room air</option>
               <option value="nasal_cannula">Nasal cannula</option>
@@ -85,12 +85,12 @@
 
           <div class="results" id="results" hidden>
             <div class="result-cards">
-              <div class="rc rc-los">
+              <div class="rc rc-los" data-tip="The median number of days similar infants stayed in hospital. Half stayed less, half stayed longer — this is a forecast, not a discharge date.">
                 <div class="rc-label">Expected length of stay</div>
                 <div class="rc-value"><span id="losMedian">–</span><small>days</small></div>
                 <div class="rc-sub">Realistic range (IQR): <b id="losIqr">–</b></div>
               </div>
-              <div class="rc rc-survival">
+              <div class="rc rc-survival" data-tip="The share of similar infants who survived to discharge or transfer. Derived by counting real outcomes, not modelled.">
                 <div class="rc-label">Survival probability</div>
                 <div class="rc-value"><span id="survival">–</span><small>%</small></div>
                 <div class="rc-sub">Based on <b id="sampleN">–</b> similar infants ·
@@ -99,7 +99,7 @@
             </div>
 
             <div class="disp-block card">
-              <div class="disp-head" data-icon="chart">Disposition likelihood</div>
+              <div class="disp-head" data-icon="chart" data-tip="How admissions ended for infants in the same birth-weight band: discharged home, transferred to another unit, or died.">Disposition likelihood</div>
               <div class="disp-cards">
                 <div class="disp-card">
                   <div class="ring" id="ringHome" style="--ring-color:var(--home);--pct:0">
@@ -152,19 +152,19 @@
             </div>
 
             <div class="staffing card">
-              <div class="disp-head" data-icon="nurse">Nurse staffing forecast</div>
+              <div class="disp-head" data-icon="nurse" data-tip="What this infant will demand of the nursing team over the whole stay, using AAP/AWHONN acuity ratios.">Nurse staffing forecast</div>
               <div class="staff-metrics">
-                <div><span id="nhppd">–</span><label>Avg NHPPD</label></div>
-                <div><span id="peakNurse">–</span><label>Peak nurse:infant</label></div>
-                <div><span id="nurseHours">–</span><label>Total nurse-hours</label></div>
-                <div><span id="shifts">–</span><label>12h shifts</label></div>
+                <div data-tip="Nursing Hours Per Patient Day — the average nursing time this one infant consumes each day of the stay. A standard workload measure." ><span id="nhppd">–</span><label>Avg NHPPD</label></div>
+                <div data-tip="The heaviest staffing this infant will need at any point — 1.00 means one nurse devoted to this baby alone during intensive care."><span id="peakNurse">–</span><label>Peak nurse:infant</label></div>
+                <div data-tip="All the nursing time this infant will consume across the whole admission, adding up every phase of care."><span id="nurseHours">–</span><label>Total nurse-hours</label></div>
+                <div data-tip="The total nurse-hours expressed as twelve-hour shifts, which is how rosters are usually budgeted."><span id="shifts">–</span><label>12h shifts</label></div>
               </div>
               <div id="phaseList" class="phase-list"></div>
               <p class="staff-note" id="staffNote"></p>
             </div>
 
             <div class="card staffing">
-              <div class="disp-head" data-icon="sparkle">Nurse competency requirement</div>
+              <div class="disp-head" data-icon="sparkle" data-tip="The minimum experience level of nurse who should take this infant, phase by phase, on Benner's novice-to-expert scale.">Nurse competency requirement</div>
               <div class="level-callout" id="levelCallout"></div>
               <div class="level-phases" id="levelPhases"></div>
               <p class="staff-note" id="competencyNote"></p>

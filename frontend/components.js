@@ -41,10 +41,17 @@ function icon(name, size) {
 function renderChrome() {
   const page = document.body.dataset.page || "home";
 
-  // Charts should honour the same reduced-motion preference as the rest of the UI.
-  if (window.Chart && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    Chart.defaults.animation = false;
-    Chart.defaults.animations = {};
+  if (window.Chart) {
+    // Charts honour the same reduced-motion preference as the rest of the UI.
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      Chart.defaults.animation = false;
+      Chart.defaults.animations = {};
+    }
+    // One styled tooltip for every chart in the app.
+    Chart.defaults.plugins.tooltip.enabled = false;
+    Chart.defaults.plugins.tooltip.external = neoChartTooltip;
+    Chart.defaults.plugins.tooltip.padding = 0;
+    Chart.defaults.hover.mode = Chart.defaults.hover.mode || "nearest";
   }
 
   const strip = document.createElement("div");
@@ -128,7 +135,127 @@ function renderChrome() {
     el.insertAdjacentHTML("afterbegin", icon(el.dataset.icon, el.dataset.iconSize));
   });
 
+  initTooltips();
   initPageTransitions();
+}
+
+/* ---------------------------------------------------------------------------
+   Widget tooltips. Any element carrying data-tip="..." explains itself on
+   hover, on keyboard focus, and on tap. One shared bubble is reused, so the
+   pages stay light and the styling stays consistent.
+   --------------------------------------------------------------------------- */
+function initTooltips() {
+  const tip = document.createElement("div");
+  tip.className = "neo-tip";
+  tip.setAttribute("role", "tooltip");
+  document.body.appendChild(tip);
+  let current = null;
+
+  function place(target) {
+    const text = target.getAttribute("data-tip");
+    if (!text) return;
+    tip.textContent = text;
+    tip.classList.add("show");
+
+    const r = target.getBoundingClientRect();
+    const t = tip.getBoundingClientRect();
+    const margin = 10;
+
+    let left = r.left + r.width / 2 - t.width / 2;
+    left = Math.max(margin, Math.min(left, window.innerWidth - t.width - margin));
+
+    // Above by default; flip below when there is not enough headroom.
+    let top = r.top - t.height - 10;
+    tip.classList.toggle("below", top < margin);
+    if (top < margin) top = r.bottom + 10;
+
+    tip.style.left = `${left + window.scrollX}px`;
+    tip.style.top = `${top + window.scrollY}px`;
+    // Point the arrow at the target even when the bubble has been clamped.
+    const arrow = r.left + r.width / 2 - left;
+    tip.style.setProperty("--arrow-x", `${Math.max(14, Math.min(arrow, t.width - 14))}px`);
+  }
+
+  function show(target) {
+    if (current === target) return;
+    current = target;
+    tip.textContent = target.getAttribute("data-tip") || "";
+    tip.classList.add("show");
+    requestAnimationFrame(() => place(target));
+  }
+
+  function hide() {
+    current = null;
+    tip.classList.remove("show");
+  }
+
+  document.addEventListener("mouseover", (e) => {
+    const t = e.target.closest("[data-tip]");
+    if (t) show(t);
+  });
+  document.addEventListener("mouseout", (e) => {
+    const t = e.target.closest("[data-tip]");
+    if (t && !t.contains(e.relatedTarget)) hide();
+  });
+  document.addEventListener("focusin", (e) => {
+    const t = e.target.closest("[data-tip]");
+    if (t) show(t);
+  });
+  document.addEventListener("focusout", hide);
+  document.addEventListener("touchstart", (e) => {
+    const t = e.target.closest("[data-tip]");
+    if (t) {
+      show(t);
+      setTimeout(hide, 2600);
+    } else hide();
+  }, { passive: true });
+  window.addEventListener("scroll", hide, { passive: true });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") hide(); });
+}
+
+/* ---------------------------------------------------------------------------
+   Chart tooltips, styled to match the rest of the interface. Registered as a
+   Chart.js default so every chart in the app gets it without extra wiring;
+   each chart's own title/label/footer callbacks continue to work untouched.
+   --------------------------------------------------------------------------- */
+function neoChartTooltip(context) {
+  const { chart, tooltip } = context;
+  let el = document.getElementById("neo-chart-tip");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "neo-chart-tip";
+    document.body.appendChild(el);
+  }
+
+  if (tooltip.opacity === 0) {
+    el.classList.remove("show");
+    return;
+  }
+
+  const title = (tooltip.title || []).join(" ");
+  let html = title ? `<div class="ct-title">${title}</div>` : "";
+  (tooltip.body || []).forEach((body, i) => {
+    const colors = tooltip.labelColors[i] || {};
+    const swatch = colors.backgroundColor
+      ? `<i class="ct-dot" style="background:${colors.backgroundColor}"></i>`
+      : "";
+    const lines = (body.lines || []).filter(Boolean);
+    if (!lines.length) return;
+    html += `<div class="ct-row">${swatch}<span>${lines.join("<br />")}</span></div>`;
+  });
+  const footer = (tooltip.footer || []).join(" ");
+  if (footer) html += `<div class="ct-foot">${footer}</div>`;
+  el.innerHTML = html;
+
+  const rect = chart.canvas.getBoundingClientRect();
+  el.classList.add("show");
+  const tw = el.offsetWidth, th = el.offsetHeight;
+  let left = rect.left + window.scrollX + tooltip.caretX - tw / 2;
+  left = Math.max(8 + window.scrollX, Math.min(left, window.scrollX + window.innerWidth - tw - 8));
+  let top = rect.top + window.scrollY + tooltip.caretY - th - 14;
+  if (top < window.scrollY + 8) top = rect.top + window.scrollY + tooltip.caretY + 16;
+  el.style.left = `${left}px`;
+  el.style.top = `${top}px`;
 }
 
 /* Cross-page transition: fade the current page out, run a slim progress bar,

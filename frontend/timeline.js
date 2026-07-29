@@ -39,14 +39,19 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderMetrics(s) {
     const box = document.getElementById("tsMetrics");
     const items = [
-      { v: s.total_infants.toLocaleString(), l: "Infants" },
-      { v: s.total_nurses, l: "Nurses on file" },
-      { v: s.avg_census, l: "Average census" },
-      { v: s.peak_census, l: "Peak census" },
-      { v: s.avg_nurses_on_duty, l: "Avg nurses on duty" },
+      { v: s.total_infants.toLocaleString(), l: "Infants",
+        t: "Infants in the simulated year, matched to the real case counts for each birth-weight band." },
+      { v: s.total_nurses, l: "Nurses on file",
+        t: "Size of the simulated nursing workforce, built as a realistic competency pyramid across the four experience levels." },
+      { v: s.avg_census, l: "Average census",
+        t: "Mean number of infants in the unit at any given hour across the whole year." },
+      { v: s.peak_census, l: "Peak census",
+        t: "The busiest single hour of the year — the moment the unit was fullest." },
+      { v: s.avg_nurses_on_duty, l: "Avg nurses on duty",
+        t: "Mean nurses rostered per hour, including the charge nurse." },
     ];
     box.innerHTML = items
-      .map((i) => `<div class="ts-metric"><span>${i.v}</span><label>${i.l}</label></div>`)
+      .map((i) => `<div class="ts-metric" data-tip="${i.t}"><span>${i.v}</span><label>${i.l}</label></div>`)
       .join("");
   }
 

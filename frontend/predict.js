@@ -79,6 +79,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const conf = document.getElementById("confidence");
     conf.textContent = r.confidence + " confidence";
+    conf.setAttribute("data-tip",
+      `Based on ${r.sample_size} similar infants. 50 or more gives high confidence, ` +
+      `20-49 moderate, 5-19 low. Treat low-confidence figures as rough sketches.`);
     conf.className = "conf-badge conf-" + String(r.confidence).replace(/\s+/g, "-");
 
     const d = r.disposition;
@@ -158,7 +161,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById("levelPhases").innerHTML = s.phases
       .map(
-        (p) => `<div class="level-phase-row">
+        (p) => `<div class="level-phase-row" data-tip="${p.name.replace(/"/g, "&quot;")} lasts about ${fmt(p.days, 1)} days and consumes ${fmt(p.nurse_hours, 0)} nurse-hours. It needs a level ${p.required_level} (${p.required_level_name}) nurse or above.">
           <span>${p.name} · <b style="color:var(--ink)">${fmt(p.days, 1)} days</b></span>
           <span class="lvl lvl-${p.required_level}">L${p.required_level} ${p.required_level_name}</span>
         </div>`
