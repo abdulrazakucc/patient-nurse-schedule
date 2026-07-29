@@ -85,13 +85,39 @@ flowchart LR
     A["👶 Infant acuity<br/>severity + ventilation<br/>+ admission condition"] --> B{"Minimum<br/>nurse level"}
     B -->|"convalescent"| L1["Level 1 · Novice"]
     B -->|"intermediate"| L2["Level 2 · Competent"]
-    B -->|"intensive"| L3["Level 3 · Proficient"]
-    B -->|"unstable / ventilated<br/>+ critical"| L4["Level 4 · Expert"]
+    B -->|"intensive, ventilated<br/>or critical"| L3["Level 3 · Proficient"]
+    B -->|"critical AND ventilated"| L4["Level 4 · Expert"]
     L1 --> M["🗓️ Shift skill mix<br/>novices capped at 30%<br/>each paired with a preceptor<br/>charge nurse must be Expert"]
     L2 --> M
     L3 --> M
     L4 --> M
+    M --> R["🕐 24-hour roster<br/>your nurses in hand,<br/>split across shifts"]
 ```
+
+Level 4 is deliberately scarce — reserved for infants who are *both* critically
+ill and ventilated. Proficient nurses routinely care for ventilated VLBW
+infants, and a unit cannot roster an expert to a third of its cots; making every
+sick infant expert-only would produce a requirement no real unit could meet.
+About 19% of the simulated cohort needs an Expert, against an expert workforce
+share of 26%.
+
+## 🕐 Rostering the nurses you actually have
+
+The Scheduling page takes the nurses **in hand** — a count per competency level
+that you edit directly — and rosters them against the census:
+
+- each nurse works **one shift per day**, so the pool is split across shifts;
+- a nurse carries at most **one full assignment** (one intensive infant, or two
+  intermediate, or three convalescent);
+- the sickest infants are placed first, into the **least senior qualified**
+  nurse, keeping experts free for the infants who need them;
+- one senior nurse is held back as **charge**, with no bedside load.
+
+The result is a **24-hour roster chart**: one bar per nurse across a day that
+starts at 07:00, split into hours committed to infants and spare capacity, and
+coloured by competency level. Any infant no qualified nurse can take appears as
+a red bar and is highlighted in the census table, with a banner naming exactly
+how many extra nurses of which level would close the gap.
 
 A nurse may always cover an assignment **below** their level, never above it, so
 a shift's requirements accumulate downward from the expert tier. NeoStay also

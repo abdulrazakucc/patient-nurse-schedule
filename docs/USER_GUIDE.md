@@ -125,6 +125,33 @@ junior to carry the work, and a plain-language verdict says so. Try adding nine
 stable 1650 g feeder-growers: three nurses covers the count on paper, but an
 all-Competent team delivers only 2.7 against 3.0 of demand.
 
+### Nurses available, and the 24-hour roster
+
+At the top of the results you set **how many nurses you actually have**, level by
+level, with the + and − buttons. Everything below recalculates instantly —
+whether you change the staffing or add and remove infants.
+
+The **24-hour roster** then shows one bar per nurse across a day that starts at
+07:00:
+
+| What you see | What it means |
+|---|---|
+| Solid coloured bar | Hours **committed to infants**, coloured by the nurse's level |
+| Pale bar | On duty with **spare capacity** — room to take an admission |
+| Red bar | An infant **nobody qualified is free to take** |
+| Shaded half / divider | The shift boundary (day and night, or three shifts) |
+
+Hover any bar to see which infants that nurse holds and what percentage of the
+whole day they are committed for. A nurse on a fully loaded 12-hour shift is
+committed for 50% of the day; the charge nurse shows as all-pale because they
+carry no bedside assignment by design.
+
+**When demand exceeds your staff**, the banner at the top turns red and states
+how many infants cannot be covered on the worst-affected shift, together with
+the exact reinforcement needed — for example *"+2 × L3 Proficient"*. Those cots
+turn red in the census table too. Press **Auto-fill to meet demand** and the app
+raises staffing until every infant is covered.
+
 ### ⏱️ Timeline — *"How does care change hour by hour?"*
 
 Follows a simulated (but statistically realistic) year of unit activity:

@@ -7,7 +7,80 @@ document.addEventListener("DOMContentLoaded", () => {
   const LEVEL_FILL = { 1: "#8aa4b0", 2: "#0e8a8f", 3: "#c9a24b", 4: "#d5637a" };
   const GRID = "rgba(14,43,54,0.07)";
   if (window.Chart) Chart.defaults.font.family = "Inter";
-  let mixChart;
+  let mixChart, rosterChart;
+
+  // Nurses in hand. Defaults describe a mid-sized unit; the user edits freely.
+  const DEFAULT_AVAILABLE = { 1: 4, 2: 6, 3: 6, 4: 4 };
+  const available = { ...DEFAULT_AVAILABLE };
+  const LEVELS = NeoEngine.nurseLevels();
+
+  /* ---------------- availability panel ---------------- */
+  function buildAvailability() {
+    document.getElementById("availGrid").innerHTML = LEVELS.map(
+      (l) => `
+      <div class="avail-item">
+        <span class="lvl lvl-${l.level}">L${l.level} ${l.short}</span>
+        <div class="avail-stepper">
+          <button type="button" data-step="-1" data-lv="${l.level}" aria-label="One fewer ${l.short} nurse">−</button>
+          <input type="number" min="0" max="99" step="1" id="avail-${l.level}"
+                 value="${available[l.level]}" aria-label="${l.short} nurses available" />
+          <button type="button" data-step="1" data-lv="${l.level}" aria-label="One more ${l.short} nurse">+</button>
+        </div>
+        <span class="avail-yrs">${l.years_label}</span>
+      </div>`
+    ).join("");
+
+    document.getElementById("availGrid").addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-step]");
+      if (!btn) return;
+      const lv = Number(btn.dataset.lv);
+      available[lv] = Math.max(0, available[lv] + Number(btn.dataset.step));
+      document.getElementById(`avail-${lv}`).value = available[lv];
+      refresh();
+    });
+    document.getElementById("availGrid").addEventListener("input", (e) => {
+      if (e.target.tagName !== "INPUT") return;
+      const lv = Number(e.target.id.split("-")[1]);
+      available[lv] = Math.max(0, Number(e.target.value) || 0);
+      refresh();
+    });
+
+    document.getElementById("availReset").addEventListener("click", () => {
+      Object.assign(available, DEFAULT_AVAILABLE);
+      syncAvailInputs();
+      refresh();
+    });
+    document.getElementById("availAuto").addEventListener("click", autoFill);
+  }
+
+  function syncAvailInputs() {
+    LEVELS.forEach((l) => {
+      const el = document.getElementById(`avail-${l.level}`);
+      if (el) el.value = available[l.level];
+    });
+  }
+
+  /* Raise staffing until every infant can be covered on every shift. */
+  function autoFill() {
+    if (census.length === 0) {
+      toast("Add infants to the census first.");
+      return;
+    }
+    const shifts = Number(document.getElementById("sShifts").value);
+    for (let guard = 0; guard < 60; guard++) {
+      const rows = NeoEngine.scheduleUnit(census, shifts).infants;
+      const roster = NeoEngine.buildRoster(rows, available, shifts);
+      if (roster.covered) break;
+      // Add the shortfall, once per shift, at the level each gap requires.
+      const need = roster.additional_nurses_needed;
+      const levels = Object.keys(need).map(Number).sort((a, b) => b - a);
+      if (!levels.length) break;
+      available[levels[0]] += shifts;
+    }
+    syncAvailInputs();
+    refresh();
+    toast("Staffing raised until every infant is covered.");
+  }
 
   const bind = (rangeId, labelId, unit) => {
     const r = document.getElementById(rangeId);
@@ -58,10 +131,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function refresh() {
     const shifts = Number(document.getElementById("sShifts").value);
+    updateAvailTotal();
+
     if (census.length === 0) {
       document.getElementById("roster").hidden = true;
       document.getElementById("rosterEmpty").hidden = false;
       document.getElementById("skillMixCard").hidden = true;
+      document.getElementById("rosterCard").hidden = true;
+      document.getElementById("statusBanner").hidden = true;
       setMetrics({ census: 0, nurses_per_shift: 0, daily_nurse_shifts: 0, total_demand: 0 });
       document.getElementById("schedNote").textContent = "";
       return;
@@ -71,13 +148,22 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("schedNote").textContent = r.note;
     renderSkillMix(r.skill_mix);
 
+    const roster = NeoEngine.buildRoster(r.infants, available, shifts);
+    renderStatus(roster, r);
+    renderRosterChart(roster, r);
+
     document.getElementById("rosterEmpty").hidden = true;
     const table = document.getElementById("roster");
     table.hidden = false;
     const body = document.getElementById("rosterBody");
     body.innerHTML = "";
+    // An infant nobody could be assigned to, on any shift.
+    const uncovered = new Set();
+    roster.shifts.forEach((s) => s.unassigned.forEach((i) => uncovered.add(i)));
+
     r.infants.forEach((inf, i) => {
       const tr = document.createElement("tr");
+      if (uncovered.has(inf.index)) tr.className = "row-uncovered";
       tr.innerHTML = `
         <td>${inf.index}</td>
         <td>${inf.weight_g} g</td>
@@ -85,7 +171,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <td>${CONDITION_LABEL[inf.condition] || inf.condition}</td>
         <td>${RESP_LABEL[inf.resp_support] || inf.resp_support}</td>
         <td><span class="pill pill-${inf.acuity}">${inf.acuity}</span></td>
-        <td>${inf.nurses_required.toFixed(2)}</td>
+        <td>${inf.nurses_required.toFixed(2)}${uncovered.has(inf.index) ? '<span class="tag-uncovered">uncovered</span>' : ""}</td>
         <td><span class="lvl lvl-${inf.required_level}">L${inf.required_level} ${inf.required_level_name}</span></td>
         <td><button class="rm" data-i="${i}" title="Remove" aria-label="Remove infant ${inf.index}">✕</button></td>`;
       body.appendChild(tr);
@@ -213,6 +299,257 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function updateAvailTotal() {
+    const total = LEVELS.reduce((s, l) => s + available[l.level], 0);
+    const shifts = Number(document.getElementById("sShifts").value);
+    document.getElementById("availTotal").innerHTML =
+      `<b>${total}</b> nurses in hand · about <b>${Math.floor(total / shifts)}</b> per shift`;
+  }
+
+  /* ---------------- headline status ---------------- */
+  function renderStatus(roster, sched) {
+    const el = document.getElementById("statusBanner");
+    el.hidden = false;
+
+    if (!roster.covered) {
+      const need = roster.additional_nurses_needed;
+      const shifts = roster.shifts_per_day;
+      const parts = Object.keys(need)
+        .map(Number)
+        .sort((a, b) => b - a)
+        .map((lv) => {
+          const info = NeoEngine.levelInfo(lv);
+          const n = need[lv] * shifts;
+          return `<span class="lvl lvl-${lv}">+${n} × L${lv} ${info.short}</span>`;
+        })
+        .join(" ");
+      const worst = Math.max(...roster.shifts.map((s) => s.unassigned.length));
+      el.className = "status-banner short";
+      el.innerHTML = `
+        <span class="sb-ic">!</span>
+        <div>
+          <b>Demand exceeds the nurses available</b>
+          ${worst} infant${worst === 1 ? "" : "s"} cannot be given a qualified nurse on the
+          worst-affected shift. Those cots are highlighted in the census below and shown in red
+          on the 24-hour roster.
+          <div class="sb-actions">To close the gap across all ${shifts} shifts, add: ${parts}</div>
+        </div>`;
+      return;
+    }
+
+    // Covered only because the charge nurse took a cot - flag it.
+    if (roster.charge_carrying_bedside) {
+      el.className = "status-banner tight";
+      el.innerHTML = `
+        <span class="sb-ic">!</span>
+        <div>
+          <b>Covered, but the charge nurse is at a cot</b>
+          Every infant has a qualified nurse only because the charge nurse took a bedside
+          assignment. That leaves nobody free to coordinate the unit, take admissions or
+          respond to a deterioration. One more senior nurse would restore the charge role.
+        </div>`;
+      return;
+    }
+
+    // Covered - but is there any slack left for an admission?
+    const tightest = Math.max(...roster.shifts.map((s) => s.mean_load));
+    const spare = roster.shifts.map(
+      (s) => s.capacity_hours - s.committed_hours
+    );
+    const minSpare = Math.min(...spare);
+    if (tightest >= 0.95) {
+      el.className = "status-banner tight";
+      el.innerHTML = `
+        <span class="sb-ic">!</span>
+        <div>
+          <b>Covered, but running at capacity</b>
+          Every infant has a qualified nurse, yet bedside nurses are at
+          ${fmt(tightest * 100, 0)}% of their assignment limit on the busiest shift.
+          A single admission or deterioration would leave you short.
+        </div>`;
+    } else {
+      el.className = "status-banner ok";
+      el.innerHTML = `
+        <span class="sb-ic">✓</span>
+        <div>
+          <b>Fully covered</b>
+          All ${sched.census} infant${sched.census === 1 ? "" : "s"} have a qualified nurse on every
+          shift, with ${fmt(minSpare, 0)} spare nurse-hours on the tightest shift.
+        </div>`;
+    }
+  }
+
+  /* ---------------- 24-hour roster ----------------
+     One row per nurse. The nursing day starts at 07:00, so shift blocks sit
+     side by side on a 24-hour axis with no wrap around midnight. Each block
+     splits into hours committed to infants and spare capacity, and any infant
+     nobody could take gets its own red row. */
+  function renderRosterChart(roster, sched) {
+    const card = document.getElementById("rosterCard");
+    card.hidden = false;
+    if (!window.Chart) return;
+
+    const rows = [];
+    roster.shifts.forEach((s) => {
+      const clock = s.label.split("-")[0];
+      s.nurses.forEach((n) => {
+        rows.push({
+          label: `${clock} · ${n.id.replace(/^S\d+-/, "")} · L${n.level}${n.is_charge ? " charge" : ""}`,
+          shift: s.label,
+          nurse: n,
+        });
+      });
+    });
+
+    const uncoveredRows = [];
+    roster.shifts.forEach((s) => {
+      s.unassigned.forEach((idx) => {
+        uncoveredRows.push({ shift: s.label, infant: idx, start: s.start_hour, end: s.end_hour });
+      });
+    });
+
+    const labels = rows.map((r) => r.label);
+    uncoveredRows.forEach((u) => labels.push(`Infant #${u.infant} · unassigned`));
+
+    // Floating bars: [startHour, endHour] on a 0-24 axis beginning at 07:00.
+    const committed = rows.map((r) => [
+      r.nurse.shift_start,
+      r.nurse.shift_start + r.nurse.allocated_hours,
+    ]);
+    const spare = rows.map((r) => [
+      r.nurse.shift_start + r.nurse.allocated_hours,
+      r.nurse.shift_end,
+    ]);
+    uncoveredRows.forEach(() => { committed.push(null); spare.push(null); });
+    const gap = rows.map(() => null).concat(uncoveredRows.map((u) => [u.start, u.end]));
+
+    const box = document.getElementById("rosterChartBox");
+    box.style.height = `${Math.max(260, labels.length * 24 + 90)}px`;
+
+    // Divider + name for each shift block, so the day/night split is obvious.
+    const shiftBands = {
+      id: "neoShiftBands",
+      beforeDatasetsDraw(chart) {
+        const { ctx, chartArea, scales } = chart;
+        ctx.save();
+        roster.shifts.forEach((s, i) => {
+          const xa = scales.x.getPixelForValue(s.start_hour);
+          const xb = scales.x.getPixelForValue(s.end_hour);
+          if (i % 2 === 1) {
+            ctx.fillStyle = "rgba(14,43,54,0.025)";
+            ctx.fillRect(xa, chartArea.top, xb - xa, chartArea.bottom - chartArea.top);
+          }
+          if (i > 0) {
+            ctx.strokeStyle = "rgba(14,43,54,0.18)";
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath();
+            ctx.moveTo(xa, chartArea.top);
+            ctx.lineTo(xa, chartArea.bottom);
+            ctx.stroke();
+            ctx.setLineDash([]);
+          }
+          ctx.fillStyle = "#74909c";
+          ctx.font = "700 10px Inter, sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText(s.label, (xa + xb) / 2, chartArea.top - 5);
+        });
+        ctx.restore();
+      },
+    };
+
+    if (rosterChart) rosterChart.destroy();
+    rosterChart = new Chart(document.getElementById("chartRoster"), {
+      type: "bar",
+      plugins: [shiftBands],
+      data: {
+        labels,
+        datasets: [
+          {
+            label: "Committed to infants",
+            data: committed,
+            backgroundColor: rows.map((r) => LEVEL_FILL[r.nurse.level]),
+            borderRadius: 3, borderSkipped: false, barPercentage: 0.78,
+          },
+          {
+            label: "On duty, spare capacity",
+            data: spare,
+            backgroundColor: "#dbe7ec",
+            borderRadius: 3, borderSkipped: false, barPercentage: 0.78,
+          },
+          {
+            label: "Uncovered",
+            data: gap,
+            backgroundColor: "#d5637a",
+            borderRadius: 3, borderSkipped: false, barPercentage: 0.78,
+          },
+        ],
+      },
+      options: {
+        indexAxis: "y",
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              title: (t) => labels[t[0].dataIndex],
+              label: (t) => {
+                const r = rows[t.dataIndex];
+                if (!r) {
+                  const u = uncoveredRows[t.dataIndex - rows.length];
+                  return u ? `No qualified nurse free on ${u.shift}` : "";
+                }
+                const n = r.nurse;
+                if (t.datasetIndex === 0) {
+                  const who = n.infants.length
+                    ? `infants #${n.infants.join(", #")}`
+                    : (n.is_charge ? "charge nurse — no bedside assignment" : "no assignment");
+                  return [
+                    `${r.shift} · ${n.level_name}`,
+                    `${who}`,
+                    `${fmt(n.allocated_hours, 1)} h committed = ${fmt(n.day_percent, 1)}% of the day`,
+                  ];
+                }
+                if (t.datasetIndex === 1) {
+                  return `${fmt(n.spare_hours, 1)} h spare (${fmt(100 - n.load * 100, 0)}% of the shift)`;
+                }
+                return "";
+              },
+            },
+          },
+        },
+        layout: { padding: { top: 16 } },
+        scales: {
+          // The category axis is stacked so all three series share one row per
+          // nurse; the value axis is not, so floating bars keep absolute hours.
+          x: {
+            stacked: false, min: 0, max: 24, grid: { color: GRID },
+            title: { display: true, text: "Hour of the nursing day (starts 07:00)" },
+            ticks: {
+              stepSize: 3,
+              callback: (v) => `${String((7 + v) % 24).padStart(2, "0")}:00`,
+            },
+          },
+          y: {
+            stacked: true, grid: { display: false },
+            ticks: { autoSkip: false, font: { size: 10 } },
+          },
+        },
+      },
+    });
+
+    const totalCommitted = roster.shifts.reduce((s, x) => s + x.committed_hours, 0);
+    const totalCapacity = roster.shifts.reduce((s, x) => s + x.capacity_hours, 0);
+    document.getElementById("rosterSub").textContent =
+      `${roster.total_available} nurses split across ${roster.shifts_per_day} shifts. ` +
+      `Each bar is one nurse's shift: the solid part is time committed to infants, ` +
+      `the pale part is spare capacity. Unit-wide, ${fmt(totalCommitted, 0)} of ` +
+      `${fmt(totalCapacity, 0)} rostered nurse-hours are committed ` +
+      `(${fmt((totalCommitted / Math.max(1, totalCapacity)) * 100, 0)}%).`;
+
+    document.getElementById("rosterNote").textContent = roster.note;
+  }
+
   function setMetrics(r) {
     document.getElementById("mCensus").textContent = r.census ?? 0;
     document.getElementById("mNurses").textContent = r.nurses_per_shift ?? 0;
@@ -221,5 +558,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   document.getElementById("sShifts").addEventListener("change", refresh);
+  buildAvailability();
   refresh();
 });

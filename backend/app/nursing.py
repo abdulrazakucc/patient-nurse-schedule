@@ -97,16 +97,20 @@ def required_level(severity: float, condition: str | None = None,
                    resp_support: str | None = None) -> int:
     """Minimum competency level for the nurse assigned to this infant.
 
-    Driven by acuity, then escalated for invasive respiratory support or a
-    critical admission condition regardless of the computed band.
+    Driven by the acuity band, then escalated for invasive respiratory support
+    or a critical admission condition.
+
+    Level 4 is deliberately reserved for the genuinely unstable infant - both
+    critically ill *and* ventilated. Proficient (3-5 year) nurses routinely care
+    for ventilated VLBW infants, and a unit cannot roster an expert to a third
+    of its cots; treating every sick infant as expert-only would make the
+    requirement unmeetable rather than informative.
     """
     lvl = 1
     if severity >= 0.35:
         lvl = 2
     if severity >= 0.60:
         lvl = 3
-    if severity >= 0.78:
-        lvl = 4
 
     cond = (condition or "").lower()
     resp = (resp_support or "").lower()
@@ -370,6 +374,189 @@ def schedule_unit(infants: list[dict], shifts_per_day: int = 2) -> dict:
             "1:2 intermediate, 1:3 convalescent) plus one charge nurse per shift."
         ),
     }
+
+
+def distribute_nurses(available_by_level: dict[int, int], shifts_per_day: int) -> list[list[int]]:
+    """Spread the available workforce across the day's shifts.
+
+    Nurses work one shift per day, so the pool has to be divided. Seniors are
+    dealt out first and rotated round-robin, which keeps every shift's skill mix
+    comparable instead of stacking all the experts onto days.
+    """
+    shifts: list[list[int]] = [[] for _ in range(max(1, shifts_per_day))]
+    seq = 0
+    for lv in (4, 3, 2, 1):
+        for _ in range(int(available_by_level.get(lv, 0) or 0)):
+            shifts[seq % len(shifts)].append(lv)
+            seq += 1
+    return shifts
+
+
+def assign_shift(infants: list[dict], nurse_levels: list[int], shift_index: int) -> dict:
+    """Assign this shift's infants to the nurses rostered on it.
+
+    Rules, in order of priority:
+      * a nurse may only take an infant at or below their competency level;
+      * a nurse carries at most one full assignment (1.0 = one intensive infant,
+        or two intermediate, or three convalescent);
+      * the sickest infants are placed first, into the *least* senior qualified
+        nurse available, so experts stay free for the infants who need them;
+      * one senior nurse is held back as charge (not given a bedside load)
+        whenever the shift has two or more nurses.
+    """
+    nurses = [
+        {
+            "id": f"S{shift_index + 1}-N{i + 1}",
+            "level": lv,
+            "load": 0.0,
+            "infants": [],
+            "is_charge": False,
+        }
+        for i, lv in enumerate(nurse_levels)
+    ]
+    nurses.sort(key=lambda n: (-n["level"], n["id"]))
+
+    charge = None
+    if len(nurses) >= 2:
+        nurses[0]["is_charge"] = True
+        charge = nurses[0]
+    bedside = [n for n in nurses if not n["is_charge"]]
+
+    queue = sorted(
+        infants,
+        key=lambda i: (-i["required_level"], -i["nurses_required"], i["index"]),
+    )
+
+    unassigned = []
+    for inf in queue:
+        eligible = [
+            n for n in bedside
+            if n["level"] >= inf["required_level"]
+            and n["load"] + inf["nurses_required"] <= 1.0 + 1e-9
+        ]
+        if not eligible:
+            unassigned.append(inf)
+            continue
+        # Least senior qualified nurse, then the tightest fit.
+        eligible.sort(key=lambda n: (n["level"], -n["load"], n["id"]))
+        pick = eligible[0]
+        pick["load"] = round(pick["load"] + inf["nurses_required"], 6)
+        pick["infants"].append(inf["index"])
+
+    # Last resort: rather than leave an infant with nobody, the charge nurse
+    # picks up an assignment. Real units do this when cover is thin - but it
+    # leaves no one free to coordinate, so it is reported as a warning.
+    charge_carrying = False
+    if unassigned and charge is not None:
+        still_unassigned = []
+        for inf in unassigned:
+            if (charge["level"] >= inf["required_level"]
+                    and charge["load"] + inf["nurses_required"] <= 1.0 + 1e-9):
+                charge["load"] = round(charge["load"] + inf["nurses_required"], 6)
+                charge["infants"].append(inf["index"])
+                charge_carrying = True
+            else:
+                still_unassigned.append(inf)
+        unassigned = still_unassigned
+
+    return {
+        "nurses": nurses,
+        "unassigned": unassigned,
+        "charge_carrying_bedside": charge_carrying,
+    }
+
+
+def build_roster(infants: list[dict], available_by_level: dict[int, int],
+                 shifts_per_day: int = 2) -> dict:
+    """Roster the available nurses against the census, shift by shift.
+
+    Returns per-shift assignments with each nurse's committed hours over the
+    24-hour cycle, plus an explicit account of any infant left uncovered.
+    """
+    shifts_per_day = max(1, int(shifts_per_day or 2))
+    shift_hours = 24.0 / shifts_per_day
+    pools = distribute_nurses(available_by_level, shifts_per_day)
+
+    shifts = []
+    total_unassigned = 0
+    worst_gap: dict[int, float] = {}
+
+    for idx, pool in enumerate(pools):
+        result = assign_shift(infants, pool, idx)
+        rows = []
+        for n in result["nurses"]:
+            allocated = round(n["load"] * shift_hours, 2)
+            rows.append(
+                {
+                    "id": n["id"],
+                    "level": n["level"],
+                    "level_name": LEVEL_BY_ID[n["level"]]["short"],
+                    "is_charge": n["is_charge"],
+                    "infants": n["infants"],
+                    "load": round(n["load"], 3),
+                    "shift_start": round(idx * shift_hours, 2),
+                    "shift_end": round((idx + 1) * shift_hours, 2),
+                    "allocated_hours": allocated,
+                    "spare_hours": round(shift_hours - allocated, 2),
+                    "day_percent": round(allocated / 24.0 * 100, 1),
+                }
+            )
+
+        # What would it take to cover the infants nobody could accept?
+        gap: dict[int, float] = {}
+        for inf in result["unassigned"]:
+            lv = inf["required_level"]
+            gap[lv] = gap.get(lv, 0.0) + inf["nurses_required"]
+        for lv, dem in gap.items():
+            worst_gap[lv] = max(worst_gap.get(lv, 0.0), dem)
+
+        total_unassigned += len(result["unassigned"])
+        shifts.append(
+            {
+                "index": idx,
+                "label": _shift_label(idx, shifts_per_day),
+                "start_hour": round(idx * shift_hours, 2),
+                "end_hour": round((idx + 1) * shift_hours, 2),
+                "nurses": rows,
+                "nurse_count": len(rows),
+                "bedside_count": sum(1 for r in rows if not r["is_charge"]),
+                "has_charge": any(r["is_charge"] for r in rows),
+                "unassigned": [i["index"] for i in result["unassigned"]],
+                "charge_carrying_bedside": result["charge_carrying_bedside"],
+                "committed_hours": round(sum(r["allocated_hours"] for r in rows), 2),
+                "capacity_hours": round(len(rows) * shift_hours, 2),
+                "mean_load": round(
+                    sum(r["load"] for r in rows if not r["is_charge"])
+                    / max(1, sum(1 for r in rows if not r["is_charge"])), 3
+                ),
+            }
+        )
+
+    needed = {lv: math.ceil(d - 1e-9) for lv, d in worst_gap.items() if d > 0}
+    total_available = sum(int(available_by_level.get(lv, 0) or 0) for lv in (1, 2, 3, 4))
+
+    return {
+        "shifts_per_day": shifts_per_day,
+        "shift_hours": shift_hours,
+        "shifts": shifts,
+        "total_available": total_available,
+        "unassigned_total": total_unassigned,
+        "covered": total_unassigned == 0,
+        "charge_carrying_bedside": any(s["charge_carrying_bedside"] for s in shifts),
+        "additional_nurses_needed": needed,
+        "note": (
+            "Each nurse works one shift per day and carries at most one full "
+            "assignment. Charge nurses are held free of a bedside load."
+        ),
+    }
+
+
+def _shift_label(idx: int, shifts_per_day: int) -> str:
+    """Clock label for a shift, with the nursing day starting at 07:00."""
+    hours = 24 // max(1, shifts_per_day)
+    start = (7 + idx * hours) % 24
+    end = (start + hours) % 24
+    return f"{start:02d}:00-{end:02d}:00"
 
 
 def skill_mix(demand_by_level: dict[int, float], bedside_nurses: int,

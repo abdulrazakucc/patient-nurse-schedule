@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from .data_loader import DATASET, GA_BINS, WEIGHT_BINS
-from .nursing import NURSE_LEVELS, estimate_staffing, schedule_unit
+from .nursing import NURSE_LEVELS, build_roster, estimate_staffing, schedule_unit
 from .predictor import TOTAL_LOS, predict
 from . import timeseries
 
@@ -52,6 +52,14 @@ class CensusInfant(BaseModel):
 class ScheduleRequest(BaseModel):
     infants: list[CensusInfant] = Field(default_factory=list)
     shifts_per_day: int = Field(2, ge=1, le=4)
+    available_nurses: dict[int, int] | None = Field(
+        None,
+        description=(
+            "Nurses in hand across the whole day, keyed by competency level "
+            "(1-4), e.g. {\"1\": 4, \"2\": 6, \"3\": 6, \"4\": 4}. When supplied, "
+            "the response includes a 24-hour roster and any uncovered infants."
+        ),
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -136,7 +144,12 @@ def api_predict(req: PredictionRequest) -> dict:
 @app.post("/api/schedule")
 def api_schedule(req: ScheduleRequest) -> dict:
     infants = [i.model_dump() for i in req.infants]
-    return schedule_unit(infants, req.shifts_per_day)
+    result = schedule_unit(infants, req.shifts_per_day)
+    if req.available_nurses:
+        result["roster"] = build_roster(
+            result["infants"], req.available_nurses, req.shifts_per_day
+        )
+    return result
 
 
 # ---------------------------------------------------------------------------
