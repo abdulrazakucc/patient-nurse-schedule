@@ -283,9 +283,8 @@ Share the link with reviewers; it renders beautifully on mobile and desktop.
 
 ## 👥 Credits
 
-- **Waseem Altaf, MD** — project lead. Specialist in *Pediatric & Adolescent
-  Medicine / Neonatal-Perinatal Medicine*; clinical direction and outcome data
-  stewardship.
+- **Waseem Altaf, MD** — project lead. *Neonatologist*; clinical direction and
+  outcome data stewardship.
 - **Abdul Razak, PhD** — prepared the application.
 
 ## License
