@@ -80,6 +80,74 @@
     };
   }
 
+  /* ---------------- Dr. Altaf's acuity tool ----------------
+     Port of backend/app/acuity_tool.py classify(). The tool is parsed from the
+     CSVs in datasets/nurse-skills/ into data/neostay-acuity.js at build time;
+     pages that do not load that bundle simply never classify. */
+  const TOOL = window.NEOSTAY_ACUITY || null;
+  const ONE_TO_ONE = { ratio: "1:1", nurses_per_infant: 1.0, nurse_level: 4 };
+  const CARE_LEVEL_COLUMN = { 4: "intensive", 3: "intensive", 2: "intermediate", 1: "continuing" };
+  const FINDINGS = {};
+  if (TOOL) {
+    TOOL.systems.forEach((s) => {
+      Object.entries(s.items).forEach(([key, items]) => {
+        items.forEach((item) => {
+          FINDINGS[item.id] = { kind: "acuity", column: key, system: s.system, ...item };
+        });
+      });
+    });
+    FINDINGS[TOOL.one_to_one.id] = {
+      kind: "acuity", column: "intensive", system: "1:1 staffing",
+      id: TOOL.one_to_one.id, label: TOOL.one_to_one.label, one_to_one: true,
+    };
+    Object.values(TOOL.levels_of_care).forEach((group) => {
+      group.criteria.forEach((c) => { FINDINGS[c.id] = { kind: "care_level", ...c }; });
+    });
+  }
+
+  function classifyAcuity(findings) {
+    if (!TOOL) return null;
+    const chosen = (findings || []).filter((f) => FINDINGS[f]).map((f) => FINDINGS[f]);
+    if (!chosen.length) return null;
+
+    const acuity = chosen.filter((c) => c.kind === "acuity");
+    const care = chosen.filter((c) => c.kind === "care_level");
+    const careLevel = care.length ? Math.max(...care.map((c) => c.level)) : null;
+
+    const rank = (key) => TOOL.columns.findIndex((c) => c.key === key);
+    const column = acuity.length
+      ? TOOL.columns[Math.min(...acuity.map((c) => rank(c.column)))]
+      : TOOL.columns[rank(CARE_LEVEL_COLUMN[careLevel])];
+    const oneToOne = acuity.some((c) => c.one_to_one);
+    const staffing = oneToOne ? ONE_TO_ONE : {
+      ratio: column.planning_ratio,
+      nurses_per_infant: column.nurses_per_infant,
+      nurse_level: column.nurse_level,
+    };
+
+    // The findings that actually decided the result.
+    const reasons = chosen
+      .filter((c) =>
+        (c.kind === "acuity" && (oneToOne ? c.one_to_one : c.column === column.key)) ||
+        (c.kind === "care_level" && c.level === careLevel))
+      .map((c) => c.label);
+    const careInfo = careLevel ? TOOL.care_levels.find((c) => c.level === careLevel) : null;
+
+    return {
+      column: column.key,
+      column_name: column.name,
+      ratio: staffing.ratio,
+      band: column.band,
+      nurses_per_infant: staffing.nurses_per_infant,
+      one_to_one: oneToOne,
+      care_level: careLevel,
+      care_level_code: careInfo ? careInfo.code : null,
+      required_level: Math.max(staffing.nurse_level, careLevel || 1),
+      assessment: column.assessment,
+      reasons,
+    };
+  }
+
   function phaseRequiredLevel(phaseKey, severity, condition, respSupport) {
     if (phaseKey === "intensive") {
       return requiredLevel(Math.max(severity, 0.6), condition, respSupport);
@@ -573,18 +641,25 @@
       const g = Number(inf.ga_weeks ?? 30);
       const modifier = conditionModifier(inf.condition, inf.resp_support);
       const sev = acuityProfile(w, g, modifier).severity;
+      const tool = classifyAcuity(inf.findings);
 
-      let band, npi;
-      if (sev >= 0.6) {
-        band = "intensive"; npi = 1.0;
-      } else if (sev >= 0.35) {
-        band = "intermediate"; npi = 0.5;
+      let band, npi, req;
+      if (tool) {
+        // Findings recorded on the acuity tool decide the ratio and level.
+        band = tool.band; npi = tool.nurses_per_infant; req = tool.required_level;
       } else {
-        band = "convalescent"; npi = 1 / 3;
+        // Otherwise the modelled acuity band sets the immediate requirement.
+        if (sev >= 0.6) {
+          band = "intensive"; npi = 1.0;
+        } else if (sev >= 0.35) {
+          band = "intermediate"; npi = 0.5;
+        } else {
+          band = "convalescent"; npi = 1 / 3;
+        }
+        req = requiredLevel(sev, inf.condition, inf.resp_support);
       }
       acuityCounts[band] += 1;
       totalDemand += npi;
-      const req = requiredLevel(sev, inf.condition, inf.resp_support);
       demandByLevel[req] += npi;
       rows.push({
         index: i + 1,
@@ -597,6 +672,8 @@
         nurses_required: round(npi, 3),
         required_level: req,
         required_level_name: LEVEL_BY_ID[req].short,
+        findings: [...(inf.findings || [])],
+        classification: tool,
       });
     });
 
@@ -616,8 +693,10 @@
       infants: rows,
       skill_mix: skillMix(demandByLevel, bedsideNurses, infants.length > 0),
       note:
-        "Immediate acuity-based demand using AAP/AWHONN ratios (1:1 intensive, " +
-        "1:2 intermediate, 1:3 convalescent) plus one charge nurse per shift.",
+        "Infants with findings recorded on the Abrazo Arrowhead acuity tool use its ratios: " +
+        "1:1 for footnoted criteria, 1:2 for other intensive and intermediate care, 1:3 for " +
+        "continuing care. Infants without findings use modelled AAP/AWHONN ratios (1:1 " +
+        "intensive, 1:2 intermediate, 1:3 convalescent). One charge nurse is added per shift.",
     };
   }
 
@@ -664,5 +743,7 @@
     levelForYears,
     requiredLevel,
     levelInfo,
+    acuityTool: () => TOOL,
+    classifyAcuity,
   };
 })();

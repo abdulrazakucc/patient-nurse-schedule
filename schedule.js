@@ -92,27 +92,91 @@ document.addEventListener("DOMContentLoaded", () => {
   bind("sWeight", "sWeightVal", "g");
   bind("sGa", "sGaVal", "weeks");
 
-  const CONDITION_LABEL = { stable: "Stable", guarded: "Guarded", serious: "Serious", critical: "Critical" };
-  const RESP_LABEL = { room_air: "Room air", nasal_cannula: "Cannula", cpap: "CPAP", ventilator: "Ventilator" };
+  const esc = (s) =>
+    String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
+  /* ---------------- acuity tool picker ----------------
+     Dr. Altaf's acuity tool: one select per body system, holding that system's
+     findings grouped by ratio column. Only the most intensive finding in a
+     system can change the result, so one choice per system is enough. */
+  const TOOL = NeoEngine.acuityTool();
+  const DEFAULT_FINDINGS = { respiratory: "respiratory.continuing_low.0" };
+
+  function buildFindingPicker() {
+    document.getElementById("findingGrid").innerHTML = TOOL.systems.map((s) => {
+      const groups = TOOL.columns
+        .filter((c) => s.items[c.key].length)
+        .map((c) => `<optgroup label="${esc(`${c.name} · ${c.ratio}`)}">${s.items[c.key]
+          .map((it) => `<option value="${it.id}"${DEFAULT_FINDINGS[s.id] === it.id ? " selected" : ""}>${esc(it.label)}${it.one_to_one ? " (1:1)" : ""}</option>`)
+          .join("")}</optgroup>`)
+        .join("");
+      return `<label class="finding-row"><span>${esc(s.system)}</span>
+        <select class="compact" aria-label="${esc(s.system)} finding"><option value="">None</option>${groups}</select></label>`;
+    }).join("");
+
+    const careGroups = (group, prefix) => TOOL.care_levels.map((cl) => {
+      const items = group.criteria.filter((c) => c.level === cl.level);
+      if (!items.length) return "";
+      return `<optgroup label="${esc(`${prefix}${cl.code} · ${cl.name}`)}">${items
+        .map((c) => `<option value="${c.id}">${esc(c.label)}</option>`).join("")}</optgroup>`;
+    }).join("");
+    document.getElementById("fCare").innerHTML = '<option value="">Not recorded</option>' +
+      careGroups(TOOL.levels_of_care.general, "") +
+      careGroups(TOOL.levels_of_care.hyperbilirubinemia, "Hyperbilirubinemia · ");
+
+    document.getElementById("fOneToOneLabel").textContent = TOOL.one_to_one.label;
+    document.getElementById("fOneToOneRow").dataset.tip = TOOL.one_to_one.note;
+    document.getElementById("addForm").addEventListener("change", updatePreview);
+    updatePreview();
+  }
+
+  function readFindings() {
+    const ids = [...document.querySelectorAll("#findingGrid select")].map((s) => s.value);
+    if (document.getElementById("fOneToOne").checked) ids.push(TOOL.one_to_one.id);
+    ids.push(document.getElementById("fCare").value);
+    return ids.filter(Boolean);
+  }
+
+  /* Live result of the tool for the infant being entered. */
+  function updatePreview() {
+    const el = document.getElementById("acuityPreview");
+    const c = NeoEngine.classifyAcuity(readFindings());
+    if (!c) {
+      el.innerHTML = "<span>Pick at least one finding to classify this infant.</span>";
+      delete el.dataset.tip;
+      return;
+    }
+    el.innerHTML = `
+      <span class="ratio-tag">${c.ratio}</span>
+      <span class="pill pill-${c.band}">${esc(c.column_name)}</span>
+      ${c.care_level_code ? `<span class="care-tag">${c.care_level_code}</span>` : ""}
+      <span class="lvl lvl-${c.required_level}">L${c.required_level} ${NeoEngine.levelInfo(c.required_level).short}</span>`;
+    el.dataset.tip = `Decided by: ${c.reasons.join("; ")}. ${c.assessment}.`;
+  }
+
+  // A unit spanning the tool, from an unstable 1:1 infant to a feeder-grower.
   const SAMPLE_UNIT = [
-    { weight_g: 620, ga_weeks: 24, condition: "critical", resp_support: "ventilator" },
-    { weight_g: 740, ga_weeks: 25, condition: "serious", resp_support: "ventilator" },
-    { weight_g: 880, ga_weeks: 27, condition: "serious", resp_support: "cpap" },
-    { weight_g: 980, ga_weeks: 28, condition: "guarded", resp_support: "cpap" },
-    { weight_g: 1150, ga_weeks: 29, condition: "guarded", resp_support: "nasal_cannula" },
-    { weight_g: 1300, ga_weeks: 30, condition: "stable", resp_support: "nasal_cannula" },
-    { weight_g: 1420, ga_weeks: 31, condition: "stable", resp_support: "room_air" },
-    { weight_g: 1650, ga_weeks: 33, condition: "stable", resp_support: "room_air" },
+    { weight_g: 620, ga_weeks: 24, findings: ["respiratory.intensive.0", "cardiovascular.intensive.1", "one-to-one", "loc.38"] },
+    { weight_g: 740, ga_weeks: 25, findings: ["respiratory.intensive.0", "nutrition.intensive.0", "lines.intermediate.0", "loc.24"] },
+    { weight_g: 880, ga_weeks: 27, findings: ["respiratory.intensive.0", "infection.intermediate.0", "nutrition.intermediate.1", "loc.24"] },
+    { weight_g: 980, ga_weeks: 28, findings: ["respiratory.intermediate.0", "hyperbilirubinemia.intermediate.0", "lines.intermediate.0", "loc.19"] },
+    { weight_g: 1150, ga_weeks: 29, findings: ["respiratory.continuing.0", "a-b-ds.intermediate.0", "nutrition.continuing.0", "loc.12"] },
+    { weight_g: 1300, ga_weeks: 30, findings: ["respiratory.continuing.0", "a-b-ds.continuing.0", "nutrition.continuing.0", "loc.17"] },
+    { weight_g: 1420, ga_weeks: 31, findings: ["respiratory.continuing_low.0", "nutrition.continuing_low.0", "lines.continuing_low.0", "loc.17"] },
+    { weight_g: 1650, ga_weeks: 33, findings: ["respiratory.continuing_low.0", "nutrition.continuing_low.0", "hyperbilirubinemia.continuing_low.0"] },
   ];
 
   document.getElementById("addForm").addEventListener("submit", (e) => {
     e.preventDefault();
+    const findings = readFindings();
+    if (!NeoEngine.classifyAcuity(findings)) {
+      toast("Pick at least one acuity tool finding first.");
+      return;
+    }
     census.push({
       weight_g: Number(document.getElementById("sWeight").value),
       ga_weeks: Number(document.getElementById("sGa").value),
-      condition: document.getElementById("sCondition").value,
-      resp_support: document.getElementById("sResp").value,
+      findings,
     });
     refresh();
     toast("Infant added to census.");
@@ -122,7 +186,7 @@ document.addEventListener("DOMContentLoaded", () => {
     census.length = 0;
     census.push(...SAMPLE_UNIT.map((i) => ({ ...i })));
     refresh();
-    toast("Sample unit loaded — 8 infants across all acuity levels.");
+    toast("Sample unit loaded — 8 infants, from 1:1 care to a feeder-grower.");
   });
   document.getElementById("presetClear").addEventListener("click", () => {
     census.length = 0;
@@ -164,12 +228,16 @@ document.addEventListener("DOMContentLoaded", () => {
     r.infants.forEach((inf, i) => {
       const tr = document.createElement("tr");
       if (uncovered.has(inf.index)) tr.className = "row-uncovered";
+      const c = inf.classification;
+      const why = c
+        ? `Decided by: ${c.reasons.join("; ")}`
+        : "No acuity tool findings recorded, so the modelled acuity is used.";
       tr.innerHTML = `
         <td>${inf.index}</td>
         <td>${inf.weight_g} g</td>
         <td>${inf.ga_weeks} wk</td>
-        <td>${CONDITION_LABEL[inf.condition] || inf.condition}</td>
-        <td>${RESP_LABEL[inf.resp_support] || inf.resp_support}</td>
+        <td data-tip="${esc(why)}"><span class="ratio-tag">${c ? c.ratio : "—"}</span></td>
+        <td>${c && c.care_level_code ? `<span class="care-tag">${c.care_level_code}</span>` : "—"}</td>
         <td><span class="pill pill-${inf.acuity}">${inf.acuity}</span></td>
         <td>${inf.nurses_required.toFixed(2)}${uncovered.has(inf.index) ? '<span class="tag-uncovered">uncovered</span>' : ""}</td>
         <td><span class="lvl lvl-${inf.required_level}">L${inf.required_level} ${inf.required_level_name}</span></td>
@@ -405,8 +473,6 @@ document.addEventListener("DOMContentLoaded", () => {
      side by side on a 24-hour axis with no wrap around midnight. Each block
      splits into hours committed to infants and spare capacity, and any infant
      nobody could take gets its own red row. */
-  const RESP_SHORT = { room_air: "air", nasal_cannula: "cannula", cpap: "CPAP", ventilator: "vent" };
-
   function renderRosterChart(roster, sched) {
     const card = document.getElementById("rosterCard");
     card.hidden = false;
@@ -419,7 +485,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const describe = (idx) => {
       const inf = byIndex[idx];
       if (!inf) return `#${idx}`;
-      return `#${idx} ${CONDITION_LABEL[inf.condition] || inf.condition} · ${RESP_SHORT[inf.resp_support] || inf.resp_support}`;
+      const c = inf.classification;
+      if (!c) return `#${idx} ${inf.acuity}`;
+      return `#${idx} ${c.ratio}${c.care_level_code ? ` · ${c.care_level_code}` : ""}`;
     };
 
     const rows = [];
@@ -653,6 +721,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   document.getElementById("sShifts").addEventListener("change", refresh);
+  buildFindingPicker();
   buildAvailability();
   refresh();
 });
