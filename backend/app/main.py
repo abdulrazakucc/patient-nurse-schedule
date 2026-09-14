@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from .acuity_tool import TOOL as ACUITY_TOOL
 from .data_loader import DATASET, GA_BINS, WEIGHT_BINS
 from .nursing import NURSE_LEVELS, build_roster, estimate_staffing, schedule_unit
 from .predictor import TOTAL_LOS, predict
@@ -47,6 +48,11 @@ class CensusInfant(BaseModel):
     ga_weeks: float = Field(..., ge=20, le=42)
     condition: str = Field("stable")
     resp_support: str = Field("room_air")
+    findings: list[str] = Field(
+        default_factory=list,
+        description="Finding ids from the acuity tool (GET /api/acuity-tool). When "
+        "present they set the ratio and minimum nurse level instead of the model.",
+    )
 
 
 class ScheduleRequest(BaseModel):
@@ -121,6 +127,12 @@ def analytics() -> dict:
             "all": series(WEIGHT_BINS, surv.get("Initial Length of Stay (By Disposition) - All", {})),
         },
     }
+
+
+@app.get("/api/acuity-tool")
+def api_acuity_tool() -> dict:
+    """Dr. Altaf's nurse-skills classifier, with the finding ids /api/schedule accepts."""
+    return ACUITY_TOOL
 
 
 @app.post("/api/predict")

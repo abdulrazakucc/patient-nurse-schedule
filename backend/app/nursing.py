@@ -21,6 +21,8 @@ from __future__ import annotations
 
 import math
 
+from .acuity_tool import classify
+
 HOURS_PER_DAY = 24
 
 # ---------------------------------------------------------------------------
@@ -307,9 +309,10 @@ def estimate_staffing(
 def schedule_unit(infants: list[dict], shifts_per_day: int = 2) -> dict:
     """Compute unit-wide nurse staffing from a live census of infants.
 
-    Each infant dict may contain: weight_g, ga_weeks, condition, resp_support.
-    Returns the immediate nurses-required (current acuity) plus a charge nurse and
-    a per-shift roster recommendation.
+    Each infant dict may contain: weight_g, ga_weeks, condition, resp_support and
+    findings (ids from Dr. Altaf's acuity tool). Returns the immediate
+    nurses-required (current acuity) plus a charge nurse and a per-shift roster
+    recommendation.
     """
     rows = []
     total_current_demand = 0.0
@@ -322,20 +325,23 @@ def schedule_unit(infants: list[dict], shifts_per_day: int = 2) -> dict:
         modifier = condition_modifier(inf.get("condition"), inf.get("resp_support"))
         profile = _acuity_profile(w, g, modifier)
         sev = profile["severity"]
+        tool = classify(inf.get("findings"))
 
-        # Current acuity band -> immediate nurse:infant requirement.
-        if sev >= 0.6:
-            band, npi = "intensive", 1.0
-            acuity_counts["intensive"] += 1
-        elif sev >= 0.35:
-            band, npi = "intermediate", 0.5
-            acuity_counts["intermediate"] += 1
+        if tool:
+            # Findings recorded on the acuity tool decide the ratio and level.
+            band, npi, req = tool["band"], tool["nurses_per_infant"], tool["required_level"]
         else:
-            band, npi = "convalescent", 1 / 3
-            acuity_counts["convalescent"] += 1
+            # Otherwise the modelled acuity band sets the immediate requirement.
+            if sev >= 0.6:
+                band, npi = "intensive", 1.0
+            elif sev >= 0.35:
+                band, npi = "intermediate", 0.5
+            else:
+                band, npi = "convalescent", 1 / 3
+            req = required_level(sev, inf.get("condition"), inf.get("resp_support"))
 
+        acuity_counts[band] += 1
         total_current_demand += npi
-        req = required_level(sev, inf.get("condition"), inf.get("resp_support"))
         demand_by_level[req] = demand_by_level.get(req, 0.0) + npi
         rows.append(
             {
@@ -349,6 +355,8 @@ def schedule_unit(infants: list[dict], shifts_per_day: int = 2) -> dict:
                 "nurses_required": round(npi, 3),
                 "required_level": req,
                 "required_level_name": LEVEL_BY_ID[req]["short"],
+                "findings": list(inf.get("findings") or []),
+                "classification": tool,
             }
         )
 
@@ -369,11 +377,16 @@ def schedule_unit(infants: list[dict], shifts_per_day: int = 2) -> dict:
         "daily_nurse_shifts": daily_nurse_shifts,
         "infants": rows,
         "skill_mix": skill_mix(demand_by_level, bedside_nurses, bool(infants)),
-        "note": (
-            "Immediate acuity-based demand using AAP/AWHONN ratios (1:1 intensive, "
-            "1:2 intermediate, 1:3 convalescent) plus one charge nurse per shift."
-        ),
+        "note": SCHEDULE_NOTE,
     }
+
+
+SCHEDULE_NOTE = (
+    "Infants with findings recorded on the Abrazo Arrowhead acuity tool use its ratios: "
+    "1:1 for footnoted criteria, 1:2 for other intensive and intermediate care, 1:3 for "
+    "continuing care. Infants without findings use modelled AAP/AWHONN ratios (1:1 "
+    "intensive, 1:2 intermediate, 1:3 convalescent). One charge nurse is added per shift."
+)
 
 
 def distribute_nurses(available_by_level: dict[int, int], shifts_per_day: int) -> list[list[int]]:

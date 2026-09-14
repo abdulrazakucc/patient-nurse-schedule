@@ -82,10 +82,16 @@ for this infant at admission, and for each phase of the stay.
 
 1. Press **Load sample unit (8 infants)** to see it work instantly, or add
    babies one at a time with the form.
-2. Each baby is classified by acuity:
-   - 🔴 **Intensive** — one nurse cares for one baby (1:1)
-   - 🟡 **Intermediate** — one nurse for two babies (1:2)
-   - 🟢 **Convalescent** — one nurse for three babies (1:3)
+2. Each baby is classified on **Dr. Altaf's acuity tool**. For each body system
+   (respiratory, neuro, lines…), pick the most intensive finding that applies,
+   tick the 1:1 box if the baby is hemodynamically unstable, and pick the highest
+   level-of-care criterion met. A preview under the form shows the result:
+   - 🔴 **Intensive care** — one nurse for two babies (1:2), or one nurse for one
+     baby (1:1) when a footnoted criterion applies
+   - 🟡 **Intermediate care** — one nurse for two babies (1:2)
+   - 🟢 **Continuing care** — one nurse for three babies (1:3)
+
+   The **Acuity tool** page shows the full tool and every level-of-care criterion.
 3. The cards at the top show **nurses needed per shift** (bedside + one charge
    nurse) and total daily nurse-shifts.
 
@@ -212,7 +218,7 @@ admission. The disposition rings make this visible rather than hiding it.
 
 **Where does the data come from?**
 Aggregated center outcome tables for 2016–2026 (counts, medians, quartiles per
-weight band and per gestational week) in [`losdata/`](../losdata/). No
+weight band and per gestational week) in [`datasets/losdata/`](../datasets/losdata/). No
 patient-level records exist anywhere in this project.
 
 **It says "moderate confidence" — should I trust it?**

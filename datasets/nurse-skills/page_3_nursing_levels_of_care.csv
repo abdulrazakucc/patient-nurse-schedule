@@ -1,0 +1,52 @@
+﻿source_file,source_page,record_type,row_order,criterion_or_note,NBN_N1_Newborn_Nursery,Level_2_N2_Continuing_Care_Nursery_CCN_Special_Care_Nursery,Level_3_N3_Neonatal_Intensive_Care_Unit_3,Level_4_N4_Neonatal_Intensive_Care_Unit_4
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,title,0,Nursing Levels of Care,,,,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,handwritten_annotation,1,Handwritten numbers above level columns,10,12,70,20
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,document_note,2,"These guidelines are meant to provide parameters for standardization. Multiple line items can increase the level of care depending on the nursing interventions required as 
+well as state regulation criteria. Documentation is a critical component. Complete Oct 30, 2020 /Modified 5/24/21/ Modified 5/25/23 / Modified 7/15/2024",,,,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,3,Healthy infant >35 weeks gestation,X,,,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,4,"Babies who require routine evaluation and management of lab testing; glucose, bilirubin",X,,,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,5,"Babies who demonstrate prolonged transition after birth, requiring short term O2 therapy, monitored by pulse ox, who are able to be weaned to RA within the first 4-6 hours of life",X,,,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,6,"Babies who have NAS and need observation, but who are stable and do not require treatment",X,,,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,7,Anti-infective and asymptomatic,,X,,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,8,Babies being treated for seizure disorder that are stable,,X,,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,9,Babies requiring continuous phototherapy after mother's discharge,,X,,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,10,Babies requiring continuous servo controlled environment for thermoregulation,,X,,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,11,Babies requiring evaluation and treatment for suspected sepsis,,X,,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,12,Babies requiring gavage feeds,,X,,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,13,Babies requiring supplemental respiratory support including short term CPAP or mechanical ventilation for less than 24 hours,,X,,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,14,"Babies requiring supplemental respiratory support of O2 therapy for <= 30 days FIO2 >21% to < 40% via hood, nasal cannula or <=1L/min HFNC",,X,,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,15,"Babies who demonstrate prolonged transition after birth, requiring short term O2 therapy, monitored by pulse ox, who are unable to be weaned to RA within the first 4 hours of life",,X,,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,16,Babies with neonatal abstinence syndrome requiring treatment,,X,,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,17,Feed and Grow,,X,,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,18,Infants > 32 weeks or weigh > 1500 grams who do not have specific medical needs that meet level III criteria,,X,,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,19,"IV therapy, TPN once maintenance is established",,X,,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,20,"Short term central lines UAC, UVC, PICC (discuss with facility NICU medical director for parameters <3, 5, 7 days)",,,X,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,21,"Anti-infective and SYMPTOMATIC (hypotonia, tachypnea, tachycardia, temperature instability)",,,X,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,22,Babies requiring arterial catheterization for frequent ABG analysis or monitoring (hemodynamically stable),,,X,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,23,Babies requiring red blood cell transfusion - blood product transfusion,,,X,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,24,"Babies requiring supplemental respiratory support of O2 therapy greater than or equal to 40%, NIPPV or mechanical ventilation or HFNC >1L/min",,,X,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,25,"Babies with acute cardiac instability, including acute CHF or unstable cardiac arrhythmia to include cardioversion",,,X,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,26,Babies with birth asphyxia or 5 minute apgar of 6 or less,,,X,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,27,Cerebral Spinal Fluid (CSF) drainage with documented hydrocephalus,,,X,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,28,Complex Medical Condition - Stable,,,X,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,29,External Ventricular drain (EVD - neurosurgery),,,X,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,30,"Exchange transfusion, partial",,,X,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,31,Infant requiring sustained life support,,,X,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,32,"Long term central lines UAC, UVC, PICC (discuss with facility NICU Medical Director for parameters > 3, 5, 7, 14 days)",,,X,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,33,Peritoneal dialysis,,,X,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,34,Surgical Repair of Stable Conditions,,,X,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,35,"TPN while adjusting towards maintenance, IVF Resuscitation, volume expanders",,,,X
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,36,ECMO / ECLS,,,,X
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,37,Exchange transfusion. Double volume (falls under hyperbilirubinemia - see tab below),,,,X
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,38,"Hemodynamically unstable or highly likely to become hemodynamically unstable due to oxygenation and perfusion insufficiencies requiring frequent nurse interventions every 15 minutes 
+including, but not limited to, multiple invasive lines, multiple vasopressor titrations, and fluid and/or blood resuscitation, Hemodynamic monitoring including arterial line, ICP Monitoring, 
+Continuous EEG Monitoring",,,,X
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,39,<= 72 hours,,,,X
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,40,High Frequency Ventilation,,,,X
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,41,Hemodialysis,,,,X
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,42,Mechanical Ventilation and respiratory interventions every 1-2 hours (excluding weaning) FIO2> 50% or Oxygen Index > 15 or PEEP >8,,,,X
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,43,Nitric Oxide,,,,X
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,44,Prostaglandin for PDA Patency,,,,X
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,45,Regional transport center unstable incoming or outgoing neonatal transports,,,,X
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,46,Surgical repair of unstable complex conditions,,,,X
+Nurse-skills-classifier-dr-waseem-altaf.pdf,3,criterion,47,Total Body Cooling,,,,X

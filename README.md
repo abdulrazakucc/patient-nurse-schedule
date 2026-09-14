@@ -39,13 +39,14 @@ from real historical outcomes.
 
 ---
 
-## 🖥️ The five pages
+## 🖥️ The six pages
 
 | Page | What you do there | Who it helps |
 |------|-------------------|--------------|
 | **Home** | Overview, headline statistics, "unit at a glance" | Everyone |
 | **Predict** | Enter one baby's weight, age & condition → get stay / survival / nursing forecast | Neonatologists, counsellors, families |
-| **Scheduling** | Build the unit's current census → get nurses needed per shift | Charge nurses, managers |
+| **Scheduling** | Classify each baby on the acuity tool to build the census → get nurses needed per shift | Charge nurses, managers |
+| **Acuity tool** | Read Dr. Altaf's nurse skills classifier: acuity tool and levels of care | Charge nurses, educators |
 | **Timeline** | Watch care intensity change hour-by-hour across a simulated year | Educators, planners |
 | **Analytics** | Interactive population charts across all weight bands & weeks | Researchers, QI teams |
 
@@ -82,11 +83,11 @@ clinical-ladder programmes.
 
 ```mermaid
 flowchart LR
-    A["👶 Infant acuity<br/>severity + ventilation<br/>+ admission condition"] --> B{"Minimum<br/>nurse level"}
-    B -->|"convalescent"| L1["Level 1 · Novice"]
-    B -->|"intermediate"| L2["Level 2 · Competent"]
-    B -->|"intensive, ventilated<br/>or critical"| L3["Level 3 · Proficient"]
-    B -->|"critical AND ventilated"| L4["Level 4 · Expert"]
+    A["👶 Acuity tool<br/>most intensive finding<br/>+ highest level of care"] --> B{"Minimum<br/>nurse level"}
+    B -->|"continuing care · N1"| L1["Level 1 · Novice"]
+    B -->|"intermediate care · N2"| L2["Level 2 · Competent"]
+    B -->|"intensive care · N3"| L3["Level 3 · Proficient"]
+    B -->|"1:1 criteria · N4"| L4["Level 4 · Expert"]
     L1 --> M["🗓️ Shift skill mix<br/>novices capped at 30%<br/>each paired with a preceptor<br/>charge nurse must be Expert"]
     L2 --> M
     L3 --> M
@@ -94,7 +95,22 @@ flowchart LR
     M --> R["🕐 24-hour roster<br/>your nurses in hand,<br/>split across shifts"]
 ```
 
-Level 4 is deliberately scarce — reserved for infants who are *both* critically
+On the Scheduling page, each infant is classified with **Dr. Waseem Altaf's nurse
+skills classifier** ([datasets/nurse-skills/](datasets/nurse-skills/)), shown in
+full on the Acuity tool page:
+
+- the **most intensive finding** across body systems sets the nurse:patient
+  ratio: 1:1 for the tool's footnoted criteria, otherwise 1:2 for intensive and
+  intermediate care and 1:3 for continuing care (the protective end of each range);
+- the **highest level-of-care criterion** met sets the care level, N1–N4;
+- the minimum nurse level is the higher of the two: intensive L3 (1:1 L4),
+  intermediate L2, continuing L1, and N1–N4 → L1–L4.
+
+The build reads only the CSVs transcribed from the scanned PDF; the handwritten
+annotations are ignored. The Predict and Timeline pages forecast a whole stay
+rather than a shift, so they still use the modelled acuity below.
+
+In that model, Level 4 is deliberately scarce — reserved for infants who are *both* critically
 ill and ventilated. Proficient nurses routinely care for ventilated VLBW
 infants, and a unit cannot roster an expert to a third of its cots; making every
 sick infant expert-only would produce a requirement no real unit could meet.
@@ -107,8 +123,8 @@ The Scheduling page takes the nurses **in hand** — a count per competency leve
 that you edit directly — and rosters them against the census:
 
 - each nurse works **one shift per day**, so the pool is split across shifts;
-- a nurse carries at most **one full assignment** (one intensive infant, or two
-  intermediate, or three convalescent);
+- a nurse carries at most **one full assignment** (one 1:1 infant, or two 1:2
+  infants, or three 1:3 infants);
 - the sickest infants are placed first, into the **least senior qualified**
   nurse, keeping experts free for the infants who need them;
 - one senior nurse is held back as **charge**, with no bedside load.
@@ -192,16 +208,19 @@ engines and requires exact agreement — including Python's banker's rounding.
 ```
 patient-nurse-schedule/
 ├── frontend/                  ← the whole web app (deployable as-is)
-│   ├── index.html · predict.html · schedule.html · timeline.html
-│   │   analytics.html · about.html
+│   ├── index.html · predict.html · schedule.html · acuity.html
+│   │   timeline.html · analytics.html · about.html
 │   ├── engine.js              ← browser-side prediction & staffing engine
 │   ├── components.js          ← shared nav / footer / icons / toasts
 │   ├── styles.css             ← design system
-│   ├── data/                  ← pre-built aggregated data bundles (JS)
+│   ├── data/                  ← pre-built data bundles (JS)
 │   └── vendor/chart.umd.min.js
 ├── backend/                   ← optional FastAPI service (local use)
-│   └── app/ (main.py, predictor.py, nursing.py, data_loader.py, timeseries.py)
-├── losdata/                   ← source aggregated CSVs (N / median / Q1 / Q3)
+│   └── app/ (main.py, predictor.py, nursing.py, acuity_tool.py,
+│             data_loader.py, timeseries.py)
+├── datasets/
+│   ├── losdata/               ← source aggregated CSVs (N / median / Q1 / Q3)
+│   └── nurse-skills/          ← Dr. Altaf's classifier: scanned PDF + one CSV per page
 ├── generated_data/            ← simulated year of hourly unit activity
 ├── datagen/generate.py        ← regenerates the simulated data
 ├── scripts/build_frontend_data.py  ← rebuilds frontend/data/ from the CSVs
@@ -244,7 +263,8 @@ python3 scripts/build_frontend_data.py
 | GET | `/api/meta` | Centers + weight/GA bins |
 | GET | `/api/analytics` | Aggregated distributions for charts |
 | POST | `/api/predict` | Per-infant forecast `{weight_g, ga_weeks, condition, resp_support}` |
-| POST | `/api/schedule` | Unit staffing from a census `{infants:[...], shifts_per_day}` |
+| GET | `/api/acuity-tool` | Dr. Altaf's classifier, with the finding ids `/api/schedule` accepts |
+| POST | `/api/schedule` | Unit staffing from a census `{infants:[{..., findings}], shifts_per_day}` |
 | GET | `/api/ts/*` | Hourly timeline aggregations |
 
 ---
@@ -271,7 +291,8 @@ Share the link with reviewers; it renders beautifully on mobile and desktop.
 
 - **[docs/USER_GUIDE.md](docs/USER_GUIDE.md)** — a walkthrough of every page,
   written for non-technical readers, with worked examples.
-- **[losdata/](losdata/)** — the source aggregated datasets with PNG/PDF charts.
+- **[datasets/losdata/](datasets/losdata/)** — the source aggregated datasets with PNG/PDF charts.
+- **[datasets/nurse-skills/](datasets/nurse-skills/)** — Dr. Altaf's nurse skills classifier.
 - **[generated_data/README.md](generated_data/README.md)** — how the simulated
   hourly data is produced.
 

@@ -1,0 +1,29 @@
+﻿source_file,source_page,record_type,row_order,infant_body_system,nurse_ratio_1_2_or_1_1_intensive_care,nurse_ratio_1_2_3_intermediate_care,nurse_ratio_1_3_continuing_care,nurse_ratio_1_3_4_continuing_care
+Nurse-skills-classifier-dr-waseem-altaf.pdf,1,title,0,Abrazo Arrowhead Neonatal Acuity Tool,,,,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,1,table_row,1,Weight/age,Small baby first 72 hours,,,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,1,table_row,2,Respiratory,"• HFOV, Ventilator, NIPPV, CPAP/BCPAP, High flow or Vapotherm >4 liters
+• Chest Tube(s)
+• iNO","• High flow or Vapotherm ≤4 liters
+• Extubated or off NIPPV/CPAP/BCPAP <24 hours",O2 NP up to 2L,RA (or home oxygen without titration parameters)
+Nurse-skills-classifier-dr-waseem-altaf.pdf,1,table_row,3,Cardiovascular,"• UAC/PAL for BP monitoring
+• Vasoactive medications/volume support
+• Cardiopulmonary resuscitation or acute pulmonary cardiac arrest",N/A,N/A,N/A
+Nurse-skills-classifier-dr-waseem-altaf.pdf,1,table_row,4,A/B/Ds,N/A,A/B/Ds requiring frequent intervention,A/B/Ds self-recovering/Brady watches,N/A
+Nurse-skills-classifier-dr-waseem-altaf.pdf,1,table_row,5,Nutrition,"• TPN/Lipids and/or IV fluids
+• First 24 hours of trophic feeds","• NPO
+• Partial/Trophic feeds
+• TPN/Lipids and/or IV fluids (weaning)",Full feeds (PO/NG/OG/Ad Lib),Full feeds (PO/NG/OG/Ad Lib)
+Nurse-skills-classifier-dr-waseem-altaf.pdf,1,table_row,6,Neuro,"• Active seizures
+• IV sedation (NON NAS)
+• Therapeutic Hypothermia/HIE*",NAS with IV medication,NAS with PO medication,NAS without medication/ESC Scoring
+Nurse-skills-classifier-dr-waseem-altaf.pdf,1,table_row,7,Hyperbilirubinemia,"• Multiple bili-lights and IV hydration and/or exchange transfusion*
+• IVIG therapy",Phototherapy with IV hydration,Phototherapy,Phototherapy
+Nurse-skills-classifier-dr-waseem-altaf.pdf,1,table_row,8,Transfusions,"Multiple in 12 hours (Packed RBCs, platelets, cryo, FFP, etc.)",Transfusion (Packed RBCs or platelets),N/A,N/A
+Nurse-skills-classifier-dr-waseem-altaf.pdf,1,table_row,9,Infection,Unstable sepsis,Stable sepsis with antibiotics,Suspected sepsis with antibiotic,N/A
+Nurse-skills-classifier-dr-waseem-altaf.pdf,1,table_row,10,Lines,N/A,"Infusing IV, PICC, UVC/UAC","• IV saline lock or TKO
+• PICC w/ long term antibiotics in stable neonate",IV saline lock
+Nurse-skills-classifier-dr-waseem-altaf.pdf,1,table_row,11,Hematology/other,"• Life threatening congenital anomaly
+• DIC/pulmonary hemorrhage <24 hours
+• Bedside surgical procedure*",N/A,N/A,N/A
+Nurse-skills-classifier-dr-waseem-altaf.pdf,1,table_row,12,Nursing Care,Nursing intervention/assessment q 1-2 hours,Nursing intervention/assessment q 2-3 hours,Nursing intervention/assessment q3-4 hours,Nursing intervention/assessment q3-4 hours
+Nurse-skills-classifier-dr-waseem-altaf.pdf,1,footnote,13,"*1:1 staffing in the NICU: Hemodynamically unstable due to oxygenation and perfusion insufficiencies requiring frequent nurse interventions every 15 minutes including, but not limited to, multiple invasive lines, multiple vasopressor titrations, and fluid and/or blood resuscitation. HFOV w/ INO until stable, Therapeutic Hypothermia, Exchange blood transfusions for first four hours, and neonatal death for the first four hours. (policy: CLN.03.02) Bedside surgical procedures to be 1:1 during procedure.",,,,

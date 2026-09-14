@@ -4,12 +4,13 @@ Build the static data bundles consumed by the browser-side engine.
 
 The web app runs 100% client-side (so it can be hosted on GitHub Pages with no
 server and no patient data ever leaving the device). This script converts the
-source datasets into two small JavaScript files:
+source datasets into small JavaScript files:
 
   frontend/data/neostay-data.js        aggregated LOS / survival statistics + bins
+  frontend/data/neostay-acuity.js      Dr. Altaf's nurse-skills classifier
   frontend/data/neostay-timeseries.js  precomputed hourly timeline payloads
 
-Run it whenever the CSVs in losdata/ or generated_data/ change:
+Run it whenever the CSVs in datasets/ or generated_data/ change:
 
     python3 scripts/build_frontend_data.py
 """
@@ -22,6 +23,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
 
+from app.acuity_tool import TOOL  # noqa: E402
 from app.data_loader import DATASET, GA_BINS, WEIGHT_BINS  # noqa: E402
 
 OUT_DIR = ROOT / "frontend" / "data"
@@ -59,6 +61,14 @@ def build_dataset() -> None:
     out = OUT_DIR / "neostay-data.js"
     out.write_text(
         "window.NEOSTAY_DATA = " + json.dumps(payload, separators=(",", ":")) + ";\n"
+    )
+    print(f"wrote {out.relative_to(ROOT)} ({out.stat().st_size / 1024:.1f} KB)")
+
+
+def build_acuity() -> None:
+    out = OUT_DIR / "neostay-acuity.js"
+    out.write_text(
+        "window.NEOSTAY_ACUITY = " + json.dumps(TOOL, separators=(",", ":")) + ";\n"
     )
     print(f"wrote {out.relative_to(ROOT)} ({out.stat().st_size / 1024:.1f} KB)")
 
@@ -110,4 +120,5 @@ def build_timeseries() -> None:
 
 if __name__ == "__main__":
     build_dataset()
+    build_acuity()
     build_timeseries()

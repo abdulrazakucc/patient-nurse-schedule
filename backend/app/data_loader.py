@@ -22,7 +22,7 @@ from typing import Optional
 # ---------------------------------------------------------------------------
 # Paths
 # ---------------------------------------------------------------------------
-DATA_DIR = Path(__file__).resolve().parents[2] / "losdata"
+DATA_DIR = Path(__file__).resolve().parents[2] / "datasets" / "losdata"
 
 FILES = {
     "survival_by_weight": "Center-1_2016-to-2026__All VLBW Infants_by-Birth Wgt 10 Levels-survival.csv",

@@ -2,7 +2,7 @@
 NeoStay synthetic data generator
 =================================
 
-This script turns the *aggregated* real statistics in ``losdata/`` (counts, medians
+This script turns the *aggregated* real statistics in ``datasets/losdata/`` (counts, medians
 and quartiles of length of stay, plus disposition and survival) into a set of
 *realistic, patient-level* datasets that experts can inspect, validate and later
 replace with genuine records pulled from the hospital systems.

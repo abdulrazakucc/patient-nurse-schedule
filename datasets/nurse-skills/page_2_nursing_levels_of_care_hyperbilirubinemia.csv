@@ -1,0 +1,25 @@
+﻿source_file,source_page,record_type,row_order,criterion_or_note,NBN_N1_Newborn_Nursery,Level_2_N2_Continuing_Care_Nursery_CCN_Special_Care_Nursery,Level_3_N3_Neonatal_Intensive_Care_Unit_3,Level_4_N4_Neonatal_Intensive_Care_Unit_4
+Nurse-skills-classifier-dr-waseem-altaf.pdf,2,title,0,Nursing Levels of Care,,,,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,2,handwritten_annotation,1,Handwritten numbers above level columns,,12,70,20
+Nurse-skills-classifier-dr-waseem-altaf.pdf,2,document_note,2,"These guidelines are meant to provide parameters for standardization. Multiple line items can increase the level of care depending on the nursing interventions 
+required as well as state regulation criteria. Documentation is a critical component. Hyperbilirubinemia should resolve within 5 days. Subset is for 4 day LOS from 
+hyperbilirubinemia identified/admitted Completed 7/15/24.",,,,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,2,criterion,3,"Neurotoxicity Risk Factors: Isoimmune hemolytic disease, G6PD deficiency, Sepsis, Clinical Instability in last 24 hour, <38 weeks, albumen of 3 g/dL or less",X,,,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,2,criterion,4,Current Birth Hospitalization and TSB rate of rise >=0.3 mg/dl/hr and <= 24 hours from birth and phototherapy,X,,,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,2,criterion,5,Current Birth Hospitalization and TSB rate of rise > 0.2 mg/dl/hr and > 24 hours from birth and phototherapy,X,,,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,2,criterion,6,No neurotoxicity risk factors and TSB >=5.5 to > 20 depending on hours from birth and gestational age >= 35 weeks and phototherapy,X,,,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,2,criterion,7,Neurotoxicity risk factors and TSB >=4 to > 16.5 depending on hours from birth and gestational age >=35 weeks and phototherapy,X,,,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,2,criterion,8,"Current birth hospitalization and requires continued stay (days 2-5) with phototherapy, hyperbilirubinemia unresolved",X,,,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,2,criterion,9,Readmission with failed home phototherapy,,X,,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,2,criterion,10,No neurotoxicity risk factors and TSB >=10 to > 21.5 depending on hours from birth and gestational age >= 35 weeks and Intensive Phototherapy (irradiance of more than 30uW/CM per nm),,X,,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,2,criterion,11,Neurotoxicity risk factors and TSB >=6 to > 18.5 depending on hours from birth and gestational age >=35 weeks and Intensive Phototherapy (irradiance of more than 30uW/CM per nm),,X,,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,2,criterion,12,Hyperbilirubinemia unresolved or worsening and Intensive Phototherapy (irradiance of more than 30uW/CM per nm),,X,,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,2,criterion,13,Continued Stay.Monitoring for post transfusion exchange complication < 48 hours,,X,,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,2,criterion,14,No neurotoxicity risk factors and TSB >=12 to > 25 depending on hours from birth and gestational age >= 35 weeks and Intensive Phototherapy and IV Hydration or Immunoglobulin,,,X,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,2,criterion,15,Neurotoxicity risk factors and TSB >=12 to > 25 depending on hours from birth and gestational age >=35 weeks and Intensive Phototherapy and IV Hydration or Immunoglobulin,,,X,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,2,criterion,16,Continued Stay (days 2-5) Hyperbilirubinemia unresolved or worsening and Immunoglobulin,,,X,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,2,criterion,17,Continued Stay (days 2-5) Monitoring for TSB monitoring >= 4x in 24 hours and Intensive Phototherapy (irradiance of more than 30uW/CM per nm) and IV Hydration,,,X,
+Nurse-skills-classifier-dr-waseem-altaf.pdf,2,criterion,18,Hyperbilirubinemia and symptoms of encephalopathy,,,,X
+Nurse-skills-classifier-dr-waseem-altaf.pdf,2,criterion,19,No neurotoxicity risk factors and TSB >=15.5 to > 27 depending on hours from birth and gestational age >= 35 weeks and Exchange Transfusion,,,,X
+Nurse-skills-classifier-dr-waseem-altaf.pdf,2,criterion,20,Neurotoxicity risk factors and TSB >=14 to > 23.5 depending on hours from birth and gestational age >=35 weeks and Exchange Transfusion,,,,X
+Nurse-skills-classifier-dr-waseem-altaf.pdf,2,criterion,21,Continued Stay (days 2-5) with hyperbilirubinemia unresolved or worsening and exchange transfusion,,,,X
