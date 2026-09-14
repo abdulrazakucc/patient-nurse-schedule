@@ -59,7 +59,7 @@ function renderChrome() {
   strip.className = "credit-strip";
   strip.innerHTML = `
     ${icon("medic", 15)}
-    <span>A project of <b>Waseem Altaf,&nbsp;MD</b> · Neonatologist</span>
+    <span>Project and Clinical Lead — <b>Waseem Altaf,&nbsp;MD</b>, Neonatologist</span>
   `;
 
   const header = document.createElement("header");
@@ -100,7 +100,7 @@ function renderChrome() {
     </div>
     <div class="footer-credit">
       <span>© 2026 Waseem Altaf, MD — Neonatologist. All rights reserved.</span>
-      <span>Prepared by Abdul Razak, PhD</span>
+      <span>Technical Lead, Lead Developer and Applied AI/Data Science Lead — Abdul Razak, PhD</span>
     </div>
   `;
 
