@@ -17,6 +17,26 @@ It is built on a decade (2016–2026) of real, aggregated outcome statistics for
 > research discussion. It is **not** a medical device and must never replace
 > clinical judgment.
 
+## Project Leadership and Contributions
+
+### Waseem Altaf, MD — Project and Clinical Lead
+
+Provides clinical direction, neonatal-care expertise, research requirements,
+interpretation, data stewardship, domain validation and hospital coordination.
+
+### Abdul Razak, PhD — Technical Lead, Lead Developer and Applied AI/Data Science Lead
+
+Leads the platform’s technical and analytical development, including system
+architecture, prediction and staffing methods, scheduling algorithms, full-stack
+implementation, interactive analytics, software testing, cross-engine validation,
+technical documentation and deployment engineering.
+
+Clinical conclusions remain under clinical leadership; the separate areas of
+responsibility are set out in [CONTRIBUTORS.md](CONTRIBUTORS.md).
+
+**Citing NeoStay:** if you use NeoStay in research, please cite it using the
+metadata in [CITATION.cff](CITATION.cff).
+
 ---
 
 ## 🍼 For the non-medical reader — what is this about?
@@ -304,9 +324,11 @@ Share the link with reviewers; it renders beautifully on mobile and desktop.
 
 ## 👥 Credits
 
-- **Waseem Altaf, MD** — project lead. *Neonatologist*; clinical direction and
-  outcome data stewardship.
-- **Abdul Razak, PhD** — prepared the application.
+- **Waseem Altaf, MD**, Neonatologist — Project and Clinical Lead.
+- **Abdul Razak, PhD** — Technical Lead, Lead Developer and Applied AI/Data Science Lead.
+
+See [Project Leadership and Contributions](#project-leadership-and-contributions)
+and [CONTRIBUTORS.md](CONTRIBUTORS.md).
 
 ## License
 

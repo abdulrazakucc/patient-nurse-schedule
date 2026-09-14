@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you use NeoStay in your research, please cite it using the metadata from this file."
+title: "NeoStay: Infant NICU Outcome and Staffing Intelligence"
+type: software
+authors:
+  - given-names: Waseem
+    family-names: Altaf
+  - given-names: Abdul
+    family-names: Razak
+abstract: >-
+  NeoStay is a research and decision-support prototype that forecasts length of
+  stay, disposition, survival and nurse staffing for Very Low Birth Weight
+  infants from aggregated neonatal outcome statistics. It is not a medical
+  device and must never replace clinical judgment.
+  Project and Clinical Lead: Waseem Altaf, MD, Neonatologist.
+  Technical Lead and Lead Developer: Abdul Razak, PhD.
+repository-code: "https://github.com/abdulrazakucc/patient-nurse-schedule"
+url: "https://abdulrazakucc.github.io/patient-nurse-schedule/"
+license: Apache-2.0
+keywords:
+  - neonatal intensive care
+  - very low birth weight
+  - length of stay
+  - nurse staffing
+  - decision support
