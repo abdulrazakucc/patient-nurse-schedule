@@ -1,6 +1,6 @@
 "use strict";
 /* Home page: hero stats + "unit at a glance" showcase, all from the bundled dataset. */
-document.addEventListener("DOMContentLoaded", () => {
+neoReady(() => {
   const a = NeoEngine.analytics();
   const meta = NeoEngine.meta();
 

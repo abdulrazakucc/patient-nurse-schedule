@@ -1,0 +1,57 @@
+# NeoStay on a hospital server. The full walk-through is docs/DEPLOYMENT.md.
+#
+#   docker compose up -d --build
+#       NeoStay on http://127.0.0.1:8000 of this server, for the hospital's own
+#       HTTPS reverse proxy to forward to.
+#
+#   docker compose --profile https up -d --build
+#       Also serves HTTPS on ports 443 and 80 itself, with the bundled Caddy proxy.
+#
+# Settings come from .env (copy .env.example). Accounts and the session secret
+# live in the "neostay-instance" volume and survive rebuilds and upgrades.
+
+services:
+  app:
+    build: .
+    image: neostay:latest
+    restart: unless-stopped
+    environment:
+      NEOSTAY_ENV: ${NEOSTAY_ENV:-production}
+      NEOSTAY_AUTH_MODE: ${NEOSTAY_AUTH_MODE:-password}
+      # The name(s) people type to reach NeoStay. Requests for any other name
+      # are refused; localhost is always allowed for health checks.
+      NEOSTAY_TRUSTED_HOSTS: ${NEOSTAY_TRUSTED_HOSTS:-}
+      NEOSTAY_SESSION_HOURS: ${NEOSTAY_SESSION_HOURS:-12}
+      NEOSTAY_AUTH_USER_HEADER: ${NEOSTAY_AUTH_USER_HEADER:-X-Forwarded-User}
+      NEOSTAY_PROXY_SECRET_FILE: ${NEOSTAY_PROXY_SECRET_FILE:-}
+      # Which proxies may report the original client address and https scheme.
+      FORWARDED_ALLOW_IPS: ${NEOSTAY_FORWARDED_ALLOW_IPS:-*}
+    ports:
+      # Loopback by default, so NeoStay is reached only through an HTTPS proxy.
+      - "${NEOSTAY_BIND_ADDRESS:-127.0.0.1}:${NEOSTAY_PORT:-8000}:8000"
+    volumes:
+      - neostay-instance:/srv/instance
+
+  https:
+    image: caddy:2
+    profiles: ["https"]
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    environment:
+      NEOSTAY_SITE_ADDRESS: ${NEOSTAY_SITE_ADDRESS:-localhost}
+      NEOSTAY_TLS: ${NEOSTAY_TLS:-internal}
+    ports:
+      - "${NEOSTAY_HTTPS_PORT:-443}:443"
+      - "${NEOSTAY_HTTP_PORT:-80}:80"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./deploy/certs:/certs:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  neostay-instance:
+  caddy-data:
+  caddy-config:

@@ -1,6 +1,6 @@
 "use strict";
 /* Timeline page: renders the precomputed bundle in data/neostay-timeseries.js. */
-document.addEventListener("DOMContentLoaded", () => {
+neoReady(() => {
   const MUTED = "#74909c", GRID = "rgba(14,43,54,0.07)";
   Chart.defaults.color = MUTED;
   Chart.defaults.font.family = "Inter";

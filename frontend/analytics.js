@@ -1,6 +1,6 @@
 "use strict";
 /* Analytics page: charts computed from the bundled dataset via the engine. */
-document.addEventListener("DOMContentLoaded", () => {
+neoReady(() => {
   const MUTED = "#74909c", GRID = "rgba(14,43,54,0.07)";
   Chart.defaults.color = MUTED;
   Chart.defaults.font.family = "Inter";

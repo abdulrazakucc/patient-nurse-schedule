@@ -1,6 +1,6 @@
 "use strict";
 /* Scheduling page: census management + unit staffing via the client-side engine. */
-document.addEventListener("DOMContentLoaded", () => {
+neoReady(() => {
   const census = [];
 
   // Competency colours, aligned with the .lvl-N badges.

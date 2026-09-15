@@ -81,6 +81,24 @@ function renderChrome() {
     <div class="center-pill" id="centerPill">Center 1 · 2016–2026</div>
   `;
 
+  // Who is signed in, and a way out. access.js sets NeoAccess before this runs.
+  const access = window.NeoAccess;
+  if (access && access.canSignOut) {
+    const account = document.createElement("div");
+    account.className = "account";
+    const who = document.createElement("span");
+    who.className = "account-who";
+    who.textContent = access.name || access.email || "Signed in";
+    if (access.email) who.title = `Signed in as ${access.email}`;
+    const signOut = document.createElement("button");
+    signOut.type = "button";
+    signOut.className = "account-signout";
+    signOut.textContent = "Sign out";
+    signOut.addEventListener("click", access.signOut);
+    account.append(who, signOut);
+    header.appendChild(account);
+  }
+
   const footer = document.createElement("footer");
   footer.className = "footer";
   footer.innerHTML = `
@@ -336,4 +354,4 @@ function toast(message) {
   toastTimer = setTimeout(() => el.classList.remove("show"), 3200);
 }
 
-document.addEventListener("DOMContentLoaded", renderChrome);
+neoReady(renderChrome);

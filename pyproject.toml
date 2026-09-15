@@ -1,0 +1,5 @@
+# Tool configuration only -- there is no build step.
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"

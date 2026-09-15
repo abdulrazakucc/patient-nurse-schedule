@@ -1,6 +1,6 @@
 "use strict";
 /* Predictor page: runs the client-side engine (engine.js) — no server round-trip. */
-document.addEventListener("DOMContentLoaded", () => {
+neoReady(() => {
   const MUTED = "#74909c", GRID = "rgba(14,43,54,0.07)";
   const PHASE_COLOR = { intensive: "#0e8a8f", intermediate: "#c9a24b", convalescent: "#10998a" };
   if (window.Chart) {

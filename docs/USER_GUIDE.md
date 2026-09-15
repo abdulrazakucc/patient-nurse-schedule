@@ -2,9 +2,31 @@
 
 *A plain-language walkthrough for clinicians, students and curious readers.*
 
-**Open the app:** https://abdulrazakucc.github.io/patient-nurse-schedule/
-It works in any modern browser, on a phone or a laptop. Nothing is installed,
-and nothing you type is sent anywhere — all calculations happen on your device.
+**Open the app:** use the address your NeoStay administrator gave you — your
+hospital's NeoStay server, or https://abdulrazakucc.github.io/patient-nurse-schedule/.
+It works in any modern browser, on a phone or a laptop, and nothing is installed.
+You sign in first; after that, nothing you type into the tools is sent anywhere —
+all calculations happen on your device.
+
+## Signing in
+
+1. Open NeoStay. You will see the **Sign in** screen.
+2. Enter the email address and password your NeoStay administrator set up for
+   you. **Show** lets you check the password as you type it.
+3. You stay signed in as you move between pages. On a hospital server a sign-in
+   lasts 12 hours; on the GitHub Pages copy it lasts until you close the tab.
+4. Use **Sign out** at the top right when you finish — always on a shared computer.
+
+| If you see… | Do this |
+|---|---|
+| *Email or password is incorrect.* | Check both and try again. |
+| *Too many attempts. Try again in a few minutes.* | Wait 15 minutes, or ask your administrator to reset your password. |
+| *Your password was accepted, but this browser did not keep the sign-in.* | Open NeoStay with its **https://** address, and allow cookies for it. |
+| *NeoStay has been updated since you signed in.* | Sign in again. |
+| *This browser cannot open NeoStay's protected data.* | Use a current version of Edge, Chrome, Firefox or Safari. |
+
+Need an account, or forgotten your password? Ask your NeoStay administrator.
+Passwords cannot be recovered, only reset.
 
 ---
 
@@ -205,8 +227,9 @@ Two important honesty rules:
 ## 4. Frequently asked questions
 
 **Is my input stored or transmitted?**
-No. The site is static files; the calculation runs in your browser's memory and
-vanishes when you close the tab.
+No. Signing in checks your password — on the hospital server, or inside your
+browser for the GitHub Pages copy. After that, every calculation runs in your
+browser's memory, and what you type into the tools vanishes when you close the tab.
 
 **Can I use this for real clinical decisions?**
 No — it is a decision-support prototype for education and research discussion.
@@ -229,9 +252,10 @@ moderate 20–49, low 5–19. Treat low-confidence numbers as rough sketches.
 
 ## 5. Sharing with colleagues
 
-Send the link — that's it:
+NeoStay is for registered users only. Send colleagues the link, and ask your
+NeoStay administrator to create an account for each of them:
 
-> **https://abdulrazakucc.github.io/patient-nurse-schedule/**
+> **https://abdulrazakucc.github.io/patient-nurse-schedule/** (or your hospital's NeoStay address)
 
 On a phone, the menu is behind the ☰ button, and every chart responds to touch.
 Feedback is welcome via GitHub issues on the repository.

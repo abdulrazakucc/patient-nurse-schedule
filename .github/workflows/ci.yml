@@ -1,0 +1,66 @@
+name: CI
+
+# The tests, plus the real server container: built, started, and checked end to
+# end with a throwaway account -- the same way a hospital server runs it.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Test
+        run: python -m pytest
+
+  container:
+    name: Server container
+    runs-on: ubuntu-latest
+    env:
+      NEOSTAY_TRUSTED_HOSTS: localhost
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and start
+        run: docker compose up -d --build
+
+      - name: Create a throwaway account and smoke test
+        run: |
+          for _ in $(seq 1 90); do
+            curl -sf http://127.0.0.1:8000/api/health > /dev/null && break
+            sleep 1
+          done
+          password=$(python3 -c 'import secrets; print(secrets.token_urlsafe(24))')
+          echo "::add-mask::$password"
+          printf '%s\n' "$password" \
+            | docker compose exec -T app python -m app.accounts add ci@example.org --password-stdin
+          NEOSTAY_SMOKE_PASSWORD="$password" scripts/smoke_test.sh http://localhost:8000 ci@example.org
+
+      - name: Show logs on failure
+        if: failure()
+        run: docker compose logs
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v

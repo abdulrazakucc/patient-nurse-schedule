@@ -1,33 +1,48 @@
-"""FastAPI application: prediction + analytics API and static frontend hosting."""
+"""
+NeoStay server: the web application, its data and the JSON API behind sign-in.
+
+One process serves everything on one port:
+
+* ``/``            the web pages. They hold no data: each page asks who is signed
+                   in, shows the sign-in screen if nobody is, and only then loads
+                   the data and the engine.
+* ``/data/...``    the data bundles the pages compute from -- signed-in users only.
+* ``/api/...``     the JSON API -- signed-in users only, apart from ``/api/health``
+                   and the sign-in routes.
+* ``/docs``        interactive API documentation, only with ``NEOSTAY_EXPOSE_DOCS``.
+
+Run it from ``backend/``::
+
+    uvicorn app.main:app --port 8000
+"""
 from __future__ import annotations
 
-from pathlib import Path
+import hmac
+from urllib.parse import urlsplit
 
-from fastapi import FastAPI, HTTPException
+from fastapi import APIRouter, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.responses import JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from . import auth, config, timeseries
 from .acuity_tool import TOOL as ACUITY_TOOL
 from .data_loader import DATASET, GA_BINS, WEIGHT_BINS
 from .nursing import NURSE_LEVELS, build_roster, estimate_staffing, schedule_unit
 from .predictor import TOTAL_LOS, predict
-from . import timeseries
 
-app = FastAPI(
-    title="NeoStay – Infant NICU Outcome & Staffing Intelligence",
-    description=(
-        "Analytics and predictive service for Very Low Birth Weight (VLBW) infant "
-        "length-of-stay, disposition, survival and nurse-staffing planning."
-    ),
-    version="1.0.0",
-)
+__version__ = "2.0.0"
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+# The same policy the pages declare in their own meta tag, plus the protections
+# only a response header can give.
+PAGE_POLICY = (
+    "default-src 'self'; script-src 'self'; "
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+    "font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; "
+    "object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
 )
 
 
@@ -71,12 +86,15 @@ class ScheduleRequest(BaseModel):
 # ---------------------------------------------------------------------------
 # API endpoints
 # ---------------------------------------------------------------------------
-@app.get("/api/health")
+api = APIRouter()
+
+
+@api.get("/api/health")
 def health() -> dict:
-    return {"status": "ok", "center": DATASET.center, "period": DATASET.period}
+    return {"status": "ok"}
 
 
-@app.get("/api/meta")
+@api.get("/api/meta")
 def meta() -> dict:
     """Bins and available centers for populating the UI."""
     return {
@@ -96,7 +114,7 @@ def meta() -> dict:
     }
 
 
-@app.get("/api/analytics")
+@api.get("/api/analytics")
 def analytics() -> dict:
     """Aggregated distributions for dashboard charts."""
 
@@ -129,13 +147,13 @@ def analytics() -> dict:
     }
 
 
-@app.get("/api/acuity-tool")
+@api.get("/api/acuity-tool")
 def api_acuity_tool() -> dict:
     """Dr. Altaf's nurse-skills classifier, with the finding ids /api/schedule accepts."""
     return ACUITY_TOOL
 
 
-@app.post("/api/predict")
+@api.post("/api/predict")
 def api_predict(req: PredictionRequest) -> dict:
     try:
         result = predict(req.weight_g, req.ga_weeks)
@@ -153,7 +171,7 @@ def api_predict(req: PredictionRequest) -> dict:
     return result
 
 
-@app.post("/api/schedule")
+@api.post("/api/schedule")
 def api_schedule(req: ScheduleRequest) -> dict:
     infants = [i.model_dump() for i in req.infants]
     result = schedule_unit(infants, req.shifts_per_day)
@@ -167,26 +185,26 @@ def api_schedule(req: ScheduleRequest) -> dict:
 # ---------------------------------------------------------------------------
 # Time series analysis (over the generated datasets)
 # ---------------------------------------------------------------------------
-@app.get("/api/ts/available")
+@api.get("/api/ts/available")
 def ts_available() -> dict:
     return {"available": timeseries.available()}
 
 
-@app.get("/api/ts/summary")
+@api.get("/api/ts/summary")
 def ts_summary() -> dict:
     if not timeseries.available():
         raise HTTPException(status_code=404, detail="Generated data not found. Run datagen/generate.py")
     return timeseries.summary()
 
 
-@app.get("/api/ts/infants")
+@api.get("/api/ts/infants")
 def ts_infants() -> dict:
     if not timeseries.available():
         raise HTTPException(status_code=404, detail="Generated data not found.")
     return {"infants": timeseries.representative_infants()}
 
 
-@app.get("/api/ts/infant/{infant_id}")
+@api.get("/api/ts/infant/{infant_id}")
 def ts_infant(infant_id: str) -> dict:
     data = timeseries.infant_series(infant_id)
     if not data:
@@ -194,7 +212,7 @@ def ts_infant(infant_id: str) -> dict:
     return data
 
 
-@app.get("/api/ts/unit-week")
+@api.get("/api/ts/unit-week")
 def ts_unit_week() -> dict:
     if not timeseries.available():
         raise HTTPException(status_code=404, detail="Generated data not found.")
@@ -202,8 +220,127 @@ def ts_unit_week() -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Static frontend (mounted last so /api/* keeps priority)
+# The application
 # ---------------------------------------------------------------------------
-FRONTEND_DIR = Path(__file__).resolve().parents[2] / "frontend"
-if FRONTEND_DIR.exists():
-    app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
+def _needs_session(path: str) -> bool:
+    """Data and API calls need a signed-in user; the pages themselves do not."""
+    if path.startswith("/api/"):
+        return path not in auth.PUBLIC_API
+    return path.startswith("/data/")
+
+
+def _web_origins(values: list[str]) -> list[str]:
+    clean = []
+    for value in values:
+        parts = urlsplit(value)
+        if (
+            parts.scheme not in {"http", "https"}
+            or not parts.netloc
+            or parts.username
+            or parts.password
+            or parts.path not in {"", "/"}
+            or parts.query
+            or parts.fragment
+        ):
+            raise RuntimeError(f"Invalid NEOSTAY_CORS_ORIGINS entry: {value!r}")
+        clean.append(value.rstrip("/"))
+    return clean
+
+
+def check_settings() -> None:
+    """Refuse to start with settings that would leave the data unprotected."""
+    if config.ENVIRONMENT not in {"development", "test", "production"}:
+        raise RuntimeError("NEOSTAY_ENV must be development, test or production")
+    if config.AUTH_MODE not in {"off", "password", "proxy"}:
+        raise RuntimeError("NEOSTAY_AUTH_MODE must be password, proxy or off")
+    if any("://" in host or "/" in host for host in config.TRUSTED_HOSTS):
+        raise RuntimeError("NEOSTAY_TRUSTED_HOSTS entries must be host names, without schemes or paths")
+    if config.ENVIRONMENT == "production" and "*" in config.TRUSTED_HOSTS:
+        raise RuntimeError("Production does not allow a wildcard in NEOSTAY_TRUSTED_HOSTS")
+    if config.AUTH_MODE == "proxy" and (
+        not config.AUTH_USER_HEADER or len(config.PROXY_SECRET) < 32
+    ):
+        raise RuntimeError("Proxy sign-in requires a user header and a 32+ character proxy secret")
+    if config.ENVIRONMENT == "production" and config.AUTH_MODE == "off":
+        raise RuntimeError("Production requires sign-in: NEOSTAY_AUTH_MODE=password or proxy")
+    if (
+        config.ENVIRONMENT == "production"
+        and config.AUTH_MODE == "password"
+        and len(config.SESSION_SECRET) < 32
+    ):
+        raise RuntimeError("Password sign-in in production requires a 32+ character session secret")
+
+
+def create_app() -> FastAPI:
+    """Build the application. A factory, so tests can build one per configuration."""
+    check_settings()
+    origins = _web_origins(config.CORS_ORIGINS)
+
+    app = FastAPI(
+        title="NeoStay – Infant NICU Outcome & Staffing Intelligence",
+        description=(
+            "Analytics and predictive service for Very Low Birth Weight (VLBW) infant "
+            "length-of-stay, disposition, survival and nurse-staffing planning. "
+            "Every data route requires a signed-in session."
+        ),
+        version=__version__,
+        docs_url="/docs" if config.EXPOSE_DOCS else None,
+        redoc_url=None,
+        openapi_url="/openapi.json" if config.EXPOSE_DOCS else None,
+    )
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=config.TRUSTED_HOSTS)
+    app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+    def secured(response: Response, path: str) -> Response:
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Referrer-Policy"] = "same-origin"
+        response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+        if path not in {"/docs", "/openapi.json"}:
+            response.headers["Content-Security-Policy"] = PAGE_POLICY
+        if _needs_session(path) or path.startswith("/api/"):
+            response.headers["Cache-Control"] = "no-store"
+        if config.ENVIRONMENT == "production":
+            response.headers["Strict-Transport-Security"] = "max-age=31536000"
+        return response
+
+    @app.middleware("http")
+    async def require_sign_in(request, call_next):
+        path = request.url.path
+        if config.AUTH_MODE == "proxy" and path != "/api/health":
+            supplied = request.headers.get("X-NeoStay-Proxy-Secret", "")
+            user = request.headers.get(config.AUTH_USER_HEADER, "").strip()
+            if not user or not hmac.compare_digest(supplied, config.PROXY_SECRET):
+                return secured(
+                    JSONResponse({"detail": "Authentication required"}, status_code=401), path
+                )
+        if (
+            config.AUTH_MODE == "password"
+            and _needs_session(path)
+            and auth.current_user(request) is None
+        ):
+            return secured(JSONResponse({"detail": "Sign in required"}, status_code=401), path)
+        return secured(await call_next(request), path)
+
+    # Same-origin pages need no CORS. It is only for a browser app on another
+    # site, and then only for the origins named -- never a wildcard.
+    if origins:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=origins,
+            allow_credentials=True,
+            allow_methods=["GET", "POST"],
+            allow_headers=["Content-Type"],
+        )
+
+    app.include_router(auth.router)
+    app.include_router(api)
+
+    # Mounted last, so every /api route above resolves first.
+    if config.FRONTEND_DIR.is_dir():
+        app.mount("/", StaticFiles(directory=config.FRONTEND_DIR, html=True), name="frontend")
+    return app
+
+
+# The instance uvicorn imports: `uvicorn app.main:app`.
+app = create_app()

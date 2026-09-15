@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'self'; base-uri 'none'; form-action 'none'" />
+  <meta name="robots" content="noindex" />
+  <title>NeoStay · Registered users only</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <!--
+    Published by scripts/build_pages_site.py when no accounts are configured:
+    this page holds no application code and no data.
+  -->
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh; display: grid; place-items: center; padding: 32px 16px;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: #122b36;
+      background: linear-gradient(180deg, #ffffff 0%, #f5f8f9 40%);
+    }
+    main {
+      width: 100%; max-width: 460px; background: #fff; border: 1px solid #e3ebef;
+      border-radius: 22px; box-shadow: 0 22px 56px rgba(14, 43, 54, 0.13); padding: 36px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+    .mark {
+      width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; color: #fff;
+      background: linear-gradient(140deg, #0e8a8f, #0a6d72);
+    }
+    .brand strong { display: block; font-family: Georgia, serif; font-size: 21px; }
+    .brand span { font-size: 12px; color: #74909c; }
+    .badge {
+      display: inline-block; font-size: 11.5px; font-weight: 700; letter-spacing: 0.6px;
+      text-transform: uppercase; color: #0a6d72; background: #e3f4f4; border-radius: 999px;
+      padding: 6px 12px; margin-bottom: 14px;
+    }
+    h1 { font-family: Georgia, serif; font-size: 28px; font-weight: 600; margin-bottom: 10px; }
+    p { color: #3d5763; font-size: 15px; line-height: 1.65; margin-bottom: 12px; }
+    .foot {
+      margin-top: 20px; padding-top: 16px; border-top: 1px solid #e3ebef;
+      font-size: 12px; color: #74909c; line-height: 1.6;
+    }
+    .warn { color: #a76f1e; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="brand">
+      <div class="mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-4.35-9-8.5C1 9 2.5 5.5 6 5.5c2 0 3.2 1.1 4 2.3.8-1.2 2-2.3 4-2.3 3.5 0 5 3.5 3 7-2.5 4.15-9 8.5-9 8.5z"/></svg>
+      </div>
+      <div><strong>NeoStay</strong><span>Infant NICU Outcome &amp; Staffing Intelligence</span></div>
+    </div>
+    <span class="badge">Registered users only</span>
+    <h1>NeoStay is not open here yet</h1>
+    <p>This copy of NeoStay is available to registered users only, and sign-in has not
+    been set up for it yet.</p>
+    <p>If you should have access, contact your NeoStay administrator.</p>
+    <div class="foot">
+      <p class="warn">Decision support only — not for clinical use.</p>
+      Project and Clinical Lead — Waseem Altaf, MD, Neonatologist<br />
+      Technical Lead, Lead Developer and Applied AI/Data Science Lead — Abdul Razak, PhD
+    </div>
+  </main>
+</body>
+</html>

@@ -2,6 +2,7 @@
 __pycache__/
 *.pyc
 .venv/
+.pytest_cache/
 
 # OS
 .DS_Store
@@ -9,3 +10,15 @@ __pycache__/
 # Editors
 .vscode/
 .idea/
+
+# Server-private state: accounts (password hashes) and the session secret
+instance/
+.env
+secrets/
+
+# Build output
+site/
+
+# Certificates and keys for the bundled HTTPS proxy
+deploy/certs/*
+!deploy/certs/README.md

@@ -1,0 +1,14 @@
+# HTTPS in front of NeoStay, for `docker compose --profile https up -d`.
+#
+# NEOSTAY_SITE_ADDRESS  the name people type, for example neostay.hospital.local
+# NEOSTAY_TLS           "internal" (default): a certificate from Caddy's own
+#                       authority. Browsers warn until IT trusts its root
+#                       certificate (see docs/DEPLOYMENT.md).
+#                       Or the hospital's own certificate and key, placed in
+#                       deploy/certs/:  /certs/neostay.crt /certs/neostay.key
+
+{$NEOSTAY_SITE_ADDRESS} {
+	tls {$NEOSTAY_TLS}
+	encode gzip
+	reverse_proxy app:8000
+}

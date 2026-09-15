@@ -799,6 +799,83 @@ code {
 .about-card .leader-name { color: var(--ink); font-size: 15.5px; font-weight: 700; margin-bottom: 8px; }
 .leader-note { margin: 24px 0 0; }
 
+/* ---------------- sign-in gate ---------------- */
+/* Pages hold no data until someone signs in; access.js reveals them. */
+body:not(.neo-unlocked) > main { display: none !important; }
+.noscript { max-width: 520px; margin: 80px auto; padding: 0 20px; text-align: center; color: var(--ink-soft); }
+
+.neo-login {
+  min-height: 100vh; display: grid; place-items: center;
+  padding: clamp(24px, 6vw, 64px) 16px;
+}
+.neo-login-card {
+  width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 18px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
+  padding: clamp(24px, 5vw, 40px);
+}
+.neo-login-brand { display: flex; align-items: center; gap: 13px; }
+.neo-login-brand strong {
+  display: block; font-family: var(--font-display); font-size: 21px; font-weight: 600;
+  color: var(--ink); line-height: 1.1;
+}
+.neo-login-brand span { font-size: 11.5px; color: var(--muted); }
+.neo-login-badge {
+  align-self: flex-start; display: inline-flex; align-items: center; gap: 7px; margin-top: 6px;
+  font-size: 11.5px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase;
+  color: var(--teal-deep); background: var(--teal-soft); border-radius: 999px; padding: 6px 12px;
+}
+.neo-login-card h1 {
+  font-family: var(--font-display); font-size: 30px; font-weight: 600; color: var(--ink);
+  letter-spacing: -0.3px;
+}
+.neo-login-lead { color: var(--ink-soft); font-size: 14.5px; line-height: 1.6; margin-top: -8px; }
+.neo-login-form { display: flex; flex-direction: column; gap: 16px; }
+.neo-login-form .field { gap: 7px; }
+.neo-login-form label { font-size: 13px; font-weight: 600; color: var(--ink-soft); }
+.neo-login-form input {
+  width: 100%; background: var(--surface-2); border: 1px solid var(--border-strong); color: var(--ink);
+  padding: 12px 14px; border-radius: 12px; font-size: 15px; font-family: inherit;
+}
+.neo-login-form input:focus {
+  outline: none; border-color: var(--teal); box-shadow: 0 0 0 3px rgba(14, 138, 143, 0.25);
+}
+.neo-password { position: relative; }
+.neo-password input { padding-right: 76px; }
+.neo-reveal {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  border: none; background: transparent; color: var(--teal-deep); cursor: pointer;
+  font: 600 13px/1 var(--font-body); padding: 9px 11px; border-radius: 8px;
+}
+.neo-reveal:hover { background: var(--teal-soft); }
+.neo-login-error {
+  background: var(--rose-soft); color: #9d3550; border-radius: 10px; padding: 10px 12px;
+  font-size: 13.5px; line-height: 1.5;
+}
+.neo-login-submit { width: 100%; }
+.neo-login-submit:disabled { opacity: 0.7; cursor: progress; transform: none; }
+.neo-login-note, .neo-login-help {
+  display: flex; gap: 8px; align-items: flex-start; font-size: 12.5px; color: var(--muted); line-height: 1.55;
+}
+.neo-login-note svg { flex: none; margin-top: 2px; color: var(--teal); }
+.neo-login-foot {
+  display: flex; flex-direction: column; gap: 6px; padding-top: 16px; border-top: 1px solid var(--border);
+  font-size: 11.5px; color: var(--muted); line-height: 1.5;
+}
+.neo-login-foot .badge-warn { align-self: flex-start; white-space: normal; margin-bottom: 4px; }
+
+/* who is signed in, in the top bar */
+.account { display: flex; align-items: center; gap: 8px; min-width: 0; flex: none; }
+.account-who {
+  font-size: 12.5px; color: var(--ink-soft); max-width: 22ch;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.account-signout {
+  font: 600 12.5px/1 var(--font-body); color: var(--teal-ink); cursor: pointer; white-space: nowrap;
+  background: var(--surface); border: 1px solid var(--border-strong); border-radius: 999px; padding: 9px 14px;
+}
+.account-signout:hover { border-color: var(--teal); background: var(--teal-soft); }
+
 /* ---------------- responsive ---------------- */
 @media (max-width: 1020px) {
   .hero { grid-template-columns: 1fr; }
@@ -820,6 +897,7 @@ code {
   .nav a { padding: 13px 16px; border-radius: 12px; font-size: 15px; }
   .nav-toggle { display: inline-flex; }
   .center-pill { display: none; }
+  .account-who { display: none; }
   .chart-box, .chart-box.tall { height: 260px; }
 }
 @media (max-width: 480px) {

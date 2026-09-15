@@ -1,6 +1,6 @@
 # 🩵 NeoStay — Infant NICU Outcome & Staffing Intelligence
 
-**Live demo → https://abdulrazakucc.github.io/patient-nurse-schedule/**
+**Live site (registered users only) → https://abdulrazakucc.github.io/patient-nurse-schedule/**
 *(works on any phone, tablet or laptop — nothing to install)*
 
 NeoStay is a web application that helps care teams answer three questions the
@@ -191,35 +191,43 @@ that is what drives the nurse-staffing forecast.
 
 ---
 
-## 🏗️ Architecture — private by design
+## 🏗️ Architecture — sign-in first, private by design
 
-The entire prediction engine runs **inside your web browser**. When you use the
-live site, nothing you type is ever sent to any server — the page is pure static
-files, and the maths happens on your own device.
+The prediction engine runs **inside the user's web browser**, and nothing typed
+into the tools is sent to a server. Every page starts with a sign-in screen:
+the data and the engine load only after a registered user signs in.
 
 ```mermaid
 flowchart TB
-    subgraph Browser["🧑‍💻 Your device (phone or laptop)"]
-        UI["HTML / CSS pages"] --> ENG["engine.js<br/>prediction + staffing engine"]
-        ENG --> DATA["Bundled aggregated statistics<br/>(154 KB, no patient-level data)"]
+    subgraph Browser["🧑‍💻 The user's browser"]
+        GATE["access.js<br/>sign-in screen"] -->|"signed in"| ENG["engine.js<br/>prediction + staffing engine"]
+        ENG --> DATA["Aggregated statistics<br/>(no patient-level data)"]
     end
-    subgraph Pages["☁️ GitHub Pages (static host, HTTPS)"]
-        FILES["Static files only<br/>no database, no server code"]
+    subgraph Server["🏥 Hospital server (Docker)"]
+        API["FastAPI: accounts, signed session cookie<br/>data + REST API only after sign-in"]
     end
-    Pages -->|"one-time download"| Browser
-    subgraph Local["🏠 Optional: run locally"]
-        API["FastAPI backend<br/>same engine in Python<br/>+ REST API + /docs"]
+    subgraph Pages["☁️ GitHub Pages"]
+        SEALED["Pages + encrypted data<br/>opened with the user's password"]
     end
+    GATE -->|"password checked by the server"| Server
+    GATE -->|"or: password unlocks the sealed copy"| Pages
 ```
+
+- **On a hospital server**, FastAPI checks the password and serves the data and
+  the API only to a signed-in session. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+- **On GitHub Pages**, which cannot check passwords, the data is published
+  encrypted; a registered account's password decrypts it in the browser.
+
+Both use the same accounts file and the same sign-in screen. Details and limits
+are in [SECURITY.md](SECURITY.md).
 
 Two interchangeable engines, verified equal:
 
-- **`frontend/engine.js`** — runs in the browser (powers the live site)
-- **`backend/app/predictor.py` + `nursing.py`** — Python/FastAPI (for local use
-  and API consumers)
+- **`frontend/engine.js`** — runs in the browser
+- **`backend/app/predictor.py` + `nursing.py`** — Python/FastAPI, for API consumers
 
-A parity test sweeps **1,311 input combinations (14,421 values)** across both
-engines and requires exact agreement — including Python's banker's rounding.
+`tests/test_engine_parity.py` runs the browser engine and compares its acuity
+classifications, unit schedules and rosters with the Python engine, value for value.
 
 ---
 
@@ -227,59 +235,82 @@ engines and requires exact agreement — including Python's banker's rounding.
 
 ```
 patient-nurse-schedule/
-├── frontend/                  ← the whole web app (deployable as-is)
+├── frontend/                  ← the web app
 │   ├── index.html · predict.html · schedule.html · acuity.html
 │   │   timeline.html · analytics.html · about.html
+│   ├── access.js              ← sign-in gate: loads data + engine after sign-in
+│   ├── access-config.js       ← "server" here; the Pages build writes "sealed"
+│   ├── sealed.js              ← opens the encrypted GitHub Pages data
 │   ├── engine.js              ← browser-side prediction & staffing engine
 │   ├── components.js          ← shared nav / footer / icons / toasts
 │   ├── styles.css             ← design system
-│   ├── data/                  ← pre-built data bundles (JS)
+│   ├── data/                  ← pre-built data bundles (served only after sign-in)
 │   └── vendor/chart.umd.min.js
-├── backend/                   ← optional FastAPI service (local use)
-│   └── app/ (main.py, predictor.py, nursing.py, acuity_tool.py,
-│             data_loader.py, timeseries.py)
+├── backend/app/               ← FastAPI server
+│   ├── main.py · config.py    ← app, security headers, settings
+│   ├── auth.py · accounts.py  ← sign-in, sessions, accounts command line
+│   └── predictor.py · nursing.py · acuity_tool.py · data_loader.py · timeseries.py
 ├── datasets/
 │   ├── losdata/               ← source aggregated CSVs (N / median / Q1 / Q3)
 │   └── nurse-skills/          ← Dr. Altaf's classifier: scanned PDF + one CSV per page
 ├── generated_data/            ← simulated year of hourly unit activity
 ├── datagen/generate.py        ← regenerates the simulated data
-├── scripts/build_frontend_data.py  ← rebuilds frontend/data/ from the CSVs
-└── .github/workflows/deploy.yml    ← auto-deploys to GitHub Pages
+├── scripts/
+│   ├── build_frontend_data.py ← rebuilds frontend/data/ from the CSVs
+│   ├── build_pages_site.py    ← builds the (sealed) GitHub Pages site
+│   └── smoke_test.sh          ← checks a running server end to end
+├── tests/                     ← sign-in, Pages build, page gating, engine parity
+├── Dockerfile · docker-compose.yml · deploy/   ← hospital server (docs/DEPLOYMENT.md)
+├── Makefile                   ← common commands: make run, make test, make user-add…
+└── .github/workflows/         ← CI (tests + container) and GitHub Pages deploy
 ```
 
 ---
 
 ## 🚀 Run it
 
-### Easiest — use the hosted app
-Open **https://abdulrazakucc.github.io/patient-nurse-schedule/** on any device.
+NeoStay is for **registered users only**: every way of running it starts with
+the sign-in screen.
 
-### Locally, no dependencies
+### On a hospital server
+
+Follow **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** — one Docker container, HTTPS,
+and accounts managed from the server's command line.
+
+### On your computer
+
 ```bash
-cd frontend
-python3 -m http.server 8000
-# open http://127.0.0.1:8000
+make user-add EMAIL=you@hospital.org NAME="Your Name"   # asks for a password (12+ characters)
+make run                                                # open http://127.0.0.1:8000 and sign in
 ```
 
-### Locally, with the FastAPI backend + interactive API docs
-```bash
-./run.sh
-# open http://127.0.0.1:8000        (app)
-# open http://127.0.0.1:8000/docs   (Swagger API docs)
-```
+Without `make`: `cd backend && ../.venv/bin/python -m app.accounts add you@hospital.org`,
+then `./run.sh`. Set `NEOSTAY_EXPOSE_DOCS=true` to see the interactive API docs at `/docs`.
 
-### Rebuild the data bundles after changing the CSVs
+### The GitHub Pages copy
+
+**https://abdulrazakucc.github.io/patient-nurse-schedule/** — see *Deployment*
+below for how accounts reach it. `make site-serve` previews the same build locally.
+
+### Tests, and rebuilding the data bundles
+
 ```bash
-python3 scripts/build_frontend_data.py
+make test        # sign-in, sealed Pages build, page gating, browser/Python engine parity
+make data        # rebuild frontend/data/ after changing the CSVs
 ```
 
 ---
 
-## 🔌 API (local backend)
+## 🔌 API (NeoStay server)
+
+Every endpoint except `/api/health` and `/api/auth/*` requires a signed-in session.
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
-| GET | `/api/health` | Service status |
+| GET | `/api/health` | Service status (public) |
+| POST | `/api/auth/login` | Sign in `{email, password}`; sets the session cookie |
+| POST | `/api/auth/logout` | Sign out |
+| GET | `/api/auth/session` | Who is signed in (public) |
 | GET | `/api/meta` | Centers + weight/GA bins |
 | GET | `/api/analytics` | Aggregated distributions for charts |
 | POST | `/api/predict` | Per-infant forecast `{weight_g, ga_weeks, condition, resp_support}` |
@@ -291,19 +322,46 @@ python3 scripts/build_frontend_data.py
 
 ## 🔒 Privacy & security
 
-- **No patient-level data anywhere.** The repository and the website contain only
-  aggregated statistics (counts, medians, quartiles).
-- **No data leaves your device.** The live site is static; every calculation runs
-  in the browser. There is no backend, database, cookie, tracker or analytics.
-- **Strict Content-Security-Policy** on every page; the only external requests
-  are the two Google Fonts stylesheets. Chart.js is bundled locally.
-- Served over **HTTPS** by GitHub Pages.
+- **Registered users only.** Pages show a sign-in screen; the data, the engine and
+  the API load only after sign-in.
+- **Passwords are never stored readable.** Accounts hold PBKDF2-SHA256 hashes
+  (600,000 iterations, per-account salt). The server issues a signed, expiring,
+  `HttpOnly` session cookie, slows repeated failed sign-ins, and ends sessions
+  at once when an account is removed or its password changes.
+- **No patient-level data anywhere.** Only aggregated statistics (counts, medians,
+  quartiles) and synthetic timeline data.
+- **Calculations stay in the browser.** What you type into the tools is not sent
+  to any server. There is no tracker or analytics.
+- **Sign-in protects the website, not this repository.** While the repository is
+  public, its datasets and data bundles can be read on GitHub by anyone.
+- **Strict Content-Security-Policy** on every page. Chart.js is bundled locally;
+  the only external requests are the Google Fonts stylesheets.
+
+The full policy, including the limits of the GitHub Pages copy, is in
+[SECURITY.md](SECURITY.md).
 
 ## ☁️ Deployment
 
-Every push to `main` triggers `.github/workflows/deploy.yml`, which publishes
-`frontend/` to **GitHub Pages** — a free, open-source-friendly static host.
-Share the link with reviewers; it renders beautifully on mobile and desktop.
+**Hospital server:** see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+
+**GitHub Pages:** every push to `main` runs `.github/workflows/deploy.yml`, which
+runs the tests and publishes one of two things:
+
+- **Without accounts:** a "registered users only" notice — no application and no data.
+- **With accounts:** the application, with its data encrypted so that only
+  registered accounts can open it.
+
+To give people access to the GitHub Pages copy:
+
+1. On your computer, create their accounts: `make user-add EMAIL=... NAME="..."`.
+2. Run `make user-export` and copy everything it prints.
+3. On GitHub, open **Settings → Secrets and variables → Actions → New repository
+   secret**, name it `NEOSTAY_USERS_JSON`, and paste.
+4. Open **Actions → Deploy to GitHub Pages → Run workflow**.
+
+Repeat steps 2–4 whenever someone is added or removed. A removed account cannot
+open copies published afterwards, but anyone who opened an earlier copy may have
+kept what they saw.
 
 ---
 
@@ -311,6 +369,9 @@ Share the link with reviewers; it renders beautifully on mobile and desktop.
 
 - **[docs/USER_GUIDE.md](docs/USER_GUIDE.md)** — a walkthrough of every page,
   written for non-technical readers, with worked examples.
+- **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** — installing NeoStay on a hospital
+  server, HTTPS, and managing accounts.
+- **[SECURITY.md](SECURITY.md)** — how sign-in protects NeoStay, and its limits.
 - **[datasets/losdata/](datasets/losdata/)** — the source aggregated datasets with PNG/PDF charts.
 - **[datasets/nurse-skills/](datasets/nurse-skills/)** — Dr. Altaf's nurse skills classifier.
 - **[generated_data/README.md](generated_data/README.md)** — how the simulated

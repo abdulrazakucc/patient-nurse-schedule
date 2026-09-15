@@ -1,0 +1,6 @@
+# Test and build dependencies. Install with: make setup-dev
+-r backend/requirements.txt
+
+pytest==9.1.1
+httpx==0.28.1          # transport used by fastapi.testclient
+cryptography==50.0.1   # seals the GitHub Pages copy (scripts/build_pages_site.py)

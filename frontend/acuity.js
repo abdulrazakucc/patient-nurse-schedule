@@ -1,7 +1,7 @@
 "use strict";
 /* Acuity tool page: renders Dr. Altaf's classifier straight from the bundled
    data, so what is shown here is exactly what Scheduling classifies with. */
-document.addEventListener("DOMContentLoaded", () => {
+neoReady(() => {
   const TOOL = NeoEngine.acuityTool();
   if (!TOOL) return;
 
