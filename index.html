@@ -3,64 +3,113 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; img-src 'self'; base-uri 'none'; form-action 'none'" />
-  <meta name="robots" content="noindex" />
-  <title>NeoStay · Registered users only</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; base-uri 'self'; form-action 'self'" />
+  <title>NeoStay · Infant NICU Outcome &amp; Staffing Intelligence</title>
+  <meta name="description" content="Forecast length of stay, survival and nurse staffing for Very Low Birth Weight infants — from a decade of real NICU outcome data. Runs entirely in your browser." />
+  <meta name="theme-color" content="#0e8a8f" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
-  <!--
-    Published by scripts/build_pages_site.py when no accounts are configured:
-    this page holds no application code and no data.
-  -->
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      min-height: 100vh; display: grid; place-items: center; padding: 32px 16px;
-      font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: #122b36;
-      background: linear-gradient(180deg, #ffffff 0%, #f5f8f9 40%);
-    }
-    main {
-      width: 100%; max-width: 460px; background: #fff; border: 1px solid #e3ebef;
-      border-radius: 22px; box-shadow: 0 22px 56px rgba(14, 43, 54, 0.13); padding: 36px;
-    }
-    .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
-    .mark {
-      width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; color: #fff;
-      background: linear-gradient(140deg, #0e8a8f, #0a6d72);
-    }
-    .brand strong { display: block; font-family: Georgia, serif; font-size: 21px; }
-    .brand span { font-size: 12px; color: #74909c; }
-    .badge {
-      display: inline-block; font-size: 11.5px; font-weight: 700; letter-spacing: 0.6px;
-      text-transform: uppercase; color: #0a6d72; background: #e3f4f4; border-radius: 999px;
-      padding: 6px 12px; margin-bottom: 14px;
-    }
-    h1 { font-family: Georgia, serif; font-size: 28px; font-weight: 600; margin-bottom: 10px; }
-    p { color: #3d5763; font-size: 15px; line-height: 1.65; margin-bottom: 12px; }
-    .foot {
-      margin-top: 20px; padding-top: 16px; border-top: 1px solid #e3ebef;
-      font-size: 12px; color: #74909c; line-height: 1.6;
-    }
-    .warn { color: #a76f1e; font-weight: 700; }
-  </style>
+  <meta property="og:title" content="NeoStay · Infant NICU Outcome & Staffing Intelligence" />
+  <meta property="og:description" content="Bedside-ready forecasts of length of stay, survival and nursing demand for the smallest patients." />
+  <meta property="og:type" content="website" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="access-config.js" defer></script>
+  <script src="sealed.js" defer></script>
+  <script src="access.js" defer data-app="vendor/chart.umd.min.js engine.js components.js home.js"></script>
 </head>
-<body>
+<body data-page="home">
+  <noscript><p class="noscript">NeoStay needs JavaScript switched on in your browser.</p></noscript>
   <main>
-    <div class="brand">
-      <div class="mark" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-4.35-9-8.5C1 9 2.5 5.5 6 5.5c2 0 3.2 1.1 4 2.3.8-1.2 2-2.3 4-2.3 3.5 0 5 3.5 3 7-2.5 4.15-9 8.5-9 8.5z"/></svg>
+    <section class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow">Very Low Birth Weight (VLBW) Neonatal Analytics</div>
+        <h2>Anticipate the journey of every <em>fragile newborn</em>.</h2>
+        <p>
+          NeoStay turns a decade of real center outcomes into clear, bedside-ready
+          intelligence — forecasting length of stay, disposition, survival and the
+          nursing resources each infant will require, from admission to discharge.
+        </p>
+        <div class="hero-actions">
+          <a class="btn-primary" href="predict.html">Open the predictor</a>
+          <a class="btn-ghost" href="about.html">How it works</a>
+        </div>
+        <div class="hero-stats" id="heroStats">
+          <div class="hs" data-tip="Total very low birth weight infants behind every figure in this app, drawn from a decade of center outcomes."><span class="hs-num" data-k="infants">–</span><span class="hs-label">Infants analysed</span></div>
+          <div class="hs" data-tip="The typical hospital stay across all birth-weight bands. Individual infants vary enormously — the predictor shows the range."><span class="hs-num" data-k="los">–</span><span class="hs-label">Median LOS (days)</span></div>
+          <div class="hs" data-tip="The share of admissions that ended in survival to discharge or transfer, counted across the whole cohort."><span class="hs-num" data-k="survival">–</span><span class="hs-label">Overall survival</span></div>
+        </div>
       </div>
-      <div><strong>NeoStay</strong><span>Infant NICU Outcome &amp; Staffing Intelligence</span></div>
-    </div>
-    <span class="badge">Registered users only</span>
-    <h1>NeoStay is not open here yet</h1>
-    <p>This copy of NeoStay is available to registered users only, and sign-in has not
-    been set up for it yet.</p>
-    <p>If you should have access, contact your NeoStay administrator.</p>
-    <div class="foot">
-      <p class="warn">Decision support only — not for clinical use.</p>
-      Project and Clinical Lead — Waseem Altaf, MD, Neonatologist<br />
-      Technical Lead, Lead Developer and Applied AI/Data Science Lead — Abdul Razak, PhD
-    </div>
+      <div class="hero-visual">
+        <div class="glance">
+          <div class="glance-head">
+            <h4>Unit at a glance</h4>
+            <span class="glance-live">Live from dataset</span>
+          </div>
+          <div class="glance-chart"><canvas id="glanceChart" aria-label="Median length of stay by birth weight"></canvas></div>
+          <div class="glance-rows" id="glanceRows"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h3>Explore the platform</h3>
+        <p>Everything you need to plan care for the smallest patients</p>
+      </div>
+      <div class="feature-grid">
+        <a class="card feature" href="predict.html">
+          <div class="feature-ic ic-teal" data-icon="flask" data-icon-size="26"></div>
+          <h4>Outcome &amp; Staffing Predictor</h4>
+          <p>Forecast length of stay, disposition, survival and per-infant nursing demand from weight, gestational age and admission condition.</p>
+          <span class="feature-go">Open predictor</span>
+        </a>
+        <a class="card feature" href="schedule.html">
+          <div class="feature-ic ic-gold" data-icon="calendar" data-icon-size="26"></div>
+          <h4>Unit Nurse Scheduling</h4>
+          <p>Build a live census of admitted infants and compute acuity-based nurses per shift and daily staffing demand.</p>
+          <span class="feature-go">Plan staffing</span>
+        </a>
+        <a class="card feature" href="timeline.html">
+          <div class="feature-ic ic-slate" data-icon="clock" data-icon-size="26"></div>
+          <h4>Hourly Timeline</h4>
+          <p>Follow individual infant journeys and whole-unit nursing demand hour by hour across a simulated year of care.</p>
+          <span class="feature-go">View timeline</span>
+        </a>
+        <a class="card feature" href="analytics.html">
+          <div class="feature-ic ic-rose" data-icon="chart" data-icon-size="26"></div>
+          <h4>Population Analytics</h4>
+          <p>Interactive charts of length of stay and disposition across 10 birth-weight bands and every gestational week.</p>
+          <span class="feature-go">View analytics</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h3>From data to decision in four steps</h3>
+        <p>Every figure NeoStay shows is traceable to the underlying outcome statistics</p>
+      </div>
+      <div class="flow">
+        <div class="card flow-step">
+          <h5>Enter the basics</h5>
+          <p>Birth weight, gestational age, admission condition and respiratory support — the details known in the first minutes of life.</p>
+        </div>
+        <div class="card flow-step">
+          <h5>Match &amp; interpolate</h5>
+          <p>The inputs are matched to a decade of outcomes and smoothly interpolated so every gram and every week matters.</p>
+        </div>
+        <div class="card flow-step">
+          <h5>Forecast outcomes</h5>
+          <p>Expected stay with its realistic range, chance of going home, and survival — each with an honest confidence signal.</p>
+        </div>
+        <div class="card flow-step">
+          <h5>Plan the nursing</h5>
+          <p>AAP/AWHONN acuity ratios convert the forecast into nurse-hours, shifts, and whole-unit staffing plans.</p>
+        </div>
+      </div>
+    </section>
   </main>
 </body>
 </html>
