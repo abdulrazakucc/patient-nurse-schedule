@@ -173,6 +173,44 @@ class TestSecret:
         with pytest.raises(SystemExit, match="NEOSTAY_USERS_JSON"):
             users_from_secret(bad)
 
+    def test_a_users_file_from_another_application_is_named(self) -> None:
+        other = '{"format": "gbd-users", "version": 1, "kdf": "pbkdf2-sha256", "users": []}'
+        with pytest.raises(SystemExit, match="another application"):
+            users_from_secret(other)
+
+    def test_problems_shown_on_github_never_repeat_email_addresses(self, monkeypatch, capsys) -> None:
+        from scripts.build_pages_site import github_error
+
+        monkeypatch.setenv("GITHUB_ACTIONS", "true")
+        github_error("Pages build failed", "Weak or malformed entry for someone@hospital.example")
+        shown = capsys.readouterr().out
+        assert shown.startswith("::error title=Pages build failed::")
+        assert "someone@hospital.example" not in shown
+
+    def test_an_unreadable_secret_publishes_the_landing_page_when_asked(
+        self, tmp_path, monkeypatch
+    ) -> None:
+        import scripts.build_pages_site as site_build
+
+        outputs = tmp_path / "github_output"
+        monkeypatch.setenv("NEOSTAY_USERS_JSON", "definitely not a users file")
+        monkeypatch.setenv("GITHUB_OUTPUT", str(outputs))
+        monkeypatch.setattr(
+            "sys.argv", ["build", "--out", str(tmp_path / "site"), "--landing-if-secret-invalid"]
+        )
+        site_build.main()
+        assert 'mode: "closed"' in (tmp_path / "site" / "access-config.js").read_text()
+        assert not (tmp_path / "site" / "data.sealed").exists()
+        assert "secret_invalid=true" in outputs.read_text()
+
+    def test_without_the_flag_an_unreadable_secret_still_fails(self, tmp_path, monkeypatch) -> None:
+        import scripts.build_pages_site as site_build
+
+        monkeypatch.setenv("NEOSTAY_USERS_JSON", "definitely not a users file")
+        monkeypatch.setattr("sys.argv", ["build", "--out", str(tmp_path / "site")])
+        with pytest.raises(SystemExit):
+            site_build.main()
+
 
 BROWSER_HARNESS = """
 globalThis.isSecureContext = true;

@@ -42,6 +42,7 @@ import gzip
 import hashlib
 import json
 import os
+import re
 import secrets
 import shutil
 import sys
@@ -223,6 +224,22 @@ def build(out_dir: Path, users: dict[str, accounts.User] | None = None) -> dict:
     return {"sealed": bool(users), "accounts": len(users), "files": sorted(written)}
 
 
+_EMAILS = re.compile(r"[^@\s\"'(]+@[^@\s\"')]+")
+_ADVICE = "Paste everything `make user-export` prints, from the first { to the last }."
+
+
+def secret_hints(text: str) -> str:
+    """What is visibly wrong with a secret, without repeating any of its content."""
+    hints = [f"{len(text)} characters"]
+    if "gbd-users" in text:
+        hints.append("it looks like a users file from another application (gbd-users), not NeoStay")
+    elif "neostay-users" not in text:
+        hints.append('it does not contain "neostay-users", so it is not the output of `make user-export`')
+    if any(quote in text for quote in "“”‘’"):
+        hints.append("it contains curly quotes, which JSON does not allow")
+    return "; ".join(hints)
+
+
 def users_from_secret(text: str) -> dict[str, accounts.User]:
     """Accounts from the NEOSTAY_USERS_JSON secret.
 
@@ -232,19 +249,34 @@ def users_from_secret(text: str) -> dict[str, accounts.User]:
     start, end = text.find("{"), text.rfind("}")
     if start == -1 or end < start:
         raise SystemExit(
-            "NEOSTAY_USERS_JSON does not contain a NeoStay users file. "
-            "Paste everything `make user-export` prints, from the first { to the last }."
+            f"NEOSTAY_USERS_JSON does not contain a NeoStay users file ({secret_hints(text)}). {_ADVICE}"
         )
     try:
         users = accounts.parse_users(text[start : end + 1])
     except (ValueError, KeyError, TypeError) as exc:
         raise SystemExit(
-            f"NEOSTAY_USERS_JSON is not a valid NeoStay users file ({exc}). "
-            "Paste everything `make user-export` prints, from the first { to the last }."
+            f"NEOSTAY_USERS_JSON is not a valid NeoStay users file: {exc} ({secret_hints(text)}). {_ADVICE}"
         ) from exc
     if not users:
         raise SystemExit("NEOSTAY_USERS_JSON contains no accounts. Add one with `make user-add`.")
     return users
+
+
+def github_error(title: str, message: str) -> None:
+    """Show a problem on the workflow run page, where it is readable without
+    signing in to GitHub. Email addresses are never repeated there."""
+    if os.environ.get("GITHUB_ACTIONS") != "true":
+        return
+    clean = _EMAILS.sub("<email address>", message)
+    clean = clean.replace("%", "%25").replace("\r", "").replace("\n", "%0A")
+    print(f"::error title={title}::{clean}")
+
+
+def github_output(name: str, value: str) -> None:
+    path = os.environ.get("GITHUB_OUTPUT")
+    if path:
+        with open(path, "a", encoding="utf-8") as handle:
+            handle.write(f"{name}={value}\n")
 
 
 def main() -> None:
@@ -256,11 +288,24 @@ def main() -> None:
         default=None,
         help="Seal the application for these accounts (default: the NEOSTAY_USERS_JSON variable)",
     )
+    parser.add_argument(
+        "--landing-if-secret-invalid",
+        action="store_true",
+        help="If NEOSTAY_USERS_JSON cannot be read, publish the landing page only instead of failing",
+    )
     args = parser.parse_args()
 
     users_json = os.environ.get("NEOSTAY_USERS_JSON", "").strip()
     if users_json:
-        users = users_from_secret(users_json)
+        try:
+            users = users_from_secret(users_json)
+        except SystemExit as problem:
+            if not args.landing_if_secret_invalid:
+                raise
+            print(problem, file=sys.stderr)
+            github_error("NEOSTAY_USERS_JSON could not be read", str(problem))
+            github_output("secret_invalid", "true")
+            users = {}
     elif args.users_file:
         users = accounts.load_users(args.users_file)
     else:
@@ -276,4 +321,9 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except SystemExit as stop:
+        if isinstance(stop.code, str):
+            github_error("GitHub Pages build failed", stop.code)
+        raise

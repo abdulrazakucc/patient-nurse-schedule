@@ -46,10 +46,13 @@ jobs:
       - name: Test
         run: python -m pytest
 
+      # An unreadable secret still publishes the landing page (never the data),
+      # explains the problem on the run page, and fails the run at the end.
       - name: Build the site
+        id: build
         env:
           NEOSTAY_USERS_JSON: ${{ secrets.NEOSTAY_USERS_JSON }}
-        run: python scripts/build_pages_site.py --out site
+        run: python scripts/build_pages_site.py --out site --landing-if-secret-invalid
 
       # Defence in depth: fail rather than publish readable data.
       - name: Verify what is published
@@ -87,3 +90,9 @@ jobs:
           publish_dir: ./site
           enable_jekyll: false
           commit_message: "Deploy ${{ github.sha }}"
+
+      - name: Report an unreadable NEOSTAY_USERS_JSON secret
+        if: steps.build.outputs.secret_invalid == 'true'
+        run: |
+          echo "::error title=Application not published::Only the landing page was published because NEOSTAY_USERS_JSON could not be read. The reason is shown above."
+          exit 1
