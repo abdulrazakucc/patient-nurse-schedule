@@ -48,7 +48,7 @@ shared store first. HTTPS must be provided in front of the server
 
 A static site cannot check who is asking, so the build publishes one of two shapes:
 
-- **No accounts:** a "registered users only" notice — no application code, no data.
+- **No accounts:** the public landing page only — no application code, no data.
 - **With accounts** (the `NEOSTAY_USERS_JSON` repository secret): the
   application, with its data sealed with AES-256-GCM under a fresh random key on
   every build. That key is wrapped for each account with the account's

@@ -25,6 +25,7 @@ from scripts.build_pages_site import (
     build,
     open_sealed,
     read_bundle,
+    users_from_secret,
 )
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -72,15 +73,20 @@ def _open(site: Path, email: str = EMAIL, password: str = PASSWORD) -> dict:
     return open_sealed((site / "data.sealed").read_bytes(), keys, email, password)
 
 
-class TestClosedNotice:
-    def test_only_the_notice_is_published(self, closed_site) -> None:
+class TestLandingOnly:
+    def test_only_the_landing_page_is_published(self, closed_site) -> None:
         assert _published(closed_site) == CLOSED_FILES
 
-    def test_no_application_or_data(self, closed_site) -> None:
-        page = (closed_site / "index.html").read_text()
-        assert "<script" not in page
-        assert "registered users only" in page.lower()
-        assert "not for clinical use" in page
+    def test_no_application_code_or_data(self, closed_site) -> None:
+        assert 'mode: "closed"' in (closed_site / "access-config.js").read_text()
+        for name in ("engine.js", "components.js", "schedule.html", "data.sealed", "keys.json"):
+            assert not (closed_site / name).exists(), name
+        assert not (closed_site / "data").exists()
+
+    def test_the_landing_page_explains_itself(self, closed_site) -> None:
+        gate = (closed_site / "access.js").read_text()
+        assert "What you can do in NeoStay" in gate and "Access is not open yet" in gate
+        assert "Decision support only — not for clinical use" in gate
 
 
 class TestSealedApplication:
@@ -139,6 +145,12 @@ class TestSealedApplication:
         with pytest.raises(ValueError):
             _open(out, COLLEAGUE, COLLEAGUE_PASSWORD)
 
+    def test_an_account_named_like_the_project_leads_still_publishes(self, tmp_path) -> None:
+        """Names shown on the site are not identities leaking from the users file."""
+        path = tmp_path / "users.json"
+        accounts.add_user("lead@hospital.example", PASSWORD, "Dr. Waseem Altaf", path)
+        assert build(tmp_path / "site", users=accounts.load_users(path))["sealed"]
+
     def test_every_build_uses_a_new_key(self, tmp_path, users, sealed_site) -> None:
         other = tmp_path / "again"
         build(other, users=users)
@@ -146,6 +158,20 @@ class TestSealedApplication:
         stale_keys = json.loads((sealed_site / "keys.json").read_text())
         with pytest.raises(InvalidTag):
             open_sealed((other / "data.sealed").read_bytes(), stale_keys, EMAIL, PASSWORD)
+
+
+class TestSecret:
+    def test_text_pasted_around_the_users_file_is_ignored(self, users) -> None:
+        from app.accounts import dump_users
+
+        pasted = "This contains password hashes: paste it only into a GitHub secret.\n"
+        pasted += dump_users(users) + "\n\n"
+        assert set(users_from_secret(pasted)) == set(users)
+
+    @pytest.mark.parametrize("bad", ["", "not json at all", '{"format": "something-else"}'])
+    def test_a_wrong_secret_is_explained(self, bad) -> None:
+        with pytest.raises(SystemExit, match="NEOSTAY_USERS_JSON"):
+            users_from_secret(bad)
 
 
 BROWSER_HARNESS = """

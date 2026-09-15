@@ -347,7 +347,7 @@ The full policy, including the limits of the GitHub Pages copy, is in
 **GitHub Pages:** every push to `main` runs `.github/workflows/deploy.yml`, which
 runs the tests and publishes one of two things:
 
-- **Without accounts:** a "registered users only" notice — no application and no data.
+- **Without accounts:** the landing page only — no application and no data.
 - **With accounts:** the application, with its data encrypted so that only
   registered accounts can open it.
 

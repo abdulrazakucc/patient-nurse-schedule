@@ -7,8 +7,8 @@ downloaded by anyone. So the site takes one of two shapes, decided by whether
 any accounts are supplied (``NEOSTAY_USERS_JSON`` in CI, ``--users-file``
 locally):
 
-* **Closed notice** -- no accounts. One page saying NeoStay is for registered
-  users only; no application code and no data.
+* **Landing page only** -- no accounts. The public landing page, saying what
+  NeoStay does and that access is not open yet; no application code and no data.
 
 * **Sealed application** -- with accounts. Every page and script of the web
   application, with its data published only as ciphertext:
@@ -54,7 +54,6 @@ sys.path.insert(0, str(ROOT / "backend"))
 from app import accounts  # noqa: E402
 
 FRONTEND = ROOT / "frontend"
-CLOSED_PAGE = ROOT / "scripts" / "pages_closed.html"
 
 MAGIC = b"NEOS1"
 CONTEXT = "neostay-sealed-v1"
@@ -67,7 +66,13 @@ SEALED_CONFIG = """/* Written by scripts/build_pages_site.py: this copy opens it
    browser, from data.sealed, with a registered account's password. */
 window.NEOSTAY_ACCESS = { mode: "sealed" };
 """
-CLOSED_FILES = frozenset({".nojekyll", "index.html", "favicon.svg"})
+CLOSED_CONFIG = """/* Written by scripts/build_pages_site.py: no accounts were supplied, so this
+   copy is the landing page only, with no sign-in form, application or data. */
+window.NEOSTAY_ACCESS = { mode: "closed" };
+"""
+# The landing page and exactly what it needs to render.
+LANDING_SOURCES = ("index.html", "styles.css", "favicon.svg", "access.js", "sealed.js")
+CLOSED_FILES = frozenset({".nojekyll", "access-config.js", *LANDING_SOURCES})
 SEALED_EXTRA = frozenset({".nojekyll", "data.sealed", "keys.json"})
 IGNORED_NAMES = frozenset({".DS_Store", "Thumbs.db"})
 
@@ -160,8 +165,9 @@ def plaintext_markers(globals_: dict, users: dict[str, accounts.User]) -> list[b
     tool = globals_["NEOSTAY_ACUITY"]
     markers = [c["label"] for c in tool["levels_of_care"]["general"]["criteria"][:8]]
     markers += list(globals_["NEOSTAY_TS"]["series"])[:8]
+    # Names are never written by the build, and people named on the site (the
+    # project leads) may well hold accounts, so names are not markers.
     markers += [user.email for user in users.values()]
-    markers += [user.name for user in users.values() if len(user.name) >= 4]
     markers += [_b64(user.hash) for user in users.values()]
     return [marker.encode() for marker in markers]
 
@@ -180,8 +186,9 @@ def build(out_dir: Path, users: dict[str, accounts.User] | None = None) -> dict:
     (out_dir / ".nojekyll").write_text("", encoding="utf-8")
 
     if not users:
-        shutil.copyfile(CLOSED_PAGE, out_dir / "index.html")
-        shutil.copyfile(FRONTEND / "favicon.svg", out_dir / "favicon.svg")
+        for name in LANDING_SOURCES:
+            shutil.copyfile(FRONTEND / name, out_dir / name)
+        (out_dir / "access-config.js").write_text(CLOSED_CONFIG, encoding="utf-8")
         expected = set(CLOSED_FILES)
     else:
         app_files = application_files()
@@ -216,6 +223,30 @@ def build(out_dir: Path, users: dict[str, accounts.User] | None = None) -> dict:
     return {"sealed": bool(users), "accounts": len(users), "files": sorted(written)}
 
 
+def users_from_secret(text: str) -> dict[str, accounts.User]:
+    """Accounts from the NEOSTAY_USERS_JSON secret.
+
+    Tolerates text pasted around the JSON -- such as the warning line that
+    ``make user-export`` prints above it -- and explains any other problem.
+    """
+    start, end = text.find("{"), text.rfind("}")
+    if start == -1 or end < start:
+        raise SystemExit(
+            "NEOSTAY_USERS_JSON does not contain a NeoStay users file. "
+            "Paste everything `make user-export` prints, from the first { to the last }."
+        )
+    try:
+        users = accounts.parse_users(text[start : end + 1])
+    except (ValueError, KeyError, TypeError) as exc:
+        raise SystemExit(
+            f"NEOSTAY_USERS_JSON is not a valid NeoStay users file ({exc}). "
+            "Paste everything `make user-export` prints, from the first { to the last }."
+        ) from exc
+    if not users:
+        raise SystemExit("NEOSTAY_USERS_JSON contains no accounts. Add one with `make user-add`.")
+    return users
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build the NeoStay site for GitHub Pages.")
     parser.add_argument("--out", type=Path, default=ROOT / "site", help="Output directory")
@@ -229,7 +260,7 @@ def main() -> None:
 
     users_json = os.environ.get("NEOSTAY_USERS_JSON", "").strip()
     if users_json:
-        users = accounts.parse_users(users_json)
+        users = users_from_secret(users_json)
     elif args.users_file:
         users = accounts.load_users(args.users_file)
     else:
@@ -241,7 +272,7 @@ def main() -> None:
             f"{result['accounts']} account(s)."
         )
     else:
-        print(f"Site written to {args.out}: closed notice only (no accounts supplied).")
+        print(f"Site written to {args.out}: landing page only (no accounts supplied).")
 
 
 if __name__ == "__main__":

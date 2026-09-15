@@ -3,8 +3,8 @@ name: Deploy to GitHub Pages
 # A static site cannot check who is asking -- every file on GitHub Pages can be
 # downloaded by anyone -- so what this publishes is one of two shapes:
 #
-#   * without the NEOSTAY_USERS_JSON secret: a "registered users only" notice,
-#     with no application code and no data;
+#   * without the NEOSTAY_USERS_JSON secret: the landing page only, with no
+#     sign-in form, application code or data;
 #   * with it: the application, whose data is encrypted and opens only in the
 #     browser of someone signing in with an account from that secret.
 #
@@ -61,9 +61,13 @@ jobs:
           if any(name.startswith("data/") for name in files):
               sys.exit("Readable data bundles must never be published")
           if not (site / "data.sealed").exists():
-              if set(files) != {".nojekyll", "index.html", "favicon.svg"}:
+              landing = {".nojekyll", "index.html", "styles.css", "favicon.svg",
+                         "access.js", "sealed.js", "access-config.js"}
+              if set(files) != landing:
                   sys.exit(f"Unexpected files: {files}")
-              print("Verified: notice only. Set NEOSTAY_USERS_JSON to publish the application.")
+              if 'mode: "closed"' not in (site / "access-config.js").read_text():
+                  sys.exit("The landing page is not in closed mode")
+              print("Verified: landing page only. Set NEOSTAY_USERS_JSON to publish the application.")
               sys.exit(0)
           if not (site / "data.sealed").read_bytes().startswith(b"NEOS1"):
               sys.exit("The data is not sealed")
