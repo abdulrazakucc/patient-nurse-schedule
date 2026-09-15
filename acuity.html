@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; base-uri 'self'; form-action 'self'" />
+  <title>Acuity tool · NeoStay</title>
+  <meta name="description" content="Dr. Waseem Altaf's nurse skills classifier: the neonatal acuity tool and nursing levels of care." />
+  <meta name="theme-color" content="#0e8a8f" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="access-config.js" defer></script>
+  <script src="sealed.js" defer></script>
+  <script src="access.js" defer data-app="engine.js components.js acuity.js"></script>
+</head>
+<body data-page="acuity">
+  <noscript><p class="noscript">NeoStay needs JavaScript switched on in your browser.</p></noscript>
+  <main>
+    <section class="panel">
+      <div class="panel-head">
+        <h3>Nurse skills classifier</h3>
+        <p>Dr. Waseem Altaf's acuity tool and nursing levels of care. Scheduling uses them to set
+        each infant's nurse:patient ratio and the minimum experience level of the nurse assigned.</p>
+      </div>
+
+      <p class="lead-note">
+        <b>How Scheduling applies it.</b> For each body system, the most intensive finding that
+        applies is recorded. The most intensive column across all systems sets the ratio:
+        intensive care is 1:2, or 1:1 for the footnoted criteria; where a column gives a range,
+        the more protective end is used. The highest level-of-care criterion met sets the care
+        level, N1 to N4. The minimum nurse level is whichever is higher — the column's, or the
+        care level's (N1 Novice, N2 Competent, N3 Proficient, N4 Expert).
+      </p>
+
+      <div class="card tool-card">
+        <div class="disp-head" data-icon="pulse"><span id="acuityTitle"></span></div>
+        <div class="table-scroll">
+          <table class="tool-table" id="acuityTable"></table>
+        </div>
+        <p class="staff-note" id="acuityFootnote"></p>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h3>Nursing levels of care</h3>
+        <p>The criteria that place an infant in each level of care, and the nurse level that
+        level requires.</p>
+      </div>
+      <div class="care-grid" id="careGeneral"></div>
+      <p class="staff-note" id="careGeneralNote"></p>
+
+      <h4 class="tool-subhead">Hyperbilirubinemia</h4>
+      <div class="care-grid" id="careBili"></div>
+      <p class="staff-note" id="careBiliNote"></p>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+ "format": "neostay-sealed-keys",
+ "version": 1,
+ "kdf": "pbkdf2-sha256",
+ "iterations": 600000,
+ "users": [
+  {
+   "id": "3e25ea3db50e627700386b0496a28133168793796ab7557af62e8f07c9f3b4e0",
+   "salt": "ZV7cyJEi2qRX+1Ub44Lj2Q==",
+   "iterations": 600000,
+   "nonce": "IdpzqMLw2WyafhO0",
+   "wrapped": "CCA5Rg9JpZloicZTgkeDFtIraTEzBL1YZJSHB2mYtJP81Et2E+FaLhKwnu4J7WGB"
+  }
+ ]
+}
