@@ -369,6 +369,9 @@ kept what they saw.
 
 - **[docs/USER_GUIDE.md](docs/USER_GUIDE.md)** — a walkthrough of every page,
   written for non-technical readers, with worked examples.
+- **[docs/NeoStay-Architecture.pdf](docs/NeoStay-Architecture.pdf)** — the full architecture and
+  methods reference (26 pages): data, algorithms with worked examples, security, deployment,
+  adapting it to another hospital, and the roadmap. Source: `docs/architecture/`.
 - **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** — installing NeoStay on a hospital
   server, HTTPS, and managing accounts.
 - **[SECURITY.md](SECURITY.md)** — how sign-in protects NeoStay, and its limits.

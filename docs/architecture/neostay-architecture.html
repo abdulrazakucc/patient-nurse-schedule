@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>NeoStay — Architecture and Methods</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --ink:#122b36; --ink-soft:#3d5763; --muted:#74909c;
+    --bg:#ffffff; --surface:#f7fafb; --border:#e3ebef; --border-strong:#d1dde3;
+    --teal:#0e8a8f; --teal-deep:#0a6d72; --teal-ink:#08565a; --teal-soft:#e3f4f4;
+    --gold:#c9a24b; --gold-soft:#f7efdd; --rose:#d5637a; --rose-soft:#fbe7ec;
+    --green:#10998a;
+    --display:"Fraunces",Georgia,serif; --body:"Inter",system-ui,sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  }
+  @page{ size:A4; margin:17mm 16mm 18mm; }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  body{ font-family:var(--body); color:var(--ink); font-size:9.6pt; line-height:1.62; background:#fff; }
+  h1,h2,h3,h4,h5{ font-family:var(--display); font-weight:600; color:var(--ink); line-height:1.2; }
+  p{ margin:0 0 7pt; color:var(--ink-soft); }
+  strong{ color:var(--ink); font-weight:650; }
+  code{ font-family:var(--mono); font-size:8.4pt; background:var(--surface); border:1px solid var(--border);
+        border-radius:3px; padding:0.5pt 3pt; color:var(--teal-ink); }
+  a{ color:var(--teal-deep); text-decoration:none; }
+
+  /* ---------- cover ---------- */
+  .cover{ position:relative; height:262mm; display:flex; flex-direction:column; justify-content:space-between;
+          break-after:page; overflow:hidden; }
+  .cover-art{ position:absolute; inset:-18mm -18mm auto -18mm; height:150mm;
+      background:
+        radial-gradient(60% 80% at 82% 6%, rgba(201,162,75,.30), transparent 62%),
+        radial-gradient(70% 90% at 6% 0%, rgba(14,138,143,.34), transparent 64%),
+        linear-gradient(160deg,#08565a 0%, #0a6d72 42%, #0e8a8f 100%);
+      border-radius:0 0 46mm 0; }
+  .cover-top{ position:relative; color:#eaf7f7; padding:16mm 4mm 0; }
+  .cover-badge{ display:inline-flex; align-items:center; gap:7px; font-size:7.6pt; letter-spacing:.16em;
+      text-transform:uppercase; font-weight:700; padding:5pt 11pt; border-radius:99px;
+      background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.34); }
+  .cover h1{ font-size:40pt; color:#fff; margin:12mm 0 4mm; letter-spacing:-.6px; }
+  .cover h1 em{ font-style:italic; color:#ffe3a8; }
+  .cover .sub{ color:#d3ecec; font-size:12.5pt; max-width:132mm; line-height:1.5; }
+  .cover-meta{ position:relative; display:grid; grid-template-columns:repeat(4,1fr); gap:6mm; padding:0 4mm 4mm; }
+  .cover-meta div{ border-top:2px solid var(--teal); padding-top:4mm; }
+  .cover-meta dt{ font-size:7.4pt; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); font-weight:700; }
+  .cover-meta dd{ font-size:9.6pt; color:var(--ink); margin-top:2pt; }
+  .cover-leads{ position:relative; display:flex; gap:6mm; padding:0 4mm; flex-wrap:wrap; }
+  .lead-card{ flex:1 1 60mm; background:var(--surface); border:1px solid var(--border);
+      border-top:3px solid var(--teal); border-radius:10px; padding:5mm; }
+  .lead-card.tech{ border-top-color:var(--gold); }
+  .lead-card b{ display:block; font-family:var(--display); font-size:11pt; }
+  .lead-card span{ font-size:8.4pt; color:var(--muted); display:block; margin-top:1mm; }
+
+  /* ---------- structure ---------- */
+  section{ break-before:page; }
+  section.flow{ break-before:auto; }
+  .sec-head{ display:flex; align-items:flex-end; gap:5mm; border-bottom:2px solid var(--teal);
+      padding-bottom:3mm; margin:0 0 6mm; break-after:avoid; }
+  .sec-num{ font-family:var(--display); font-size:26pt; color:var(--teal); opacity:.5; line-height:.9; }
+  .sec-head h2{ font-size:18pt; letter-spacing:-.2px; }
+  .sec-head p{ margin:0 0 1pt auto; text-align:right; font-size:8.2pt; color:var(--muted); max-width:70mm; }
+  h3{ break-after:avoid; font-size:12pt; margin:6mm 0 2.5mm; color:var(--teal-ink); }
+  h4{ break-after:avoid; font-size:10pt; margin:4mm 0 2mm; }
+  ul,ol{ margin:0 0 7pt 5mm; color:var(--ink-soft); }
+  li{ margin-bottom:2.5pt; }
+  .lead{ font-size:10.6pt; color:var(--ink); line-height:1.65; }
+
+  /* ---------- components ---------- */
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:5mm; }
+  .grid3{ display:grid; grid-template-columns:repeat(3,1fr); gap:4mm; }
+  .card{ background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:4.5mm; break-inside:avoid; }
+  .card h4{ margin:0 0 1.5mm; color:var(--teal-ink); }
+  .card p:last-child{ margin-bottom:0; }
+  .kpi{ background:#fff; border:1px solid var(--border); border-left:3px solid var(--teal); border-radius:8px; padding:3.5mm 4mm; }
+  .kpi b{ display:block; font-family:var(--display); font-size:17pt; color:var(--teal-deep); line-height:1.1; }
+  .kpi span{ font-size:7.8pt; text-transform:uppercase; letter-spacing:.09em; color:var(--muted); }
+  .note{ break-inside:auto; border-left:3px solid var(--gold); background:var(--gold-soft); border-radius:0 8px 8px 0;
+      padding:3.5mm 4.5mm; margin:3mm 0 4mm; font-size:9pt; break-inside:avoid; }
+  .note b{ color:#8a6a1c; }
+  .warn{ border-left:3px solid var(--rose); background:var(--rose-soft); border-radius:0 8px 8px 0;
+      padding:3.5mm 4.5mm; margin:3mm 0 4mm; font-size:9pt; break-inside:avoid; }
+  .warn b{ color:#a33b56; }
+  .plain{ border-left:3px solid var(--green); background:#eaf7f4; border-radius:0 8px 8px 0;
+      padding:3.5mm 4.5mm; margin:3mm 0 4mm; font-size:9pt; break-inside:auto; }
+  .plain b{ color:#0a6f63; }
+
+  table{ width:100%; border-collapse:collapse; font-size:8.6pt; margin:2mm 0 4mm; break-inside:avoid; }
+  caption{ caption-side:top; text-align:left; font-size:8pt; font-weight:700; color:var(--teal-deep);
+      letter-spacing:.06em; text-transform:uppercase; padding-bottom:1.8mm; }
+  th{ text-align:left; background:var(--teal-soft); color:var(--teal-ink); font-weight:700; font-size:8pt;
+      padding:2.2mm 2.6mm; border-bottom:1px solid var(--border-strong); }
+  td{ padding:2.1mm 2.6mm; border-bottom:1px solid var(--border); color:var(--ink-soft); vertical-align:top; }
+  tbody tr:nth-child(even) td{ background:#fbfdfd; }
+  td.num,th.num{ text-align:right; font-variant-numeric:tabular-nums; }
+  .tag{ display:inline-block; padding:1pt 6pt; border-radius:99px; font-size:7.4pt; font-weight:700; }
+  .t1{ background:#e8eef2; color:#40606f; } .t2{ background:var(--teal-soft); color:var(--teal-ink); }
+  .t3{ background:var(--gold-soft); color:#a76f1e; } .t4{ background:var(--rose-soft); color:#b5445f; }
+
+  figure{ margin:3mm 0 5mm; break-inside:avoid; break-before:avoid; }
+  figure svg{ width:100%; height:auto; display:block; }
+  figcaption{ font-size:8pt; color:var(--muted); margin-top:2mm; }
+  figcaption b{ color:var(--teal-deep); }
+  .formula{ font-family:var(--mono); font-size:8.6pt; background:#fff; border:1px solid var(--border-strong);
+      border-left:3px solid var(--teal); border-radius:0 8px 8px 0; padding:3mm 4mm; margin:2.5mm 0 4mm;
+      color:var(--ink); white-space:pre-wrap; break-inside:avoid; }
+  pre{ white-space:pre-wrap; word-break:break-word; font-family:var(--mono); font-size:8.2pt; background:#0d2a30; color:#dff1f1; border-radius:8px;
+      padding:3.5mm 4mm; margin:2.5mm 0 4mm; overflow:hidden; break-inside:avoid; }
+  pre .c{ color:#8fb9bd; }
+  .worked{ border:1px solid var(--teal); border-radius:10px; overflow:hidden; margin:3mm 0 5mm; break-inside:avoid; }
+  .worked-h{ background:var(--teal-soft); color:var(--teal-ink); font-weight:700; font-size:8.6pt;
+      padding:2.5mm 4mm; letter-spacing:.04em; }
+  .worked-b{ padding:4mm; }
+  .worked-b table{ margin-bottom:0; }
+  .steps{ counter-reset:s; list-style:none; margin-left:0; }
+  .steps li{ counter-increment:s; position:relative; padding-left:9mm; margin-bottom:3mm; }
+  .steps li::before{ content:counter(s,decimal-leading-zero); position:absolute; left:0; top:-1mm;
+      font-family:var(--display); font-size:13pt; color:var(--teal); opacity:.55; }
+  .toc{ column-count:2; column-gap:9mm; }
+  .toc a{ display:flex; justify-content:space-between; gap:3mm; border-bottom:1px dotted var(--border-strong);
+      padding:2mm 0; font-size:9pt; color:var(--ink); break-inside:avoid; }
+  .toc a span:last-child{ color:var(--muted); font-variant-numeric:tabular-nums; }
+  .small{ font-size:8.2pt; color:var(--muted); }
+  .end{ margin-top:8mm; border-top:2px solid var(--teal); padding-top:4mm; font-size:8.2pt; color:var(--muted); }
+</style>
+</head>
+<body>
+
+<!-- ============================ COVER ============================ -->
+<div class="cover">
+  <div class="cover-art"></div>
+  <div class="cover-top">
+    <span class="cover-badge">Architecture &amp; Methods · Version 2.0</span>
+    <h1>NeoStay<br /><em>How it works</em></h1>
+    <p class="sub">A complete, plain-language guide to the NeoStay platform: the data it stands on,
+    the algorithms that forecast a newborn's hospital stay, the method that turns those forecasts
+    into safe nurse staffing, and everything a hospital needs to run it.</p>
+  </div>
+
+  <div class="cover-leads">
+    <div class="lead-card">
+      <b>Waseem Altaf, MD</b>
+      <span>Project and Clinical Lead · Neonatologist</span>
+      <span>Clinical direction, outcome interpretation, data stewardship, domain validation.</span>
+    </div>
+    <div class="lead-card tech">
+      <b>Abdul Razak, PhD</b>
+      <span>Technical Lead, Lead Developer and Applied AI/Data Science Lead</span>
+      <span>Architecture, algorithms, full-stack implementation, validation, deployment.</span>
+    </div>
+  </div>
+
+  <dl class="cover-meta">
+    <div><dt>Document</dt><dd>Architecture &amp; methods reference</dd></div>
+    <div><dt>Audience</dt><dd>Clinical leads, nursing management, hospital IT</dd></div>
+    <div><dt>Application</dt><dd>NeoStay 2.0 · sign-in required</dd></div>
+    <div><dt>Status</dt><dd>Decision-support prototype — not a medical device</dd></div>
+  </dl>
+</div>
+
+<!-- ============================ CONTENTS ============================ -->
+<section class="flow">
+  <div class="sec-head"><span class="sec-num">00</span><h2>Contents</h2>
+    <p>Everything in this document was read back from the source code before it was written down.</p></div>
+
+  <div class="toc">
+    <a href="#s1"><span>1 · What NeoStay does</span><span>3</span></a>
+    <a href="#s2"><span>2 · Words used in this document</span><span>4</span></a>
+    <a href="#s3"><span>3 · System architecture</span><span>5</span></a>
+    <a href="#s4"><span>4 · The data foundation</span><span>7</span></a>
+    <a href="#s5"><span>5 · Algorithm 1 — outcome prediction</span><span>9</span></a>
+    <a href="#s6"><span>6 · Algorithm 2 — nursing workload for one infant</span><span>11</span></a>
+    <a href="#s7"><span>7 · Algorithm 3 — the acuity classifier</span><span>13</span></a>
+    <a href="#s8"><span>8 · Algorithm 4 — unit staffing and the 24-hour roster</span><span>15</span></a>
+    <a href="#s9"><span>9 · The hourly timeline and analytics</span><span>17</span></a>
+    <a href="#s10"><span>10 · Access control and security</span><span>18</span></a>
+    <a href="#s11"><span>11 · Running NeoStay in a hospital</span><span>20</span></a>
+    <a href="#s12"><span>12 · How correctness is checked</span><span>21</span></a>
+    <a href="#s13"><span>13 · Adapting NeoStay to any hospital</span><span>22</span></a>
+    <a href="#s14"><span>14 · Future steps</span><span>24</span></a>
+    <a href="#s15"><span>15 · Appendix — files, endpoints, settings</span><span>25</span></a>
+  </div>
+
+  <div class="plain" style="margin-top:8mm">
+    <b>How to read this document.</b> Every section opens with a plain-language explanation for readers
+    who do not write software, followed by the exact rule the program applies. Worked examples use real
+    output from the application, reproduced by running the code itself. Where a number appears, it can be
+    reproduced by running NeoStay with the inputs shown.
+  </div>
+
+  <div class="grid3" style="margin-top:6mm">
+    <div class="kpi"><b>4</b><span>Algorithms described</span></div>
+    <div class="kpi"><b>8</b><span>Figures and diagrams</span></div>
+    <div class="kpi"><b>97</b><span>Automated tests passing</span></div>
+  </div>
+</section>
+
+<!-- ============================ 1 ============================ -->
+<section id="s1">
+  <div class="sec-head"><span class="sec-num">01</span><h2>What NeoStay does</h2>
+    <p>The problem, the answer, and who benefits.</p></div>
+
+  <p class="lead">A neonatal intensive care unit (NICU) cares for newborn babies who are very small or
+  very ill. Two questions dominate every admission: <strong>how long will this baby stay?</strong> and
+  <strong>how many nurses — and which nurses — will this baby need?</strong> NeoStay answers both,
+  using ten years of the unit's own recorded outcomes and a published acuity tool, and presents the
+  answers in a web application a clinician can use in under a minute.</p>
+
+  <div class="grid3">
+    <div class="card"><h4>For neonatologists</h4><p>An expected length of stay with an honest range,
+      the chance of going home, being transferred or dying, and how confident that estimate is —
+      matched to babies of the same birth weight and gestational age.</p></div>
+    <div class="card"><h4>For charge nurses</h4><p>A live census that converts each baby's clinical
+      findings into a nurse-to-patient ratio, then adds up the whole unit into nurses needed per shift,
+      the right mix of experience, and a 24-hour roster of the nurses actually available.</p></div>
+    <div class="card"><h4>For managers and educators</h4><p>Population analytics across birth-weight
+      bands and gestational weeks, an hourly view of a simulated year of unit activity, and a shared
+      reference for the acuity tool the unit uses.</p></div>
+  </div>
+
+  <h3>The six screens</h3>
+  <table>
+    <caption>Table 1 — What each page of the application does</caption>
+    <thead><tr><th>Page</th><th>Question it answers</th><th>What it shows</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Home</strong></td><td>What is in the data?</td><td>Headline figures for the whole cohort and a chart of stay by birth weight.</td></tr>
+      <tr><td><strong>Predict</strong></td><td>What should we expect for this baby?</td><td>Length of stay with range, discharge outcome, survival, confidence, and the nursing the stay will need.</td></tr>
+      <tr><td><strong>Scheduling</strong></td><td>How many nurses tonight, and who?</td><td>Census built from acuity findings, nurses per shift, skill mix, 24-hour roster, uncovered cots.</td></tr>
+      <tr><td><strong>Acuity tool</strong></td><td>What are the rules?</td><td>The full acuity tool and nursing levels of care, exactly as transcribed from the source document.</td></tr>
+      <tr><td><strong>Timeline</strong></td><td>How does demand move through a day or a year?</td><td>Hour-by-hour care intensity for individual journeys and for the whole unit.</td></tr>
+      <tr><td><strong>Analytics</strong></td><td>What does the population look like?</td><td>Stay and discharge outcomes across every weight band and gestational week.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="warn"><b>What NeoStay is not.</b> It is a decision-support prototype for planning and
+  teaching. It is not a medical device, it has not been clinically validated, and it never replaces
+  clinical judgment. It holds aggregated statistics only: no patient-level records exist anywhere in
+  the system, and nothing typed into the tools is sent to a server.</div>
+</section>
+
+<!-- ============================ 2 ============================ -->
+<section id="s2">
+  <div class="sec-head"><span class="sec-num">02</span><h2>Words used in this document</h2>
+    <p>Plain meanings first. Every later section uses these terms exactly.</p></div>
+
+  <table>
+    <caption>Table 2 — Glossary</caption>
+    <thead><tr><th style="width:32mm">Term</th><th>Plain meaning</th></tr></thead>
+    <tbody>
+      <tr><td><strong>NICU</strong></td><td>Neonatal intensive care unit: the ward for newborn babies who need intensive care.</td></tr>
+      <tr><td><strong>VLBW</strong></td><td>Very low birth weight: born under about 1,500 grams (3.3 lb). NeoStay's data covers these babies.</td></tr>
+      <tr><td><strong>Gestational age</strong></td><td>How many weeks the pregnancy lasted. Full term is about 40 weeks.</td></tr>
+      <tr><td><strong>Length of stay</strong></td><td>Days from admission to leaving the unit.</td></tr>
+      <tr><td><strong>Disposition</strong></td><td>How the stay ended: discharged home, transferred to another hospital, or died.</td></tr>
+      <tr><td><strong>Median</strong></td><td>The middle value. Half of similar babies stayed less, half stayed more.</td></tr>
+      <tr><td><strong>Interquartile range (Q1–Q3)</strong></td><td>The middle half of babies. A realistic range, not a best and worst case.</td></tr>
+      <tr><td><strong>Acuity</strong></td><td>How sick a baby is, and therefore how much nursing attention is needed.</td></tr>
+      <tr><td><strong>Nurse:patient ratio</strong></td><td>How many babies one nurse cares for. 1:1 means one nurse for one baby; 1:3 means one nurse for three.</td></tr>
+      <tr><td><strong>NHPPD</strong></td><td>Nursing hours per patient day: total nursing hours divided by days of stay.</td></tr>
+      <tr><td><strong>Census</strong></td><td>The list of babies currently admitted.</td></tr>
+      <tr><td><strong>Skill mix</strong></td><td>How many nurses of each experience level a shift needs.</td></tr>
+      <tr><td><strong>Levels of care (N1–N4)</strong></td><td>Four categories of nursery, from a newborn nursery (N1) to the most intensive NICU care (N4).</td></tr>
+      <tr><td><strong>Benner levels (L1–L4)</strong></td><td>A standard nursing career ladder: Novice, Competent, Proficient, Expert.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note"><b>One convention throughout.</b> <strong>N1–N4</strong> always describes the
+  <em>baby's</em> level of care. <strong>L1–L4</strong> always describes the <em>nurse's</em> experience
+  level. Section 7 explains how one is translated into the other.</div>
+</section>
+
+<!-- ============================ 3 ============================ -->
+<section id="s3">
+  <div class="sec-head"><span class="sec-num">03</span><h2>System architecture</h2>
+    <p>Three deployments, one codebase, two engines that must agree.</p></div>
+
+  <p class="lead">NeoStay is a web application whose calculations run <strong>inside the user's own
+  browser</strong>. Nothing a clinician types is transmitted. The server's job is narrower: it checks
+  who is signed in and hands out the reference data. That design keeps the application fast, private,
+  and simple to host — either on a hospital server or on a public static host.</p>
+
+  <figure>
+    <svg viewBox="0 0 780 330" role="img" aria-label="Architecture overview">
+      <defs>
+        <linearGradient id="gTeal" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#0e8a8f"/><stop offset="1" stop-color="#0a6d72"/>
+        </linearGradient>
+        <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+          <path d="M0 0 L10 5 L0 10 z" fill="#74909c"/>
+        </marker>
+      </defs>
+      <rect x="1" y="1" width="778" height="328" rx="14" fill="#fbfdfd" stroke="#e3ebef"/>
+
+      <!-- browser -->
+      <rect x="24" y="26" width="300" height="278" rx="12" fill="#fff" stroke="#0e8a8f" stroke-width="1.5"/>
+      <text x="40" y="50" font-family="Inter" font-size="12" font-weight="700" fill="#08565a">The user's browser</text>
+      <text x="40" y="66" font-family="Inter" font-size="9.5" fill="#74909c">All calculations happen here</text>
+
+      <rect x="40" y="80" width="268" height="44" rx="9" fill="#e3f4f4" stroke="#0e8a8f"/>
+      <text x="54" y="99" font-family="Inter" font-size="10.5" font-weight="700" fill="#08565a">access.js — sign-in gate</text>
+      <text x="54" y="114" font-family="Inter" font-size="9" fill="#3d5763">Landing page, sign-in, unlocks everything else</text>
+
+      <rect x="40" y="134" width="268" height="52" rx="9" fill="#fff" stroke="#d1dde3"/>
+      <text x="54" y="153" font-family="Inter" font-size="10.5" font-weight="700" fill="#122b36">engine.js — prediction &amp; staffing</text>
+      <text x="54" y="168" font-family="Inter" font-size="9" fill="#3d5763">Interpolation, acuity classifier, skill mix,</text>
+      <text x="54" y="180" font-family="Inter" font-size="9" fill="#3d5763">roster builder (Sections 5–8)</text>
+
+      <rect x="40" y="196" width="268" height="44" rx="9" fill="#fff" stroke="#d1dde3"/>
+      <text x="54" y="215" font-family="Inter" font-size="10.5" font-weight="700" fill="#122b36">Data bundles</text>
+      <text x="54" y="230" font-family="Inter" font-size="9" fill="#3d5763">Outcome statistics · acuity tool · timeline</text>
+
+      <rect x="40" y="250" width="268" height="40" rx="9" fill="#fff" stroke="#d1dde3"/>
+      <text x="54" y="268" font-family="Inter" font-size="10.5" font-weight="700" fill="#122b36">Pages &amp; charts</text>
+      <text x="54" y="282" font-family="Inter" font-size="9" fill="#3d5763">7 HTML pages, one design system, Chart.js</text>
+
+      <!-- server -->
+      <rect x="352" y="26" width="196" height="140" rx="12" fill="#fff" stroke="#c9a24b" stroke-width="1.5"/>
+      <text x="368" y="50" font-family="Inter" font-size="12" font-weight="700" fill="#a76f1e">Hospital server</text>
+      <text x="368" y="66" font-family="Inter" font-size="9.5" fill="#74909c">FastAPI in one container</text>
+      <text x="368" y="86" font-family="Inter" font-size="9" fill="#3d5763">• Accounts &amp; signed session cookie</text>
+      <text x="368" y="101" font-family="Inter" font-size="9" fill="#3d5763">• Serves pages to anyone</text>
+      <text x="368" y="116" font-family="Inter" font-size="9" fill="#3d5763">• Serves data only after sign-in</text>
+      <text x="368" y="131" font-family="Inter" font-size="9" fill="#3d5763">• Same algorithms in Python (API)</text>
+      <text x="368" y="150" font-family="Inter" font-size="9" fill="#3d5763">• Optional hospital single sign-on</text>
+
+      <!-- pages -->
+      <rect x="352" y="182" width="196" height="122" rx="12" fill="#fff" stroke="#0e8a8f" stroke-width="1.5"/>
+      <text x="368" y="206" font-family="Inter" font-size="12" font-weight="700" fill="#08565a">GitHub Pages</text>
+      <text x="368" y="222" font-family="Inter" font-size="9.5" fill="#74909c">Static host, no server logic</text>
+      <text x="368" y="242" font-family="Inter" font-size="9" fill="#3d5763">• Landing page is public</text>
+      <text x="368" y="257" font-family="Inter" font-size="9" fill="#3d5763">• Data published encrypted</text>
+      <text x="368" y="272" font-family="Inter" font-size="9" fill="#3d5763">• Password unlocks it in the browser</text>
+      <text x="368" y="287" font-family="Inter" font-size="9" fill="#3d5763">• No account list is published</text>
+
+      <!-- sources -->
+      <rect x="576" y="26" width="180" height="278" rx="12" fill="url(#gTeal)"/>
+      <text x="592" y="50" font-family="Inter" font-size="12" font-weight="700" fill="#ffffff">Source of truth</text>
+      <text x="592" y="66" font-family="Inter" font-size="9.5" fill="#cfeaea">Files in the repository</text>
+      <text x="592" y="92" font-family="Inter" font-size="9.5" font-weight="700" fill="#ffffff">datasets/losdata/</text>
+      <text x="592" y="106" font-family="Inter" font-size="8.8" fill="#d9eeee">Aggregated outcomes 2016–2026</text>
+      <text x="592" y="132" font-family="Inter" font-size="9.5" font-weight="700" fill="#ffffff">datasets/nurse-skills/</text>
+      <text x="592" y="146" font-family="Inter" font-size="8.8" fill="#d9eeee">Acuity tool &amp; levels of care</text>
+      <text x="592" y="172" font-family="Inter" font-size="9.5" font-weight="700" fill="#ffffff">generated_data/</text>
+      <text x="592" y="186" font-family="Inter" font-size="8.8" fill="#d9eeee">Synthetic year of unit activity</text>
+      <text x="592" y="212" font-family="Inter" font-size="9.5" font-weight="700" fill="#ffffff">instance/access/</text>
+      <text x="592" y="226" font-family="Inter" font-size="8.8" fill="#d9eeee">Accounts (hashes only, never shipped)</text>
+      <text x="592" y="258" font-family="Inter" font-size="8.8" fill="#d9eeee">A build step turns the CSV files</text>
+      <text x="592" y="270" font-family="Inter" font-size="8.8" fill="#d9eeee">into the browser data bundles</text>
+      <text x="592" y="282" font-family="Inter" font-size="8.8" fill="#d9eeee">(Figure 3).</text>
+
+      <line x1="324" y1="104" x2="350" y2="96" stroke="#74909c" marker-end="url(#ar)"/>
+      <line x1="324" y1="150" x2="350" y2="230" stroke="#74909c" marker-end="url(#ar)"/>
+      <line x1="548" y1="96" x2="574" y2="96" stroke="#74909c" marker-end="url(#ar)"/>
+      <line x1="548" y1="230" x2="574" y2="230" stroke="#74909c" marker-end="url(#ar)"/>
+    </svg>
+    <figcaption><b>Figure 1 — Architecture overview.</b> The browser holds the whole application. A
+    hospital server and the public GitHub Pages copy are two ways to deliver it; both require sign-in,
+    and both draw on the same files in the repository.</figcaption>
+  </figure>
+
+  <h3>Two engines, kept identical</h3>
+  <p>The same algorithms exist twice: in <code>frontend/engine.js</code> for the browser, and in
+  <code>backend/app/</code> for the Python API. A test runs the browser engine in a JavaScript runtime
+  and compares its answers with Python's, value by value, so the two can never drift apart
+  (Section 12).</p>
+
+  <table>
+    <caption>Table 3 — Main components and where they live</caption>
+    <thead><tr><th style="width:52mm">Component</th><th>File</th><th>Responsibility</th></tr></thead>
+    <tbody>
+      <tr><td>Sign-in gate</td><td><code>frontend/access.js</code></td><td>Landing page, sign-in form, loads data and page scripts only after sign-in.</td></tr>
+      <tr><td>Encrypted-data reader</td><td><code>frontend/sealed.js</code></td><td>Opens the encrypted data published on GitHub Pages, in the browser.</td></tr>
+      <tr><td>Browser engine</td><td><code>frontend/engine.js</code></td><td>Prediction, acuity classification, staffing, skill mix, rostering.</td></tr>
+      <tr><td>Shared layout</td><td><code>frontend/components.js</code></td><td>Header, navigation, footer, tooltips, sign-out.</td></tr>
+      <tr><td>Outcome data reader</td><td><code>backend/app/data_loader.py</code></td><td>Parses the aggregated CSV tables into bins and statistics.</td></tr>
+      <tr><td>Prediction</td><td><code>backend/app/predictor.py</code></td><td>Interpolation, blending, disposition probabilities, confidence.</td></tr>
+      <tr><td>Nursing model</td><td><code>backend/app/nursing.py</code></td><td>Severity, care phases, ratios, skill mix, roster construction.</td></tr>
+      <tr><td>Acuity classifier</td><td><code>backend/app/acuity_tool.py</code></td><td>Parses the acuity tool CSVs; classifies an infant from its findings.</td></tr>
+      <tr><td>Accounts and sign-in</td><td><code>backend/app/accounts.py</code>, <code>auth.py</code></td><td>Password hashing, session cookies, rate limiting.</td></tr>
+      <tr><td>Application</td><td><code>backend/app/main.py</code></td><td>Routes, access rules, security headers.</td></tr>
+      <tr><td>Build steps</td><td><code>scripts/build_frontend_data.py</code>, <code>build_pages_site.py</code></td><td>Data bundles for the browser; the published (encrypted) site.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================ 4 ============================ -->
+<section id="s4">
+  <div class="sec-head"><span class="sec-num">04</span><h2>The data foundation</h2>
+    <p>What NeoStay knows, where it comes from, and how it reaches the browser.</p></div>
+
+  <p class="lead">NeoStay stands on three bodies of data. None of them contains a patient record. The
+  first is a decade of the centre's own aggregated outcomes; the second is the acuity tool the unit
+  classifies babies with; the third is a synthetic year of unit activity used only for the timeline
+  demonstrations.</p>
+
+  <table>
+    <caption>Table 4 — The three data sources</caption>
+    <thead><tr><th style="width:44mm">Source</th><th>Contents</th><th>Used by</th></tr></thead>
+    <tbody>
+      <tr><td><strong>datasets/losdata/</strong><br /><span class="small">3 CSV tables</span></td>
+        <td>For each of 11 birth-weight bands and 18 gestational-age groups: how many babies (N), the median stay, and the quartiles Q1 and Q3. A second table splits those by discharge outcome.</td>
+        <td>Prediction (Section 5), Analytics, Home page.</td></tr>
+      <tr><td><strong>datasets/nurse-skills/</strong><br /><span class="small">3 CSV tables + scanned PDF</span></td>
+        <td>The Abrazo Arrowhead Neonatal Acuity Tool (11 body systems × 4 ratio columns) and the Nursing Levels of Care (45 general criteria, 19 hyperbilirubinemia criteria).</td>
+        <td>Acuity classifier (Section 7), Scheduling, Acuity tool page.</td></tr>
+      <tr><td><strong>generated_data/</strong><br /><span class="small">5 CSV tables</span></td>
+        <td>A deterministic simulation of 709 infants and 42 nurses over a decade, hour by hour, anchored to the real medians and outcome proportions.</td>
+        <td>Timeline page and the hourly API only. Never used for prediction.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note"><b>The scanned document is never read by the program.</b> The acuity tool arrived as
+  a three-page scan. Its tables were transcribed into CSV files, and only those CSV files are parsed.
+  The handwritten annotations on the scan are deliberately ignored.</div>
+
+  <h3>How the raw tables are shaped</h3>
+  <p>The outcome tables are "wide": the first row names each band, the second row repeats four
+  sub-columns beneath it (N, Median, Q1, Q3), and each later row is one measure, such as
+  <em>Total Length Of Stay</em>. The loader reads that shape into one statistic per measure per band, and
+  attaches a numeric midpoint to every band so that values can be interpolated between them.</p>
+
+  <figure>
+    <svg viewBox="0 0 780 200" role="img" aria-label="Data build pipeline">
+      <defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M0 0 L10 5 L0 10 z" fill="#0e8a8f"/></marker></defs>
+      <rect x="1" y="1" width="778" height="198" rx="12" fill="#fbfdfd" stroke="#e3ebef"/>
+
+      <rect x="20" y="40" width="150" height="120" rx="10" fill="#fff" stroke="#d1dde3"/>
+      <text x="34" y="64" font-family="Inter" font-size="10.5" font-weight="700" fill="#122b36">CSV tables</text>
+      <text x="34" y="82" font-family="Inter" font-size="8.6" fill="#3d5763">losdata: N / median /</text>
+      <text x="34" y="94" font-family="Inter" font-size="8.6" fill="#3d5763">Q1 / Q3 per band</text>
+      <text x="34" y="112" font-family="Inter" font-size="8.6" fill="#3d5763">nurse-skills: findings,</text>
+      <text x="34" y="124" font-family="Inter" font-size="8.6" fill="#3d5763">criteria, ratio columns</text>
+      <text x="34" y="142" font-family="Inter" font-size="8.6" fill="#3d5763">generated_data: hourly</text>
+
+      <rect x="210" y="40" width="160" height="120" rx="10" fill="#e3f4f4" stroke="#0e8a8f"/>
+      <text x="224" y="64" font-family="Inter" font-size="10.5" font-weight="700" fill="#08565a">Python parsers</text>
+      <text x="224" y="82" font-family="Inter" font-size="8.6" fill="#3d5763">data_loader.py</text>
+      <text x="224" y="96" font-family="Inter" font-size="8.6" fill="#3d5763">acuity_tool.py</text>
+      <text x="224" y="110" font-family="Inter" font-size="8.6" fill="#3d5763">timeseries.py</text>
+      <text x="224" y="132" font-family="Inter" font-size="8.4" fill="#74909c">Validates shape,</text>
+      <text x="224" y="144" font-family="Inter" font-size="8.4" fill="#74909c">rejects weak entries</text>
+
+      <rect x="410" y="40" width="160" height="120" rx="10" fill="#fff" stroke="#d1dde3"/>
+      <text x="424" y="64" font-family="Inter" font-size="10.5" font-weight="700" fill="#122b36">Data bundles</text>
+      <text x="424" y="82" font-family="Inter" font-size="8.6" fill="#3d5763">neostay-data.js</text>
+      <text x="424" y="96" font-family="Inter" font-size="8.6" fill="#3d5763">neostay-acuity.js</text>
+      <text x="424" y="110" font-family="Inter" font-size="8.6" fill="#3d5763">neostay-timeseries.js</text>
+      <text x="424" y="132" font-family="Inter" font-size="8.4" fill="#74909c">Built by</text>
+      <text x="424" y="144" font-family="Inter" font-size="8.4" fill="#74909c">build_frontend_data.py</text>
+
+      <rect x="610" y="40" width="150" height="120" rx="10" fill="#fff" stroke="#c9a24b"/>
+      <text x="624" y="64" font-family="Inter" font-size="10.5" font-weight="700" fill="#a76f1e">Delivery</text>
+      <text x="624" y="82" font-family="Inter" font-size="8.6" fill="#3d5763">Server: after sign-in</text>
+      <text x="624" y="96" font-family="Inter" font-size="8.6" fill="#3d5763">Pages: encrypted,</text>
+      <text x="624" y="108" font-family="Inter" font-size="8.6" fill="#3d5763">opened by password</text>
+      <text x="624" y="130" font-family="Inter" font-size="8.4" fill="#74909c">build_pages_site.py</text>
+      <text x="624" y="142" font-family="Inter" font-size="8.4" fill="#74909c">(Section 10)</text>
+
+      <line x1="172" y1="100" x2="206" y2="100" stroke="#0e8a8f" marker-end="url(#ar2)"/>
+      <line x1="372" y1="100" x2="406" y2="100" stroke="#0e8a8f" marker-end="url(#ar2)"/>
+      <line x1="572" y1="100" x2="606" y2="100" stroke="#0e8a8f" marker-end="url(#ar2)"/>
+      <text x="14" y="188" font-family="Inter" font-size="8.4" fill="#74909c">Each step is reproducible from the command line; the bundles are checked into the repository so the site can be rebuilt without a database.</text>
+    </svg>
+    <figcaption><b>Figure 2 — From source tables to the browser.</b> No database is involved at any
+    point: the data is small enough to be prepared once and read directly.</figcaption>
+  </figure>
+
+  <h3>The bands</h3>
+  <p>Predictions are made against 11 birth-weight bands, from <em>under 501 g</em> to <em>over 1400 g</em>,
+  and 18 gestational-age groups, from <em>under 22 weeks</em> to <em>over 37 weeks</em>. Each band carries a
+  midpoint (for example 750 g for the 701–800 g band) which anchors the interpolation in Section 5.</p>
+</section>
+
+<!-- ============================ 5 ============================ -->
+<section id="s5">
+  <div class="sec-head"><span class="sec-num">05</span><h2>Algorithm 1 — outcome prediction</h2>
+    <p>From two numbers known at birth to a stay, an outcome and a confidence.</p></div>
+
+  <div class="plain"><b>In plain words.</b> NeoStay looks up what happened to babies of a similar birth
+  weight, and to babies of a similar gestational age, then blends the two pictures. Because a 720 g baby
+  sits between two recorded weight bands, the figures either side are mixed in proportion, so every gram
+  and every week changes the answer slightly. Nothing is modelled or guessed: the numbers come from the
+  unit's own counts.</div>
+
+  <h3>The five steps</h3>
+  <ol class="steps">
+    <li><strong>Locate the bands.</strong> The birth weight falls in one weight band (upper bound
+      inclusive), the gestational age in one age group (upper bound exclusive).</li>
+    <li><strong>Interpolate.</strong> For the median, Q1 and Q3, take the two nearest band midpoints and
+      mix them in proportion to the distance. Values beyond the first or last midpoint are held at that
+      end rather than extrapolated.</li>
+    <li><strong>Blend.</strong> Average the weight-based estimate and the age-based estimate.</li>
+    <li><strong>Discharge outcome.</strong> Take the recorded counts of Home, Transfer and Died for that
+      weight band and convert them to percentages. Survival is 100% minus the died percentage.</li>
+    <li><strong>Confidence.</strong> Report how many babies stand behind the answer, graded by sample
+      size.</li>
+  </ol>
+
+  <div class="formula">Interpolation between two band midpoints x₀ and x₁ (values y₀, y₁):
+
+    y = y₀ + (value − x₀) / (x₁ − x₀) × (y₁ − y₀)
+
+Blend of the two views:   LOS = mean(LOS by weight, LOS by gestational age)
+Survival:                 survival % = 100 − died %</div>
+
+  <table>
+    <caption>Table 5 — Confidence grades (by number of similar babies, N)</caption>
+    <thead><tr><th>Grade</th><th class="num">N</th><th>How to read it</th></tr></thead>
+    <tbody>
+      <tr><td><span class="tag t2">high</span></td><td class="num">50 or more</td><td>A solid basis for planning conversations.</td></tr>
+      <tr><td><span class="tag t3">moderate</span></td><td class="num">20 – 49</td><td>Usable, but treat the range as wide.</td></tr>
+      <tr><td><span class="tag t3">low</span></td><td class="num">5 – 19</td><td>A rough sketch only.</td></tr>
+      <tr><td><span class="tag t4">very low</span></td><td class="num">under 5</td><td>Indicative; do not plan on it.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="worked">
+    <div class="worked-h">Worked example — a baby of 720 g born at 25 weeks</div>
+    <div class="worked-b">
+      <p>The inputs fall in the <strong>701–800 g</strong> band and the <strong>25 Weeks</strong> group.
+      These are the figures NeoStay returns, reproduced by running the prediction code:</p>
+      <table>
+        <thead><tr><th>Quantity</th><th class="num">Median</th><th class="num">Q1</th><th class="num">Q3</th></tr></thead>
+        <tbody>
+          <tr><td>Length of stay by birth weight</td><td class="num">103.6 days</td><td class="num">83.8</td><td class="num">128.0</td></tr>
+          <tr><td>Length of stay by gestational age</td><td class="num">102.0 days</td><td class="num">86.0</td><td class="num">122.0</td></tr>
+          <tr><td><strong>Blended forecast</strong></td><td class="num"><strong>102.8 days</strong></td><td class="num"><strong>84.9</strong></td><td class="num"><strong>125.0</strong></td></tr>
+          <tr><td>If discharged home</td><td class="num">105.8 days</td><td class="num">94.2</td><td class="num">122.6</td></tr>
+          <tr><td>If transferred</td><td class="num">79.6 days</td><td class="num">32.3</td><td class="num">122.7</td></tr>
+          <tr><td>If the baby dies</td><td class="num">6.7 days</td><td class="num">2.2</td><td class="num">19.1</td></tr>
+        </tbody>
+      </table>
+      <table>
+        <thead><tr><th>Discharge outcome</th><th class="num">Home</th><th class="num">Transfer</th><th class="num">Died</th><th class="num">Survival</th><th class="num">N</th><th>Confidence</th></tr></thead>
+        <tbody><tr><td>Recorded for this weight band</td><td class="num">68.8%</td><td class="num">17.2%</td><td class="num">14.1%</td><td class="num">85.9%</td><td class="num">64</td><td><span class="tag t2">high</span></td></tr></tbody>
+      </table>
+      <p class="small" style="margin-bottom:0">Read as: babies like this one typically stayed about
+      <strong>103 days</strong>, with the middle half between <strong>85 and 125 days</strong>. Roughly
+      <strong>seven in ten</strong> went home. The shorter stay in the "died" row reflects deaths that
+      occurred early in the admission — the application shows this rather than hiding it.</p>
+    </div>
+  </div>
+
+  <div class="warn"><b>Honest limits.</b> These are group averages, not a prediction for an individual
+  baby, and they describe one centre's history between 2016 and 2026. A baby with a condition the data
+  does not capture may behave very differently.</div>
+</section>
+
+<!-- ============================ 6 ============================ -->
+<section id="s6">
+  <div class="sec-head"><span class="sec-num">06</span><h2>Algorithm 2 — nursing workload for one infant</h2>
+    <p>Turning a forecast stay into nurse-hours, shifts and the experience required.</p></div>
+
+  <div class="plain"><b>In plain words.</b> A baby is not equally demanding throughout its stay. The
+  first part is intensive, with one nurse at the cot; later the baby shares a nurse with one other, then
+  with two others as it feeds and grows. NeoStay estimates how sick the baby is, splits the expected stay
+  into those three phases, and adds up the nursing hours.</div>
+
+  <h3>Step 1 — a severity score between 0 and 1</h3>
+  <p>Two things drive it: how small the baby is and how early it was born. The admission condition and
+  the breathing support then raise it.</p>
+
+  <div class="formula">weight part      = clamp01((1400 − birth weight in g) / 1000)
+age part         = clamp01((34 − gestational age in weeks) / 12)
+severity (S)     = clamp01(0.55 × weight part + 0.45 × age part + modifiers)</div>
+
+  <div class="grid2">
+    <table>
+      <caption>Table 6 — Condition modifier</caption>
+      <thead><tr><th>Condition on admission</th><th class="num">Added</th></tr></thead>
+      <tbody>
+        <tr><td>Stable</td><td class="num">0.00</td></tr>
+        <tr><td>Guarded</td><td class="num">+0.12</td></tr>
+        <tr><td>Serious</td><td class="num">+0.25</td></tr>
+        <tr><td>Critical</td><td class="num">+0.40</td></tr>
+      </tbody>
+    </table>
+    <table>
+      <caption>Table 7 — Breathing support modifier</caption>
+      <thead><tr><th>Respiratory support</th><th class="num">Added</th></tr></thead>
+      <tbody>
+        <tr><td>Room air</td><td class="num">0.00</td></tr>
+        <tr><td>Nasal cannula</td><td class="num">+0.05</td></tr>
+        <tr><td>CPAP</td><td class="num">+0.15</td></tr>
+        <tr><td>Ventilator</td><td class="num">+0.30</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Step 2 — split the stay into three phases</h3>
+  <div class="formula">intensive share     = 0.15 + 0.45 × S          → one nurse per baby   (1:1)
+intermediate share  = 0.30 + 0.10 × (1 − S)   → one nurse per two    (1:2)
+convalescent share  = whatever remains        → one nurse per three  (1:3)
+(the three shares are normalised so they add to 1)</div>
+
+  <h3>Step 3 — convert to hours, shifts and a minimum nurse level</h3>
+  <div class="formula">phase days    = phase share × expected length of stay
+nurse-hours   = phase days × 24 hours × nurses per baby
+NHPPD         = total nurse-hours ÷ length of stay
+12-hour shifts = total nurse-hours ÷ 12</div>
+
+  <p>The minimum experience level follows the acuity band, then rises for invasive support: severity
+  0.35 or more requires a Competent nurse (L2), 0.60 or more a Proficient nurse (L3); a ventilated or
+  critically ill baby requires at least L3; a baby that is both critically ill <em>and</em> ventilated
+  requires an Expert (L4). Within a stay, the intensive phase carries the full requirement, the
+  intermediate phase L2, and the convalescent phase L1.</p>
+
+  <div class="worked">
+    <div class="worked-h">Worked example — the same 720 g baby, serious on admission, on CPAP</div>
+    <div class="worked-b">
+      <p>Severity reaches its maximum of <strong>1.00</strong> (the small size and early birth already
+      score high, and serious + CPAP add 0.40). With the forecast stay of 102.8 days:</p>
+      <table>
+        <thead><tr><th>Phase</th><th class="num">Days</th><th class="num">Nurses per baby</th><th class="num">Nurse-hours</th><th>Minimum nurse</th></tr></thead>
+        <tbody>
+          <tr><td>Intensive care (1:1)</td><td class="num">61.7</td><td class="num">1.00</td><td class="num">1,480.3</td><td><span class="tag t3">L3 Proficient</span></td></tr>
+          <tr><td>Intermediate care (1:2)</td><td class="num">30.8</td><td class="num">0.50</td><td class="num">370.1</td><td><span class="tag t2">L2 Competent</span></td></tr>
+          <tr><td>Convalescent care (1:3)</td><td class="num">10.3</td><td class="num">0.333</td><td class="num">82.2</td><td><span class="tag t1">L1 Novice</span></td></tr>
+          <tr><td><strong>Whole stay</strong></td><td class="num"><strong>102.8</strong></td><td class="num">—</td><td class="num"><strong>1,932.6</strong></td><td><strong>L3 at admission</strong></td></tr>
+        </tbody>
+      </table>
+      <p style="margin-bottom:0">That is <strong>18.8 nursing hours per patient day</strong> and about
+      <strong>161 twelve-hour shifts</strong> of nursing for this one baby.</p>
+    </div>
+  </div>
+
+  <div class="note"><b>Where the numbers come from.</b> The ratios follow AAP and AWHONN acuity-based
+  staffing standards. The phase shares, the severity weights and the experience thresholds are
+  <em>modelling assumptions</em> for planning discussion, chosen to be easy to change — not values from a
+  validated dataset. Section 13 shows where a hospital changes them.</div>
+</section>
+
+<!-- ============================ 7 ============================ -->
+<section id="s7">
+  <div class="sec-head"><span class="sec-num">07</span><h2>Algorithm 3 — the acuity classifier</h2>
+    <p>The unit's own tool, applied consistently to every cot.</p></div>
+
+  <div class="plain"><b>In plain words.</b> Instead of estimating how sick a baby is from weight and age,
+  the charge nurse can record what is actually happening at the cot: what breathing support is running,
+  what lines are in, which medicines are infusing. The acuity tool turns those findings into a
+  nurse:patient ratio. A second table, the Nursing Levels of Care, decides which level of nursery the
+  baby belongs to. NeoStay applies both, for every baby, the same way every time.</div>
+
+  <h3>What was transcribed</h3>
+  <div class="grid3">
+    <div class="kpi"><b>11</b><span>Body systems</span></div>
+    <div class="kpi"><b>108</b><span>Selectable findings</span></div>
+    <div class="kpi"><b>64</b><span>Level-of-care criteria</span></div>
+  </div>
+  <p class="small" style="margin-top:3mm">Findings cover weight and age, respiratory, cardiovascular,
+  A/B/Ds, nutrition, neuro, hyperbilirubinemia, transfusions, infection, lines, and haematology/other.
+  The 64 criteria split into 45 general criteria and 19 hyperbilirubinemia criteria.</p>
+
+  <table>
+    <caption>Table 8 — The four ratio columns, and what NeoStay plans with</caption>
+    <thead><tr><th>Column in the tool</th><th>Printed ratio</th><th>Used for planning</th><th class="num">Counts as</th><th>Minimum nurse</th><th>Assessment frequency</th></tr></thead>
+    <tbody>
+      <tr><td>Intensive care</td><td>1:2 or 1:1</td><td>1:2, or 1:1 when a footnoted criterion applies</td><td class="num">0.50 / 1.00</td><td><span class="tag t3">L3</span> / <span class="tag t4">L4</span></td><td>every 1–2 hours</td></tr>
+      <tr><td>Intermediate care</td><td>1:2–3</td><td>1:2</td><td class="num">0.50</td><td><span class="tag t2">L2</span></td><td>every 2–3 hours</td></tr>
+      <tr><td>Continuing care</td><td>1:3</td><td>1:3</td><td class="num">0.333</td><td><span class="tag t1">L1</span></td><td>every 3–4 hours</td></tr>
+      <tr><td>Continuing care (lower)</td><td>1:3–4</td><td>1:3</td><td class="num">0.333</td><td><span class="tag t1">L1</span></td><td>every 3–4 hours</td></tr>
+    </tbody>
+  </table>
+
+  <p>Where the printed tool gives a range, NeoStay plans with the more protective end. The single
+  exception is intensive care, where the tool's own footnote defines which babies need 1:1 — the
+  hemodynamically unstable baby needing interventions every 15 minutes, therapeutic hypothermia,
+  exchange transfusion, and bedside surgical procedures. Those findings are marked in the application
+  with a <span class="tag t4">1:1</span> tag.</p>
+
+  <figure>
+    <svg viewBox="0 0 780 260" role="img" aria-label="Acuity classification flow">
+      <defs><marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M0 0 L10 5 L0 10 z" fill="#74909c"/></marker></defs>
+      <rect x="1" y="1" width="778" height="258" rx="12" fill="#fbfdfd" stroke="#e3ebef"/>
+
+      <rect x="20" y="30" width="170" height="90" rx="10" fill="#fff" stroke="#d1dde3"/>
+      <text x="34" y="52" font-family="Inter" font-size="10" font-weight="700" fill="#122b36">Findings ticked</text>
+      <text x="34" y="70" font-family="Inter" font-size="8.6" fill="#3d5763">One per body system,</text>
+      <text x="34" y="82" font-family="Inter" font-size="8.6" fill="#3d5763">the most intensive that</text>
+      <text x="34" y="94" font-family="Inter" font-size="8.6" fill="#3d5763">applies · optional 1:1 box</text>
+      <text x="34" y="110" font-family="Inter" font-size="8.6" fill="#3d5763">· level-of-care criterion</text>
+
+      <rect x="230" y="18" width="200" height="52" rx="10" fill="#e3f4f4" stroke="#0e8a8f"/>
+      <text x="244" y="38" font-family="Inter" font-size="9.6" font-weight="700" fill="#08565a">Most intensive column wins</text>
+      <text x="244" y="54" font-family="Inter" font-size="8.6" fill="#3d5763">across all systems → ratio</text>
+
+      <rect x="230" y="86" width="200" height="52" rx="10" fill="#fff" stroke="#d5637a"/>
+      <text x="244" y="106" font-family="Inter" font-size="9.6" font-weight="700" fill="#b5445f">Any footnoted finding?</text>
+      <text x="244" y="122" font-family="Inter" font-size="8.6" fill="#3d5763">→ ratio becomes 1:1, nurse L4</text>
+
+      <rect x="230" y="154" width="200" height="52" rx="10" fill="#fff" stroke="#c9a24b"/>
+      <text x="244" y="174" font-family="Inter" font-size="9.6" font-weight="700" fill="#a76f1e">Highest criterion met</text>
+      <text x="244" y="190" font-family="Inter" font-size="8.6" fill="#3d5763">→ level of care N1…N4</text>
+
+      <rect x="470" y="60" width="140" height="110" rx="10" fill="#e3f4f4" stroke="#0e8a8f"/>
+      <text x="484" y="84" font-family="Inter" font-size="10" font-weight="700" fill="#08565a">Take the higher</text>
+      <text x="484" y="102" font-family="Inter" font-size="8.6" fill="#3d5763">column level (L1–L4)</text>
+      <text x="484" y="116" font-family="Inter" font-size="8.6" fill="#3d5763">vs care level (N1→L1 …</text>
+      <text x="484" y="130" font-family="Inter" font-size="8.6" fill="#3d5763">N4→L4)</text>
+      <text x="484" y="152" font-family="Inter" font-size="8.6" fill="#3d5763">= minimum nurse level</text>
+
+      <rect x="650" y="60" width="110" height="110" rx="10" fill="#0e8a8f"/>
+      <text x="664" y="88" font-family="Inter" font-size="10" font-weight="700" fill="#fff">Result</text>
+      <text x="664" y="108" font-family="Inter" font-size="8.6" fill="#dff1f1">ratio · demand</text>
+      <text x="664" y="122" font-family="Inter" font-size="8.6" fill="#dff1f1">care level</text>
+      <text x="664" y="136" font-family="Inter" font-size="8.6" fill="#dff1f1">nurse level</text>
+      <text x="664" y="150" font-family="Inter" font-size="8.6" fill="#dff1f1">reasons list</text>
+
+      <line x1="192" y1="60" x2="226" y2="44" stroke="#74909c" marker-end="url(#ar3)"/>
+      <line x1="192" y1="80" x2="226" y2="110" stroke="#74909c" marker-end="url(#ar3)"/>
+      <line x1="192" y1="100" x2="226" y2="178" stroke="#74909c" marker-end="url(#ar3)"/>
+      <line x1="432" y1="44" x2="466" y2="96" stroke="#74909c" marker-end="url(#ar3)"/>
+      <line x1="432" y1="112" x2="466" y2="115" stroke="#74909c" marker-end="url(#ar3)"/>
+      <line x1="432" y1="178" x2="466" y2="134" stroke="#74909c" marker-end="url(#ar3)"/>
+      <line x1="612" y1="115" x2="646" y2="115" stroke="#74909c" marker-end="url(#ar3)"/>
+      <text x="20" y="238" font-family="Inter" font-size="8.4" fill="#74909c">If no findings are recorded for a baby, NeoStay falls back to the severity model of Section 6, and says so in the census row.</text>
+    </svg>
+    <figcaption><b>Figure 3 — How one baby is classified.</b> The ratio comes from the most intensive
+    finding anywhere on the tool; the nurse level is the higher of the column's requirement and the
+    level of care.</figcaption>
+  </figure>
+
+  <div class="worked">
+    <div class="worked-h">Worked example — a ventilated baby on parenteral nutrition with a PICC line</div>
+    <div class="worked-b">
+      <table>
+        <thead><tr><th>Ticked on the tool</th><th>Column</th></tr></thead>
+        <tbody>
+          <tr><td>Respiratory: "HFOV, Ventilator, NIPPV, CPAP/BCPAP, High flow or Vapotherm &gt;4 liters"</td><td>Intensive care</td></tr>
+          <tr><td>Nutrition: "TPN/Lipids and/or IV fluids"</td><td>Intensive care</td></tr>
+          <tr><td>Lines: "Infusing IV, PICC, UVC/UAC"</td><td>Intermediate care</td></tr>
+          <tr><td>Level of care: "supplemental respiratory support ≥ 40%, NIPPV or mechanical ventilation or HFNC &gt;1 L/min"</td><td>N3</td></tr>
+        </tbody>
+      </table>
+      <p><strong>Result:</strong> ratio <strong>1:2</strong> (intensive care, no footnoted 1:1 criterion),
+      counts as <strong>0.50</strong> of a nurse, level of care <strong>N3</strong>, minimum nurse
+      <span class="tag t3">L3 Proficient</span>, assessment <strong>every 1–2 hours</strong>. The
+      application lists the three deciding findings when the ratio is hovered, so the number can always
+      be traced back to a tick.</p>
+      <p style="margin-bottom:0">Had "Therapeutic Hypothermia/HIE" been ticked instead, the footnote
+      would apply: ratio <strong>1:1</strong>, counting as a whole nurse, minimum
+      <span class="tag t4">L4 Expert</span>.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ 8 ============================ -->
+<section id="s8">
+  <div class="sec-head"><span class="sec-num">08</span><h2>Algorithm 4 — unit staffing and the 24-hour roster</h2>
+    <p>From a census of cots to a defensible shift plan.</p></div>
+
+  <div class="plain"><b>In plain words.</b> Each baby needs a fraction of a nurse. Add those fractions
+  together and you have the bedside nurses the shift needs. But a number alone can hide an unsafe
+  roster: three novices cannot replace three experts. So NeoStay also works out how experienced the team
+  must be, then lays the nurses the unit actually has across the day and shows which cots, if any, are
+  left without a qualified nurse.</div>
+
+  <h3>Step 1 — demand</h3>
+  <p>Every baby contributes its ratio: a 1:1 baby counts 1.00, a 1:2 baby 0.50, a 1:3 baby 0.333. The
+  sum, rounded up, is the number of bedside nurses. One charge nurse is added per shift.</p>
+
+  <h3>Step 2 — skill mix</h3>
+  <p>Requirements accumulate downward: a nurse may always cover a baby below their level, never above
+  it. NeoStay adds the demand at L4, then L4+L3, then L4+L3+L2, rounding each total up, and converts
+  those running totals into a headcount per level. Two safety rules then apply: novices are capped at
+  <strong>30%</strong> of the bedside team, with the surplus promoted to Competent, and every novice on
+  shift needs a Proficient or Expert preceptor. Finally the roster's <em>effective capacity</em> is
+  computed by weighting each nurse by experience, so a numerically adequate but junior shift is
+  visible.</p>
+
+  <table>
+    <caption>Table 9 — Nurse levels, as NeoStay models them</caption>
+    <thead><tr><th>Level</th><th>Stage</th><th>Experience</th><th class="num">Counts as</th><th>Typical assignment</th></tr></thead>
+    <tbody>
+      <tr><td><span class="tag t1">L1</span></td><td>Novice / Advanced Beginner</td><td>0–1 year</td><td class="num">0.75</td><td>Convalescent babies; intermediate care with a preceptor.</td></tr>
+      <tr><td><span class="tag t2">L2</span></td><td>Competent</td><td>1–3 years</td><td class="num">0.90</td><td>Intermediate and special care; stable intensive with support.</td></tr>
+      <tr><td><span class="tag t3">L3</span></td><td>Proficient</td><td>3–5 years</td><td class="num">1.00</td><td>Intensive 1:1 assignments, including ventilated babies.</td></tr>
+      <tr><td><span class="tag t4">L4</span></td><td>Expert</td><td>5+ years</td><td class="num">1.10</td><td>Most unstable babies, charge nurse, precepting.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Step 3 — the 24-hour roster</h3>
+  <p>The nurses available across the whole day are dealt out shift by shift, most senior first and
+  rotating, so no shift collects all the experts. Within a shift the most senior nurse becomes charge
+  and carries no cot. The sickest babies are placed first, each into the <em>least senior qualified</em>
+  nurse with room, keeping experts free for the babies who need them. No nurse exceeds one full
+  assignment. If a baby cannot be placed, the charge nurse takes it as a last resort — reported as a
+  warning — and anything still unplaced is listed, with the extra nurses that would close the gap.</p>
+
+  <div class="worked">
+    <div class="worked-h">Worked example — the sample unit built into the Scheduling page (8 babies, two 12-hour shifts, 20 nurses available)</div>
+    <div class="worked-b">
+      <table>
+        <thead><tr><th class="num">#</th><th class="num">Weight</th><th class="num">Age</th><th>Ratio</th><th>Care level</th><th>Acuity band</th><th class="num">Counts as</th><th>Minimum nurse</th></tr></thead>
+        <tbody>
+          <tr><td class="num">1</td><td class="num">620 g</td><td class="num">24 wk</td><td><strong>1:1</strong></td><td>N4</td><td>intensive</td><td class="num">1.000</td><td><span class="tag t4">L4 Expert</span></td></tr>
+          <tr><td class="num">2</td><td class="num">740 g</td><td class="num">25 wk</td><td>1:2</td><td>N3</td><td>intensive</td><td class="num">0.500</td><td><span class="tag t3">L3</span></td></tr>
+          <tr><td class="num">3</td><td class="num">880 g</td><td class="num">27 wk</td><td>1:2</td><td>N3</td><td>intensive</td><td class="num">0.500</td><td><span class="tag t3">L3</span></td></tr>
+          <tr><td class="num">4</td><td class="num">980 g</td><td class="num">28 wk</td><td>1:2</td><td>N2</td><td>intermediate</td><td class="num">0.500</td><td><span class="tag t2">L2</span></td></tr>
+          <tr><td class="num">5</td><td class="num">1150 g</td><td class="num">29 wk</td><td>1:2</td><td>N2</td><td>intermediate</td><td class="num">0.500</td><td><span class="tag t2">L2</span></td></tr>
+          <tr><td class="num">6</td><td class="num">1300 g</td><td class="num">30 wk</td><td>1:3</td><td>N2</td><td>convalescent</td><td class="num">0.333</td><td><span class="tag t2">L2</span></td></tr>
+          <tr><td class="num">7</td><td class="num">1420 g</td><td class="num">31 wk</td><td>1:3</td><td>N2</td><td>convalescent</td><td class="num">0.333</td><td><span class="tag t2">L2</span></td></tr>
+          <tr><td class="num">8</td><td class="num">1650 g</td><td class="num">33 wk</td><td>1:3</td><td>—</td><td>convalescent</td><td class="num">0.333</td><td><span class="tag t1">L1</span></td></tr>
+        </tbody>
+      </table>
+
+      <div class="grid3" style="margin:3mm 0">
+        <div class="kpi"><b>4.00</b><span>Total demand (nurses)</span></div>
+        <div class="kpi"><b>5</b><span>Nurses per shift (4 bedside + charge)</span></div>
+        <div class="kpi"><b>10</b><span>Daily nurse-shifts</span></div>
+      </div>
+
+      <table>
+        <thead><tr><th>Level</th><th class="num">Demand needing this level</th><th class="num">Recommended on shift</th><th class="num">Effective capacity</th></tr></thead>
+        <tbody>
+          <tr><td><span class="tag t4">L4 Expert</span></td><td class="num">1.00</td><td class="num">1</td><td class="num">1.10</td></tr>
+          <tr><td><span class="tag t3">L3 Proficient</span></td><td class="num">1.00</td><td class="num">1</td><td class="num">1.00</td></tr>
+          <tr><td><span class="tag t2">L2 Competent</span></td><td class="num">1.67</td><td class="num">2</td><td class="num">1.80</td></tr>
+          <tr><td><span class="tag t1">L1 Novice</span></td><td class="num">0.33</td><td class="num">0</td><td class="num">0.00</td></tr>
+          <tr><td><strong>Total</strong></td><td class="num"><strong>4.00</strong></td><td class="num"><strong>4 bedside</strong></td><td class="num"><strong>3.90</strong></td></tr>
+        </tbody>
+      </table>
+      <p style="margin-bottom:0">With 20 nurses in hand (4 · 6 · 6 · 4 across L1–L4), the roster covers
+      every baby on both shifts: 10 nurses per shift, <strong>48.0 of 120 rostered nurse-hours
+      committed</strong>, average bedside load 0.44 of a full assignment. The application states the
+      verdict in words — here, "fully covered" — rather than leaving the comparison to the eye.</p>
+    </div>
+  </div>
+
+  <div class="note"><b>Reading the effective capacity.</b> 3.90 against a demand of 4.00 means this
+  particular mix is marginally junior for the work, even though the headcount matches. Adding one
+  Expert instead of one Competent would close it. This is exactly the signal the number exists to give.</div>
+</section>
+
+<!-- ============================ 9 ============================ -->
+<section id="s9">
+  <div class="sec-head"><span class="sec-num">09</span><h2>The hourly timeline and analytics</h2>
+    <p>What a whole year of this unit looks like, hour by hour.</p></div>
+
+  <div class="plain"><b>In plain words.</b> To show how demand rises and falls, NeoStay includes a
+  simulated year of unit activity. It is not real patient data and never feeds a prediction. It is built
+  by drawing babies whose numbers match the real recorded medians, quartiles and discharge proportions,
+  so the shape of the year is realistic while every individual baby is invented.</div>
+
+  <table>
+    <caption>Table 10 — The simulated unit (deterministic: the same every time it is generated)</caption>
+    <thead><tr><th>Measure</th><th class="num">Value</th><th>How it is produced</th></tr></thead>
+    <tbody>
+      <tr><td>Infants simulated</td><td class="num">709</td><td>Counts per birth-weight band follow the real N values.</td></tr>
+      <tr><td>Nurses simulated</td><td class="num">42</td><td>Experience drawn across the four levels, with hire dates.</td></tr>
+      <tr><td>Average census</td><td class="num">12.28</td><td>Babies present, averaged over every hour of the decade.</td></tr>
+      <tr><td>Peak census</td><td class="num">23</td><td>The busiest hour recorded.</td></tr>
+      <tr><td>Average nurses on duty</td><td class="num">9.55</td><td>Rostered from the hourly demand.</td></tr>
+      <tr><td>Care-phase mix</td><td class="num">40.8 / 34.3 / 25.0 %</td><td>Intensive / intermediate / convalescent, across all infant-hours.</td></tr>
+      <tr><td>Discharge mix</td><td class="num">553 / 73 / 83</td><td>Home / transferred / died, drawn using the real proportions.</td></tr>
+    </tbody>
+  </table>
+
+  <p>Lengths of stay are drawn from a log-normal distribution whose median and interquartile range are
+  fitted to the real figures for that band and outcome, then clamped to between 1 and 250 days. The
+  generator is seeded, so reviewers can reproduce the identical dataset and inspect it as plain CSV.</p>
+
+  <p>The Analytics page reads the aggregated tables directly and plots length of stay across all 11
+  weight bands and all 18 gestational-age groups, with the discharge mix per band.</p>
+</section>
+
+<!-- ============================ 10 ============================ -->
+<section id="s10">
+  <div class="sec-head"><span class="sec-num">10</span><h2>Access control and security</h2>
+    <p>Registered users only — enforced differently on a server and on a static host.</p></div>
+
+  <div class="plain"><b>In plain words.</b> Every page begins at a sign-in screen. On a hospital server
+  the server checks the password and refuses to hand over any data until it is satisfied. On a public
+  static host no server exists to do the checking, so the data is published encrypted and the password
+  unlocks it inside the browser. Both use one account list.</div>
+
+  <figure>
+    <svg viewBox="0 0 780 250" role="img" aria-label="Sign-in flows">
+      <defs><marker id="ar4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M0 0 L10 5 L0 10 z" fill="#0e8a8f"/></marker></defs>
+      <rect x="1" y="1" width="778" height="248" rx="12" fill="#fbfdfd" stroke="#e3ebef"/>
+      <text x="20" y="26" font-family="Inter" font-size="10" font-weight="700" fill="#08565a">A · Hospital server</text>
+      <rect x="20" y="36" width="130" height="58" rx="9" fill="#fff" stroke="#d1dde3"/>
+      <text x="32" y="58" font-family="Inter" font-size="9" fill="#3d5763">Browser opens a</text>
+      <text x="32" y="72" font-family="Inter" font-size="9" fill="#3d5763">page (public shell,</text>
+      <text x="32" y="86" font-family="Inter" font-size="9" fill="#3d5763">no data inside)</text>
+      <rect x="180" y="36" width="130" height="58" rx="9" fill="#e3f4f4" stroke="#0e8a8f"/>
+      <text x="192" y="58" font-family="Inter" font-size="9" fill="#3d5763">Email + password</text>
+      <text x="192" y="72" font-family="Inter" font-size="9" fill="#3d5763">checked against</text>
+      <text x="192" y="86" font-family="Inter" font-size="9" fill="#3d5763">PBKDF2 hash</text>
+      <rect x="340" y="36" width="130" height="58" rx="9" fill="#fff" stroke="#d1dde3"/>
+      <text x="352" y="58" font-family="Inter" font-size="9" fill="#3d5763">Signed session</text>
+      <text x="352" y="72" font-family="Inter" font-size="9" fill="#3d5763">cookie issued</text>
+      <text x="352" y="86" font-family="Inter" font-size="9" fill="#3d5763">(HttpOnly, 12 h)</text>
+      <rect x="500" y="36" width="260" height="58" rx="9" fill="#0e8a8f"/>
+      <text x="514" y="58" font-family="Inter" font-size="9.4" font-weight="700" fill="#fff">Data files and API unlock</text>
+      <text x="514" y="74" font-family="Inter" font-size="8.8" fill="#dff1f1">Every request re-checks the session against the</text>
+      <text x="514" y="87" font-family="Inter" font-size="8.8" fill="#dff1f1">account list; removal ends it at once</text>
+      <line x1="152" y1="65" x2="176" y2="65" stroke="#0e8a8f" marker-end="url(#ar4)"/>
+      <line x1="312" y1="65" x2="336" y2="65" stroke="#0e8a8f" marker-end="url(#ar4)"/>
+      <line x1="472" y1="65" x2="496" y2="65" stroke="#0e8a8f" marker-end="url(#ar4)"/>
+
+      <text x="20" y="136" font-family="Inter" font-size="10" font-weight="700" fill="#a76f1e">B · GitHub Pages (no server can check anything)</text>
+      <rect x="20" y="146" width="130" height="72" rx="9" fill="#fff" stroke="#d1dde3"/>
+      <text x="32" y="168" font-family="Inter" font-size="9" fill="#3d5763">Build encrypts all</text>
+      <text x="32" y="182" font-family="Inter" font-size="9" fill="#3d5763">data: AES-256-GCM,</text>
+      <text x="32" y="196" font-family="Inter" font-size="9" fill="#3d5763">new random key</text>
+      <text x="32" y="210" font-family="Inter" font-size="9" fill="#3d5763">every build</text>
+      <rect x="180" y="146" width="150" height="72" rx="9" fill="#fff" stroke="#c9a24b"/>
+      <text x="192" y="168" font-family="Inter" font-size="9" fill="#3d5763">That key is wrapped</text>
+      <text x="192" y="182" font-family="Inter" font-size="9" fill="#3d5763">once per account with</text>
+      <text x="192" y="196" font-family="Inter" font-size="9" fill="#3d5763">the account's password</text>
+      <text x="192" y="210" font-family="Inter" font-size="9" fill="#3d5763">hash → keys.json</text>
+      <rect x="360" y="146" width="150" height="72" rx="9" fill="#e3f4f4" stroke="#0e8a8f"/>
+      <text x="372" y="168" font-family="Inter" font-size="9" fill="#3d5763">Reader types the</text>
+      <text x="372" y="182" font-family="Inter" font-size="9" fill="#3d5763">password; browser</text>
+      <text x="372" y="196" font-family="Inter" font-size="9" fill="#3d5763">re-derives the same</text>
+      <text x="372" y="210" font-family="Inter" font-size="9" fill="#3d5763">hash (600,000 rounds)</text>
+      <rect x="540" y="146" width="220" height="72" rx="9" fill="#0a6d72"/>
+      <text x="554" y="170" font-family="Inter" font-size="9.4" font-weight="700" fill="#fff">Data decrypts in the browser</text>
+      <text x="554" y="188" font-family="Inter" font-size="8.8" fill="#dff1f1">Wrong password fails the authentication</text>
+      <text x="554" y="201" font-family="Inter" font-size="8.8" fill="#dff1f1">tag and reveals nothing. No password or</text>
+      <text x="554" y="214" font-family="Inter" font-size="8.8" fill="#dff1f1">email leaves the device.</text>
+      <line x1="152" y1="182" x2="176" y2="182" stroke="#0e8a8f" marker-end="url(#ar4)"/>
+      <line x1="332" y1="182" x2="356" y2="182" stroke="#0e8a8f" marker-end="url(#ar4)"/>
+      <line x1="512" y1="182" x2="536" y2="182" stroke="#0e8a8f" marker-end="url(#ar4)"/>
+    </svg>
+    <figcaption><b>Figure 4 — Two ways to enforce one account list.</b> The server path is stronger; the
+    published path is what makes a static host usable at all. Section 10 states the limits of each.</figcaption>
+  </figure>
+
+  <table>
+    <caption>Table 11 — Security parameters, as implemented</caption>
+    <thead><tr><th>Control</th><th>Setting</th></tr></thead>
+    <tbody>
+      <tr><td>Password storage</td><td>PBKDF2-HMAC-SHA256, 600,000 iterations, random 16-byte salt per account, 32-byte hash</td></tr>
+      <tr><td>Minimum password length</td><td>12 characters; the email address itself is rejected</td></tr>
+      <tr><td>Session</td><td>Signed token (HMAC-SHA256) in an <code>HttpOnly</code>, <code>SameSite=Lax</code> cookie, <code>Secure</code> in production, 12 hours by default</td></tr>
+      <tr><td>Session revocation</td><td>Every request re-checks the account and a fingerprint of its password: removing an account or changing its password ends its sessions immediately</td></tr>
+      <tr><td>Brute-force limits</td><td>5 failed sign-ins per account and 20 per client in 15 minutes, then a wait</td></tr>
+      <tr><td>Cross-site sign-in</td><td>Refused; an unknown email and a wrong password get the same answer, in the same time</td></tr>
+      <tr><td>Published data</td><td>gzip, then AES-256-GCM with a fresh 256-bit key per build; key wrapped per account; published files carry no email, name or password hash</td></tr>
+      <tr><td>Production start-up</td><td>Refuses to run without sign-in, or with a session secret under 32 characters, or with a wildcard host</td></tr>
+      <tr><td>Browser policy</td><td>Content-Security-Policy on every page, <code>X-Frame-Options: DENY</code>, HSTS in production, no caching of data or API responses</td></tr>
+    </tbody>
+  </table>
+
+  <div class="warn"><b>Two limits to state plainly.</b> First, anyone can download the published
+  encrypted files and try passwords offline, slowed only by the 600,000 hashing rounds — so accounts
+  used on the public copy need long, unique passwords. Second, removing an account protects only copies
+  published afterwards. A hospital server has neither limitation.</div>
+</section>
+
+<!-- ============================ 11 ============================ -->
+<section id="s11">
+  <div class="sec-head"><span class="sec-num">11</span><h2>Running NeoStay in a hospital</h2>
+    <p>One container, one address, accounts managed from the command line.</p></div>
+
+  <figure>
+    <svg viewBox="0 0 780 210" role="img" aria-label="Deployment topology">
+      <rect x="1" y="1" width="778" height="208" rx="12" fill="#fbfdfd" stroke="#e3ebef"/>
+      <rect x="20" y="40" width="140" height="120" rx="10" fill="#fff" stroke="#d1dde3"/>
+      <text x="34" y="64" font-family="Inter" font-size="10" font-weight="700" fill="#122b36">Clinical staff</text>
+      <text x="34" y="84" font-family="Inter" font-size="8.8" fill="#3d5763">Any modern browser,</text>
+      <text x="34" y="97" font-family="Inter" font-size="8.8" fill="#3d5763">phone or desktop,</text>
+      <text x="34" y="110" font-family="Inter" font-size="8.8" fill="#3d5763">on the hospital network</text>
+      <text x="34" y="132" font-family="Inter" font-size="8.8" fill="#74909c">https://neostay.<tspan>hospital</tspan></text>
+
+      <rect x="200" y="40" width="150" height="120" rx="10" fill="#fff" stroke="#c9a24b"/>
+      <text x="214" y="64" font-family="Inter" font-size="10" font-weight="700" fill="#a76f1e">HTTPS front door</text>
+      <text x="214" y="84" font-family="Inter" font-size="8.8" fill="#3d5763">Either the bundled</text>
+      <text x="214" y="97" font-family="Inter" font-size="8.8" fill="#3d5763">Caddy proxy with the</text>
+      <text x="214" y="110" font-family="Inter" font-size="8.8" fill="#3d5763">hospital certificate,</text>
+      <text x="214" y="123" font-family="Inter" font-size="8.8" fill="#3d5763">or the hospital's own</text>
+      <text x="214" y="136" font-family="Inter" font-size="8.8" fill="#3d5763">reverse proxy</text>
+
+      <rect x="390" y="40" width="180" height="120" rx="10" fill="#e3f4f4" stroke="#0e8a8f"/>
+      <text x="404" y="64" font-family="Inter" font-size="10" font-weight="700" fill="#08565a">NeoStay container</text>
+      <text x="404" y="84" font-family="Inter" font-size="8.8" fill="#3d5763">FastAPI + pages + data</text>
+      <text x="404" y="97" font-family="Inter" font-size="8.8" fill="#3d5763">Runs as a non-root user</text>
+      <text x="404" y="110" font-family="Inter" font-size="8.8" fill="#3d5763">Health check every 30 s</text>
+      <text x="404" y="123" font-family="Inter" font-size="8.8" fill="#3d5763">Restarts automatically</text>
+      <text x="404" y="136" font-family="Inter" font-size="8.8" fill="#3d5763">Listens on 127.0.0.1:8000</text>
+
+      <rect x="610" y="40" width="150" height="120" rx="10" fill="#fff" stroke="#d1dde3"/>
+      <text x="624" y="64" font-family="Inter" font-size="10" font-weight="700" fill="#122b36">Private state</text>
+      <text x="624" y="84" font-family="Inter" font-size="8.8" fill="#3d5763">Docker volume:</text>
+      <text x="624" y="97" font-family="Inter" font-size="8.8" fill="#3d5763">accounts (hashes)</text>
+      <text x="624" y="110" font-family="Inter" font-size="8.8" fill="#3d5763">+ session secret,</text>
+      <text x="624" y="123" font-family="Inter" font-size="8.8" fill="#3d5763">created on first start</text>
+      <text x="624" y="140" font-family="Inter" font-size="8.8" fill="#74909c">Survives upgrades</text>
+
+      <path d="M162 100 L196 100" stroke="#74909c" stroke-width="1.2"/><path d="M352 100 L386 100" stroke="#74909c" stroke-width="1.2"/>
+      <path d="M572 100 L606 100" stroke="#74909c" stroke-width="1.2"/>
+      <text x="20" y="190" font-family="Inter" font-size="8.4" fill="#74909c">No database, no external service, no internet access required once the image is built. Hospital single sign-on can replace NeoStay passwords.</text>
+    </svg>
+    <figcaption><b>Figure 5 — Deployment topology.</b> Everything a hospital runs is one container plus
+    an HTTPS front door.</figcaption>
+  </figure>
+
+  <h3>Installation, end to end</h3>
+  <pre><span class="c"># 1 · get the code and set the hospital's address</span>
+git clone https://github.com/abdulrazakucc/patient-nurse-schedule.git neostay
+cd neostay &amp;&amp; cp .env.example .env     <span class="c"># set NEOSTAY_TRUSTED_HOSTS and NEOSTAY_SITE_ADDRESS</span>
+
+<span class="c"># 2 · start it (with the bundled HTTPS proxy)</span>
+docker compose --profile https up -d --build
+
+<span class="c"># 3 · create the first account (password typed at a hidden prompt)</span>
+docker compose exec app python -m app.accounts add first.admin@hospital.org --name "First Admin"
+
+<span class="c"># 4 · check it end to end</span>
+NEOSTAY_SMOKE_PASSWORD='…' scripts/smoke_test.sh \
+    https://neostay.hospital.local first.admin@hospital.org</pre>
+
+  <table>
+    <caption>Table 12 — Managing who can sign in</caption>
+    <thead><tr><th>Task</th><th>Command (run on the server)</th></tr></thead>
+    <tbody>
+      <tr><td>Add a person</td><td><code>docker compose exec app python -m app.accounts add name@hospital.org --name "Full Name"</code></td></tr>
+      <tr><td>Reset a password</td><td>the same command again — it keeps the account and sets a new password</td></tr>
+      <tr><td>Remove a person</td><td><code>docker compose exec app python -m app.accounts remove name@hospital.org</code></td></tr>
+      <tr><td>List everyone</td><td><code>docker compose exec app python -m app.accounts list</code></td></tr>
+    </tbody>
+  </table>
+  <p class="small">Changes take effect immediately, with no restart. Removing an account or resetting a
+  password signs that person out everywhere at once. The full guide, including single sign-on, backups
+  and troubleshooting, is <code>docs/DEPLOYMENT.md</code>.</p>
+</section>
+
+<!-- ============================ 12 ============================ -->
+<section id="s12">
+  <div class="sec-head"><span class="sec-num">12</span><h2>How correctness is checked</h2>
+    <p>What runs before any change reaches a hospital or the published site.</p></div>
+
+  <table>
+    <caption>Table 13 — The automated test suite (97 tests passing)</caption>
+    <thead><tr><th style="width:52mm">Test file</th><th>What it proves</th></tr></thead>
+    <tbody>
+      <tr><td><code>tests/test_engine_parity.py</code></td><td>The browser engine and the Python engine give identical answers: 512 acuity classification cases plus a full unit schedule and 24-hour roster, compared value by value.</td></tr>
+      <tr><td><code>tests/test_auth.py</code></td><td>Passwords hash to the standard PBKDF2 vector; data and API refuse a signed-out request; removing an account or changing a password ends its sessions; repeated failures are slowed; production refuses unsafe settings.</td></tr>
+      <tr><td><code>tests/test_pages_site.py</code></td><td>The published site contains no readable data, email, name or password hash; every account opens the same data; a wrong password or removed account opens nothing; each build uses a new key; the browser's own decryption code opens a real build.</td></tr>
+      <tr><td><code>tests/test_frontend_pages.py</code></td><td>Every page loads the sign-in gate and nothing else; no page pulls data directly; no inline scripts.</td></tr>
+    </tbody>
+  </table>
+
+  <p>Two workflows run on every push: the test suite, and a build of the real container which is then
+  started and smoke-tested end to end with a throwaway account. The deployment workflow additionally
+  refuses to publish if anything readable would be exposed.</p>
+
+  <div class="note"><b>Evidence behind this document.</b> Every figure quoted in Sections 5 to 9 was
+  produced by executing the application's own code with the inputs shown, not transcribed by hand.</div>
+</section>
+
+<!-- ============================ 13 ============================ -->
+<section id="s13">
+  <div class="sec-head"><span class="sec-num">13</span><h2>Adapting NeoStay to any hospital</h2>
+    <p>Different units grade nurses differently. Here is what fits today, and what does not yet.</p></div>
+
+  <p class="lead">NeoStay currently models nurses on <strong>Benner's four stages</strong> and babies on
+  the <strong>N1–N4</strong> levels of care. Hospitals use many other ladders: NHS Agenda for Change
+  bands, clinical ladder tiers I–IV, or local titles such as "junior staff nurse" and "senior sister".
+  Any of these can be used <em>today</em> by mapping local grades onto the four levels; deeper
+  customisation is a code change, and is the first item on the roadmap in Section 14.</p>
+
+  <table>
+    <caption>Table 14 — Mapping local grades onto NeoStay's four levels (worked examples)</caption>
+    <thead><tr><th>NeoStay level</th><th>NHS Agenda for Change</th><th>US clinical ladder</th><th>Typical local title</th><th class="num">Counts as</th></tr></thead>
+    <tbody>
+      <tr><td><span class="tag t1">L1 Novice</span></td><td>Band 5, first year</td><td>Clinical Nurse I</td><td>Newly qualified staff nurse</td><td class="num">0.75</td></tr>
+      <tr><td><span class="tag t2">L2 Competent</span></td><td>Band 5, experienced</td><td>Clinical Nurse II</td><td>Staff nurse</td><td class="num">0.90</td></tr>
+      <tr><td><span class="tag t3">L3 Proficient</span></td><td>Band 6</td><td>Clinical Nurse III</td><td>Senior staff nurse / charge</td><td class="num">1.00</td></tr>
+      <tr><td><span class="tag t4">L4 Expert</span></td><td>Band 7+</td><td>Clinical Nurse IV</td><td>Sister / ANNP / unit lead</td><td class="num">1.10</td></tr>
+    </tbody>
+  </table>
+
+  <div class="plain"><b>Practical advice for a unit adopting NeoStay this month.</b> Agree the mapping
+  once, with the nursing leadership, and write it down beside the roster. Enter the number of nurses in
+  each of the four levels on the Scheduling page. Everything else — ratios, skill mix, rostering —
+  follows automatically. Nothing in the application needs to change.</div>
+
+  <h3>What is configurable today</h3>
+  <table>
+    <thead><tr><th>Setting</th><th>Where</th><th>Changed by</th></tr></thead>
+    <tbody>
+      <tr><td>Who may sign in</td><td>Accounts file on the server</td><td>NeoStay administrator, no restart</td></tr>
+      <tr><td>Nurses available per level</td><td>Scheduling page</td><td>Charge nurse, per session</td></tr>
+      <tr><td>Shifts per day (2 × 12 h or 3 × 8 h)</td><td>Scheduling page</td><td>Charge nurse, per session</td></tr>
+      <tr><td>Findings recorded per baby</td><td>Scheduling page</td><td>Charge nurse, per baby</td></tr>
+      <tr><td>Session length, host name, HTTPS, single sign-on</td><td><code>.env</code></td><td>Hospital IT</td></tr>
+    </tbody>
+  </table>
+
+  <h3>What is fixed in code today</h3>
+  <table>
+    <thead><tr><th>Assumption</th><th>Current value</th><th>File to change</th></tr></thead>
+    <tbody>
+      <tr><td>Number and names of nurse levels</td><td>4 (Benner stages)</td><td><code>backend/app/nursing.py</code> and <code>frontend/engine.js</code></td></tr>
+      <tr><td>Experience weighting per level</td><td>0.75 / 0.90 / 1.00 / 1.10</td><td>same two files</td></tr>
+      <tr><td>Novice cap and preceptor rule</td><td>30% of the bedside team; one preceptor per novice</td><td>same two files</td></tr>
+      <tr><td>Level of care → nurse level</td><td>N1→L1, N2→L2, N3→L3, N4→L4</td><td><code>backend/app/acuity_tool.py</code></td></tr>
+      <tr><td>Ratios per acuity column</td><td>1:1 / 1:2 / 1:2 / 1:3</td><td><code>backend/app/acuity_tool.py</code></td></tr>
+      <tr><td>Severity weights and phase shares</td><td>0.55 / 0.45; 0.15 + 0.45·S etc.</td><td><code>backend/app/nursing.py</code></td></tr>
+      <tr><td>The acuity tool itself</td><td>Abrazo Arrowhead tool as transcribed</td><td><code>datasets/nurse-skills/*.csv</code></td></tr>
+    </tbody>
+  </table>
+
+  <div class="warn"><b>Before any unit relies on this.</b> The clinical lead should confirm the mapping
+  from levels of care to nurse levels, the ratios used where the printed tool gives a range, and the
+  local policy on novice supervision. These are planning assumptions, not regulations.</div>
+</section>
+
+<!-- ============================ 14 ============================ -->
+<section id="s14">
+  <div class="sec-head"><span class="sec-num">14</span><h2>Future steps</h2>
+    <p>What would make NeoStay usable by any hospital, in the order it should be built.</p></div>
+
+  <table>
+    <caption>Table 15 — Roadmap, highest value first</caption>
+    <thead><tr><th style="width:44mm">Step</th><th>Why it matters</th><th>Effort</th></tr></thead>
+    <tbody>
+      <tr><td><strong>1 · A staffing-policy file per hospital</strong></td>
+        <td>Move nurse levels, their names, their weightings, the novice cap, the ratios and the level-of-care mapping out of the code into one reviewed configuration file, with a page in the application to edit it. A unit with five bands, or with 1:1 policies of its own, would then need no code change.</td><td>Medium</td></tr>
+      <tr><td><strong>2 · Load the hospital's own acuity tool</strong></td>
+        <td>The classifier already reads its rules from CSV files. Allowing a hospital to upload its own tool, validated on import, would let each unit classify by its own policy while keeping NeoStay's arithmetic.</td><td>Medium</td></tr>
+      <tr><td><strong>3 · Use the hospital's own outcome data</strong></td>
+        <td>Predictions currently rest on one centre's decade. An import step for a unit's own aggregated outcomes — same shape, validated — would make forecasts local, with the sample size shown per band.</td><td>Medium</td></tr>
+      <tr><td><strong>4 · Named nurses and real rosters</strong></td>
+        <td>Today the roster places anonymous nurses by level. Naming them, respecting leave, contracted hours, continuity of care and night-shift fairness, is what turns a plan into a publishable roster.</td><td>Large</td></tr>
+      <tr><td><strong>5 · Save and reload a unit census</strong></td>
+        <td>The census is lost when the tab closes. Storing it per unit — on the hospital server only — would allow shift handover, a record of what was planned, and later comparison with what happened.</td><td>Small</td></tr>
+      <tr><td><strong>6 · Prospective validation</strong></td>
+        <td>Compare forecast stay and forecast staffing with what actually happened, band by band, and publish the error. Without this, NeoStay stays a planning aid; with it, it can be cited.</td><td>Large</td></tr>
+      <tr><td><strong>7 · Patient-level modelling</strong></td>
+        <td>With patient-level data and ethical approval, survival and stay could be modelled directly (for example a competing-risks or survival model) instead of interpolated from bands, with uncertainty per baby.</td><td>Large</td></tr>
+      <tr><td><strong>8 · Single sign-on everywhere, and an audit trail</strong></td>
+        <td>Proxy-based single sign-on already exists; adding group-based roles (charge nurse, manager, read-only) and an access log would meet most hospital information-governance reviews.</td><td>Medium</td></tr>
+      <tr><td><strong>9 · Multi-unit and multi-site view</strong></td>
+        <td>One page comparing several units or hospitals, with per-unit thresholds, would support regional planning and transfers.</td><td>Medium</td></tr>
+      <tr><td><strong>10 · Accessibility and offline use</strong></td>
+        <td>A formal accessibility audit (WCAG 2.2 AA) and an offline-capable installable app would make NeoStay dependable on ward computers with poor connectivity.</td><td>Small</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note"><b>The through-line.</b> Steps 1 to 3 remove every assumption that is specific to one
+  hospital. After those three, adopting NeoStay becomes configuration rather than development — which is
+  the condition for it to be useful to hospitals beyond the one it was written in.</div>
+</section>
+
+<!-- ============================ 15 ============================ -->
+<section id="s15">
+  <div class="sec-head"><span class="sec-num">15</span><h2>Appendix — files, endpoints, settings</h2>
+    <p>For the engineer who inherits this system.</p></div>
+
+  <h3>Repository map</h3>
+  <table>
+    <thead><tr><th style="width:56mm">Path</th><th>Contents</th></tr></thead>
+    <tbody>
+      <tr><td><code>frontend/</code></td><td>Seven pages, the sign-in gate, the engine, the design system, prebuilt data bundles.</td></tr>
+      <tr><td><code>backend/app/</code></td><td>FastAPI application, prediction, nursing model, acuity classifier, accounts and sign-in.</td></tr>
+      <tr><td><code>datasets/</code></td><td>Source outcome tables and the nurse-skills classifier (CSV, plus the original scan).</td></tr>
+      <tr><td><code>generated_data/</code></td><td>The synthetic year of unit activity used by the Timeline page.</td></tr>
+      <tr><td><code>scripts/</code></td><td>Data-bundle build, published-site build, end-to-end smoke test.</td></tr>
+      <tr><td><code>tests/</code></td><td>Sign-in, published site, page gating, engine parity.</td></tr>
+      <tr><td><code>deploy/</code>, <code>Dockerfile</code>, <code>docker-compose.yml</code></td><td>Hospital deployment, including the optional HTTPS proxy.</td></tr>
+      <tr><td><code>docs/</code></td><td>User guide, deployment guide, and this document.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>API endpoints</h3>
+  <table>
+    <thead><tr><th>Method</th><th>Endpoint</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td>GET</td><td><code>/api/health</code></td><td>Service status (public, for monitoring).</td></tr>
+      <tr><td>POST</td><td><code>/api/auth/login</code> · <code>/logout</code></td><td>Sign in and out.</td></tr>
+      <tr><td>GET</td><td><code>/api/auth/session</code></td><td>Who is signed in (public).</td></tr>
+      <tr><td>GET</td><td><code>/api/meta</code> · <code>/api/analytics</code></td><td>Bands, nurse levels, aggregated distributions.</td></tr>
+      <tr><td>GET</td><td><code>/api/acuity-tool</code></td><td>The whole classifier, with the finding identifiers.</td></tr>
+      <tr><td>POST</td><td><code>/api/predict</code></td><td>Outcome and staffing forecast for one infant.</td></tr>
+      <tr><td>POST</td><td><code>/api/schedule</code></td><td>Unit staffing, skill mix and optional roster from a census.</td></tr>
+      <tr><td>GET</td><td><code>/api/ts/*</code></td><td>Hourly timeline aggregations.</td></tr>
+    </tbody>
+  </table>
+  <p class="small">Everything except <code>/api/health</code> and the sign-in routes requires a valid session.</p>
+
+  <h3>Key settings</h3>
+  <table>
+    <thead><tr><th>Variable</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td><code>NEOSTAY_TRUSTED_HOSTS</code></td><td>The host names the server answers to. Required on a server.</td></tr>
+      <tr><td><code>NEOSTAY_AUTH_MODE</code></td><td><code>password</code> (default) or <code>proxy</code> for hospital single sign-on.</td></tr>
+      <tr><td><code>NEOSTAY_SESSION_SECRET_FILE</code></td><td>File holding the secret that signs session cookies; created on first start.</td></tr>
+      <tr><td><code>NEOSTAY_SESSION_HOURS</code></td><td>How long a sign-in lasts. Default 12.</td></tr>
+      <tr><td><code>NEOSTAY_SITE_ADDRESS</code> · <code>NEOSTAY_TLS</code></td><td>Address and certificate for the bundled HTTPS proxy.</td></tr>
+      <tr><td><code>NEOSTAY_USERS_JSON</code></td><td>Repository secret that seals the published GitHub Pages copy for a set of accounts.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="end">
+    <strong>NeoStay — Architecture and Methods.</strong>
+    Project and Clinical Lead: Waseem Altaf, MD, Neonatologist.
+    Technical Lead, Lead Developer and Applied AI/Data Science Lead: Abdul Razak, PhD.
+    Decision support only — not for clinical use. © 2026 Waseem Altaf, MD. Licensed under the Apache
+    License 2.0. Source document: <code>docs/architecture/neostay-architecture.html</code>.
+  </div>
+</section>
+
+</body>
+</html>
