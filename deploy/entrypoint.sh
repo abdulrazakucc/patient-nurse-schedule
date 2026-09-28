@@ -6,9 +6,17 @@ INSTANCE="${NEOSTAY_INSTANCE_DIR:-/srv/instance}"
 SECRET="${NEOSTAY_SESSION_SECRET_FILE:-$INSTANCE/session_secret}"
 USERS="${NEOSTAY_USERS_FILE:-$INSTANCE/access/users.json}"
 
+# Stateless mode: the platform supplies the accounts and the session secret, so
+# no writable disk is needed at all (Cloud Run, App Runner, Container Apps).
+if [ -n "${NEOSTAY_USERS_JSON:-}" ] && [ -n "${NEOSTAY_SESSION_SECRET:-}${NEOSTAY_SESSION_SECRET_FILE:-}" ]; then
+  echo "==> Accounts and session secret supplied by the platform; no storage needed."
+  exec "$@"
+fi
+
 if [ ! -w "$INSTANCE" ]; then
   echo "!! $INSTANCE is not writable by this container (running as UID $(id -u))." >&2
-  echo "!! Use the named volume from docker-compose.yml, or give UID 10001 write access." >&2
+  echo "!! Mount a volume there, supply NEOSTAY_USERS_JSON and NEOSTAY_SESSION_SECRET" >&2
+  echo "!! for a stateless deployment (docs/CLOUD.md), or give UID 10001 write access." >&2
   exit 1
 fi
 

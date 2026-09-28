@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Apply with:  kubectl apply -k deploy/kubernetes
+# The Secret is deliberately NOT included: create it first, from your own
+# accounts file (see secret.example.yaml).
+resources:
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+
+labels:
+  - includeSelectors: false
+    pairs:
+      app.kubernetes.io/name: neostay
+      app.kubernetes.io/part-of: neostay

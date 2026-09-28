@@ -138,12 +138,33 @@ def parse_users(text: str) -> dict[str, User]:
     return users
 
 
+def from_environment() -> dict[str, User] | None:
+    """Accounts supplied through ``NEOSTAY_USERS_JSON``, or None when unset.
+
+    A platform with no writable disk (Cloud Run, App Runner, Container Apps)
+    passes the users file in as a secret. Accounts are then read-only: they are
+    changed by updating that secret and redeploying.
+    """
+    if not config.USERS_JSON:
+        return None
+    return parse_users(config.USERS_JSON)
+
+
+def read_only() -> bool:
+    """True when accounts come from the environment and cannot be edited here."""
+    return bool(config.USERS_JSON)
+
+
 def load_users(path: Path | None = None) -> dict[str, User]:
     """All accounts, keyed by email. A missing file means no accounts.
 
     Cached by modification time, so it is cheap to call on every request and a
     change -- a removed account, a new password -- takes effect on the next one.
     """
+    if path is None:
+        supplied = from_environment()
+        if supplied is not None:
+            return supplied
     path = Path(path or config.USERS_FILE)
     try:
         stat = path.stat()
@@ -183,6 +204,11 @@ def dump_users(users: dict[str, User]) -> str:
 
 def save_users(users: dict[str, User], path: Path | None = None) -> Path:
     """Write atomically, readable by the owner only."""
+    if path is None and read_only():
+        raise ValueError(
+            "Accounts come from NEOSTAY_USERS_JSON and cannot be changed here. "
+            "Edit that secret on the platform and deploy again (docs/CLOUD.md)."
+        )
     path = Path(path or config.USERS_FILE)
     path.parent.mkdir(parents=True, exist_ok=True)
     temp = path.with_name(f".{path.name}.{secrets.token_hex(4)}")
@@ -287,13 +313,23 @@ def main(argv: list[str] | None = None) -> int:
     commands.add_parser("list", help="List accounts")
     commands.add_parser("export", help="Print the users file, for the GitHub Pages secret")
     args = parser.parse_args(argv)
-    path = Path(args.file or config.USERS_FILE)
+    # No --file: follow the same order the server does, so that accounts supplied
+    # by the platform are what these commands read, and cannot be half-edited.
+    path = Path(args.file) if args.file else None
+    shown = path or (Path("NEOSTAY_USERS_JSON") if read_only() else config.USERS_FILE)
+    if path is None and read_only() and args.command in {"add", "remove"}:
+        print(
+            "Accounts come from NEOSTAY_USERS_JSON and cannot be changed here.\n"
+            "Edit that secret on the platform and deploy again (docs/CLOUD.md).",
+            file=sys.stderr,
+        )
+        return 1
 
     try:
         if args.command == "add":
             email = normalise_email(args.email)
             user = add_user(email, _read_password(email, args.password_stdin), args.name, path)
-            print(f"Saved {user.email} to {path}. A running server applies this at once.")
+            print(f"Saved {user.email} to {shown}. A running server applies this at once.")
             print("GitHub Pages copy: update the NEOSTAY_USERS_JSON secret (make user-export).")
         elif args.command == "remove":
             if not remove_user(args.email, path):
@@ -305,20 +341,21 @@ def main(argv: list[str] | None = None) -> int:
             users = load_users(path)
             if not users:
                 print(
-                    f"No accounts in {path}. Create one with: "
+                    f"No accounts in {shown}. Create one with: "
                     "make user-add EMAIL=someone@hospital.org"
                 )
             for user in users.values():
                 print(f"{user.email:40} {user.name:24} since {user.created_at[:10]}")
         else:
-            if not load_users(path):
-                print(f"No accounts in {path}.", file=sys.stderr)
+            users = load_users(path)
+            if not users:
+                print(f"No accounts in {shown}.", file=sys.stderr)
                 return 1
             print(
                 "This contains password hashes: paste it only into a GitHub secret.",
                 file=sys.stderr,
             )
-            print(path.read_text(encoding="utf-8"), end="")
+            print(dump_users(users) if path is None and read_only() else path.read_text(encoding="utf-8"), end="")
     except ValueError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1

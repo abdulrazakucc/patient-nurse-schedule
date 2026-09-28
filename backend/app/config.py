@@ -54,14 +54,23 @@ def _flag(var: str) -> bool:
 
 
 def _secret(var: str, file_var: str) -> str:
-    """Read a secret from a mounted file, falling back to an environment variable."""
+    """Read a secret from a mounted file, falling back to an environment variable.
+
+    A file is preferred: it keeps the value out of ``docker inspect`` and process
+    listings. The image names a default file, so a platform that supplies the
+    value directly instead -- the usual arrangement where there is no writable
+    disk -- must not be treated as a broken configuration.
+    """
+    direct = os.environ.get(var, "").strip()
     secret_file = os.environ.get(file_var, "").strip()
     if secret_file:
         try:
             return Path(secret_file).read_text(encoding="utf-8").strip()
         except OSError as exc:
+            if direct:
+                return direct
             raise RuntimeError(f"Could not read the secret configured by {file_var}") from exc
-    return os.environ.get(var, "").strip()
+    return direct
 
 
 ENVIRONMENT: str = os.environ.get("NEOSTAY_ENV", "development").strip().lower()
@@ -69,6 +78,9 @@ AUTH_MODE: str = os.environ.get("NEOSTAY_AUTH_MODE", "password").strip().lower()
 
 INSTANCE_DIR: Path = _path("NEOSTAY_INSTANCE_DIR", ROOT_DIR / "instance")
 USERS_FILE: Path = _path("NEOSTAY_USERS_FILE", INSTANCE_DIR / "access" / "users.json")
+# Accounts handed in by the platform instead of a file: the container then needs
+# no writable storage at all, which is what serverless container hosts offer.
+USERS_JSON: str = os.environ.get("NEOSTAY_USERS_JSON", "").strip()
 SESSION_SECRET: str = _secret("NEOSTAY_SESSION_SECRET", "NEOSTAY_SESSION_SECRET_FILE")
 try:
     SESSION_HOURS: int = max(1, min(int(os.environ.get("NEOSTAY_SESSION_HOURS", "12")), 24 * 30))

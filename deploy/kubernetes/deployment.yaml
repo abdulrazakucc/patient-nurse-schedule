@@ -1,0 +1,67 @@
+# NeoStay on any Kubernetes cluster (EKS, AKS, GKE, OpenShift, k3s, on-premises).
+# Nothing here is specific to a cloud provider: one image, one Secret, one Service.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: neostay
+  labels: { app.kubernetes.io/name: neostay }
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app.kubernetes.io/name: neostay }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: neostay }
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: neostay
+          # Replace with your own registry if you mirror the image.
+          image: ghcr.io/abdulrazakucc/neostay:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8000
+          env:
+            - name: NEOSTAY_ENV
+              value: production
+            - name: NEOSTAY_AUTH_MODE
+              value: password
+            # The host names people type. Requests for any other name are refused.
+            - name: NEOSTAY_TRUSTED_HOSTS
+              value: neostay.hospital.example
+            # Trust the cluster ingress to report the client address and https scheme.
+            - name: FORWARDED_ALLOW_IPS
+              value: "*"
+            # Accounts and the session secret come from the Secret, so this
+            # container needs no writable storage and can scale to several replicas.
+            - name: NEOSTAY_USERS_JSON
+              valueFrom:
+                secretKeyRef: { name: neostay, key: users.json }
+            - name: NEOSTAY_SESSION_SECRET
+              valueFrom:
+                secretKeyRef: { name: neostay, key: session-secret }
+          readinessProbe:
+            httpGet: { path: /api/health, port: http }
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /api/health, port: http }
+            initialDelaySeconds: 20
+            periodSeconds: 30
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { cpu: "1", memory: 768Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: ["ALL"] }
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}

@@ -2,7 +2,8 @@
 
 *For hospital IT, and for the people who will manage NeoStay accounts.*
 
-NeoStay runs as **one Docker container**. Everyone reaches it through a web
+NeoStay runs as **one Docker container**. This guide covers a hospital server or VM; to run the
+same container on AWS, Azure, Google Cloud or Kubernetes, see [CLOUD.md](CLOUD.md). Everyone reaches it through a web
 browser at an `https://` address, and everyone signs in with an account created
 by a NeoStay administrator. Pages, data and API are all behind that sign-in.
 

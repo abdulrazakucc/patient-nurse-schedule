@@ -1,0 +1,27 @@
+# HTTPS entry point. Set ingressClassName to whatever the cluster runs
+# (nginx, traefik, alb, azure-application-gateway, gce) and point tls.secretName
+# at the certificate — from cert-manager, or one loaded by the platform.
+# NeoStay must be reached over https: browsers refuse its sign-in cookie on plain http.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: neostay
+  labels: { app.kubernetes.io/name: neostay }
+  annotations:
+    # cert-manager.io/cluster-issuer: letsencrypt
+    kubernetes.io/ingress.class: nginx
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [neostay.hospital.example]
+      secretName: neostay-tls
+  rules:
+    - host: neostay.hospital.example
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: neostay
+                port: { name: http }

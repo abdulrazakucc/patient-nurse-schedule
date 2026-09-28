@@ -344,6 +344,8 @@ The full policy, including the limits of the GitHub Pages copy, is in
 
 **Hospital server:** see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
+**Any cloud (AWS, Azure, Google Cloud, Kubernetes):** see [docs/CLOUD.md](docs/CLOUD.md). One container, five environment variables, no managed database or cloud-specific service; plain Kubernetes manifests live in [deploy/kubernetes/](deploy/kubernetes/).
+
 **GitHub Pages:** every push to `main` runs `.github/workflows/deploy.yml`, which
 runs the tests and publishes one of two things:
 
@@ -374,6 +376,8 @@ kept what they saw.
   adapting it to another hospital, and the roadmap. Source: `docs/architecture/`.
 - **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** — installing NeoStay on a hospital
   server, HTTPS, and managing accounts.
+- **[docs/CLOUD.md](docs/CLOUD.md)** — deploying the same container to a cloud
+  platform, and what keeps it portable between providers.
 - **[SECURITY.md](SECURITY.md)** — how sign-in protects NeoStay, and its limits.
 - **[datasets/losdata/](datasets/losdata/)** — the source aggregated datasets with PNG/PDF charts.
 - **[datasets/nurse-skills/](datasets/nurse-skills/)** — Dr. Altaf's nurse skills classifier.
