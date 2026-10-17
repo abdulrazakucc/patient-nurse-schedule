@@ -143,7 +143,7 @@
         <li>Forecasting length of stay, discharge outcome and survival for very low birth weight infants.</li>
         <li>Translating an acuity policy into nurse:patient ratios and minimum nurse competency.</li>
         <li>Unit-level demand, skill mix and a 24-hour roster of the nurses actually available.</li>
-        <li>Population analytics and an hourly view of demand.</li>
+        <li>Population analytics across every birth-weight band and gestational week.</li>
         <li>Multi-branch deployment, per-branch configuration, and roll-up reporting.</li>
       </ul>
     </div>
@@ -180,7 +180,7 @@
     <div class="kpi"><b>712</b><span>VLBW infants behind the statistics</span></div>
     <div class="kpi"><b>108</b><span>Acuity findings encoded</span></div>
     <div class="kpi"><b>64</b><span>Level-of-care criteria</span></div>
-    <div class="kpi"><b>111</b><span>Automated tests passing</span></div>
+    <div class="kpi"><b>105</b><span>Automated tests passing</span></div>
   </div>
 
   <h3>What works now</h3>
@@ -200,9 +200,9 @@
       <tr><td>Unit staffing and rostering</td>
         <td>Demand summed across cots; skill mix accumulated from the expert tier downward; novice cap and preceptor rule applied; nurses dealt across shifts and matched to cots, with uncovered cots named.</td>
         <td><span class="tag t2">Working, rules-based</span></td></tr>
-      <tr><td>Hourly timeline and analytics</td>
-        <td>A deterministic synthetic year (709 infants, 42 nurses) anchored to the real medians and outcome shares, used for demonstration only.</td>
-        <td><span class="tag t3">Demonstration data</span></td></tr>
+      <tr><td>Population analytics</td>
+        <td>Length of stay, discharge outcome and survival charted across every birth-weight band and gestational week, from the same aggregated tables the forecast uses.</td>
+        <td><span class="tag t2">Working</span></td></tr>
       <tr><td>Access control</td>
         <td>Named accounts, PBKDF2-hashed passwords, signed expiring session cookies, rate-limited sign-in; a published copy can be encrypted so only accounts can open it.</td>
         <td><span class="tag t2">Working</span></td></tr>
@@ -504,9 +504,10 @@
   <div class="role">
     <span class="who">Role 3 · Unit manager / matron</span>
     <h4>"Is my establishment right, and what do I take to the staffing review?"</h4>
-    <p>Uses the hourly timeline and analytics to see demand by hour, day and season; compares recommended
-    establishment with actual staffing over a period; collects the record of shifts where cover was
-    short and by which grade. The output is evidence for an establishment case, not a rota.</p>
+    <p>Runs the unit's typical census through the staffing model to compare recommended establishment
+    with actual staffing; collects the record of shifts where cover was short and by which grade. Once
+    the hospital supplies its own census history (D4), the same comparison runs over a real period.
+    The output is evidence for an establishment case, not a rota.</p>
   </div>
 
   <div class="role">
@@ -583,7 +584,7 @@
     <tbody>
       <tr><td>Application architecture</td><td>Twelve-factor service: configuration from the environment, stateless processes, logs to standard output, one build promoted across environments</td><td>Dockerfile, <code>docs/CLOUD.md</code></td></tr>
       <tr><td>Source control</td><td>Trunk-based with short-lived branches; every change reviewed; signed, descriptive commits; semantic versioning for releases</td><td>Repository history</td></tr>
-      <tr><td>Testing</td><td>Automated suite covering sign-in and sessions, published-site encryption, page gating, cloud configuration, and engine parity between the browser and Python implementations</td><td>111 tests currently passing</td></tr>
+      <tr><td>Testing</td><td>Automated suite covering sign-in and sessions, published-site encryption, page gating, cloud configuration, and engine parity between the browser and Python implementations</td><td>105 tests currently passing</td></tr>
       <tr><td>Continuous integration</td><td>Tests plus a real container build, started and smoke-tested end to end on every push</td><td><code>.github/workflows/ci.yml</code></td></tr>
       <tr><td>Security</td><td>Hashed credentials, signed expiring sessions, rate limiting, strict Content-Security-Policy, non-root container, read-only root filesystem, secrets never in images or Git</td><td><code>SECURITY.md</code></td></tr>
       <tr><td>Supply chain</td><td>Pinned dependencies, automated dependency updates, multi-architecture images with provenance, image digests pinned in production</td><td>Workflows, <code>requirements*.txt</code></td></tr>

@@ -170,17 +170,17 @@
     <a href="#s2"><span>2 · Words used in this document</span><span>4</span></a>
     <a href="#s3"><span>3 · System architecture</span><span>5</span></a>
     <a href="#s4"><span>4 · The data foundation</span><span>7</span></a>
-    <a href="#s5"><span>5 · Algorithm 1 — outcome prediction</span><span>9</span></a>
-    <a href="#s6"><span>6 · Algorithm 2 — nursing workload for one infant</span><span>11</span></a>
-    <a href="#s7"><span>7 · Algorithm 3 — the acuity classifier</span><span>13</span></a>
-    <a href="#s8"><span>8 · Algorithm 4 — unit staffing and the 24-hour roster</span><span>15</span></a>
-    <a href="#s9"><span>9 · The hourly timeline and analytics</span><span>17</span></a>
-    <a href="#s10"><span>10 · Access control and security</span><span>18</span></a>
-    <a href="#s11"><span>11 · Running NeoStay in a hospital</span><span>20</span></a>
-    <a href="#s12"><span>12 · How correctness is checked</span><span>21</span></a>
-    <a href="#s13"><span>13 · Adapting NeoStay to any hospital</span><span>22</span></a>
-    <a href="#s14"><span>14 · Future steps</span><span>24</span></a>
-    <a href="#s15"><span>15 · Appendix — files, endpoints, settings</span><span>25</span></a>
+    <a href="#s5"><span>5 · Algorithm 1 — outcome prediction</span><span>8</span></a>
+    <a href="#s6"><span>6 · Algorithm 2 — nursing workload for one infant</span><span>10</span></a>
+    <a href="#s7"><span>7 · Algorithm 3 — the acuity classifier</span><span>12</span></a>
+    <a href="#s8"><span>8 · Algorithm 4 — unit staffing and the 24-hour roster</span><span>14</span></a>
+    <a href="#s9"><span>9 · Population analytics</span><span>3</span></a>
+    <a href="#s10"><span>10 · Access control and security</span><span>17</span></a>
+    <a href="#s11"><span>11 · Running NeoStay in a hospital</span><span>19</span></a>
+    <a href="#s12"><span>12 · How correctness is checked</span><span>20</span></a>
+    <a href="#s13"><span>13 · Adapting NeoStay to any hospital</span><span>21</span></a>
+    <a href="#s14"><span>14 · Future steps</span><span>23</span></a>
+    <a href="#s15"><span>15 · Appendix — files, endpoints, settings</span><span>24</span></a>
   </div>
 
   <div class="plain" style="margin-top:8mm">
@@ -193,7 +193,7 @@
   <div class="grid3" style="margin-top:6mm">
     <div class="kpi"><b>4</b><span>Algorithms described</span></div>
     <div class="kpi"><b>8</b><span>Figures and diagrams</span></div>
-    <div class="kpi"><b>97</b><span>Automated tests passing</span></div>
+    <div class="kpi"><b>105</b><span>Automated tests passing</span></div>
   </div>
 </section>
 
@@ -216,11 +216,10 @@
       findings into a nurse-to-patient ratio, then adds up the whole unit into nurses needed per shift,
       the right mix of experience, and a 24-hour roster of the nurses actually available.</p></div>
     <div class="card"><h4>For managers and educators</h4><p>Population analytics across birth-weight
-      bands and gestational weeks, an hourly view of a simulated year of unit activity, and a shared
-      reference for the acuity tool the unit uses.</p></div>
+      bands and gestational weeks, and a shared reference for the acuity tool the unit uses.</p></div>
   </div>
 
-  <h3>The six screens</h3>
+  <h3>The five screens</h3>
   <table>
     <caption>Table 1 — What each page of the application does</caption>
     <thead><tr><th>Page</th><th>Question it answers</th><th>What it shows</th></tr></thead>
@@ -229,7 +228,6 @@
       <tr><td><strong>Predict</strong></td><td>What should we expect for this baby?</td><td>Length of stay with range, discharge outcome, survival, confidence, and the nursing the stay will need.</td></tr>
       <tr><td><strong>Scheduling</strong></td><td>How many nurses tonight, and who?</td><td>Census built from acuity findings, nurses per shift, skill mix, 24-hour roster, uncovered cots.</td></tr>
       <tr><td><strong>Acuity tool</strong></td><td>What are the rules?</td><td>The full acuity tool and nursing levels of care, exactly as transcribed from the source document.</td></tr>
-      <tr><td><strong>Timeline</strong></td><td>How does demand move through a day or a year?</td><td>Hour-by-hour care intensity for individual journeys and for the whole unit.</td></tr>
       <tr><td><strong>Analytics</strong></td><td>What does the population look like?</td><td>Stay and discharge outcomes across every weight band and gestational week.</td></tr>
     </tbody>
   </table>
@@ -309,11 +307,11 @@
 
       <rect x="40" y="196" width="268" height="44" rx="9" fill="#fff" stroke="#d1dde3"/>
       <text x="54" y="215" font-family="Inter" font-size="10.5" font-weight="700" fill="#122b36">Data bundles</text>
-      <text x="54" y="230" font-family="Inter" font-size="9" fill="#3d5763">Outcome statistics · acuity tool · timeline</text>
+      <text x="54" y="230" font-family="Inter" font-size="9" fill="#3d5763">Outcome statistics · acuity tool</text>
 
       <rect x="40" y="250" width="268" height="40" rx="9" fill="#fff" stroke="#d1dde3"/>
       <text x="54" y="268" font-family="Inter" font-size="10.5" font-weight="700" fill="#122b36">Pages &amp; charts</text>
-      <text x="54" y="282" font-family="Inter" font-size="9" fill="#3d5763">7 HTML pages, one design system, Chart.js</text>
+      <text x="54" y="282" font-family="Inter" font-size="9" fill="#3d5763">6 HTML pages, one design system, Chart.js</text>
 
       <!-- server -->
       <rect x="352" y="26" width="196" height="140" rx="12" fill="#fff" stroke="#c9a24b" stroke-width="1.5"/>
@@ -342,10 +340,8 @@
       <text x="592" y="106" font-family="Inter" font-size="8.8" fill="#d9eeee">Aggregated outcomes 2016–2026</text>
       <text x="592" y="132" font-family="Inter" font-size="9.5" font-weight="700" fill="#ffffff">datasets/nurse-skills/</text>
       <text x="592" y="146" font-family="Inter" font-size="8.8" fill="#d9eeee">Acuity tool &amp; levels of care</text>
-      <text x="592" y="172" font-family="Inter" font-size="9.5" font-weight="700" fill="#ffffff">generated_data/</text>
-      <text x="592" y="186" font-family="Inter" font-size="8.8" fill="#d9eeee">Synthetic year of unit activity</text>
-      <text x="592" y="212" font-family="Inter" font-size="9.5" font-weight="700" fill="#ffffff">instance/access/</text>
-      <text x="592" y="226" font-family="Inter" font-size="8.8" fill="#d9eeee">Accounts (hashes only, never shipped)</text>
+      <text x="592" y="172" font-family="Inter" font-size="9.5" font-weight="700" fill="#ffffff">instance/access/</text>
+      <text x="592" y="186" font-family="Inter" font-size="8.8" fill="#d9eeee">Accounts (hashes only, never shipped)</text>
       <text x="592" y="258" font-family="Inter" font-size="8.8" fill="#d9eeee">A build step turns the CSV files</text>
       <text x="592" y="270" font-family="Inter" font-size="8.8" fill="#d9eeee">into the browser data bundles</text>
       <text x="592" y="282" font-family="Inter" font-size="8.8" fill="#d9eeee">(Figure 3).</text>
@@ -390,13 +386,13 @@
   <div class="sec-head"><span class="sec-num">04</span><h2>The data foundation</h2>
     <p>What NeoStay knows, where it comes from, and how it reaches the browser.</p></div>
 
-  <p class="lead">NeoStay stands on three bodies of data. None of them contains a patient record. The
-  first is a decade of the centre's own aggregated outcomes; the second is the acuity tool the unit
-  classifies babies with; the third is a synthetic year of unit activity used only for the timeline
-  demonstrations.</p>
+  <p class="lead">NeoStay stands on two bodies of data. Neither contains a patient record. The first
+  is a decade of the centre's own aggregated outcomes; the second is the acuity tool the unit
+  classifies babies with. Nothing in the application is randomly generated: every figure it shows is
+  computed from these two sources by rules set out in this document.</p>
 
   <table>
-    <caption>Table 4 — The three data sources</caption>
+    <caption>Table 4 — The two data sources</caption>
     <thead><tr><th style="width:44mm">Source</th><th>Contents</th><th>Used by</th></tr></thead>
     <tbody>
       <tr><td><strong>datasets/losdata/</strong><br /><span class="small">3 CSV tables</span></td>
@@ -405,9 +401,6 @@
       <tr><td><strong>datasets/nurse-skills/</strong><br /><span class="small">3 CSV tables + scanned PDF</span></td>
         <td>The Abrazo Arrowhead Neonatal Acuity Tool (11 body systems × 4 ratio columns) and the Nursing Levels of Care (45 general criteria, 19 hyperbilirubinemia criteria).</td>
         <td>Acuity classifier (Section 7), Scheduling, Acuity tool page.</td></tr>
-      <tr><td><strong>generated_data/</strong><br /><span class="small">5 CSV tables</span></td>
-        <td>A deterministic simulation of 709 infants and 42 nurses over a decade, hour by hour, anchored to the real medians and outcome proportions.</td>
-        <td>Timeline page and the hourly API only. Never used for prediction.</td></tr>
     </tbody>
   </table>
 
@@ -433,13 +426,11 @@
       <text x="34" y="94" font-family="Inter" font-size="8.6" fill="#3d5763">Q1 / Q3 per band</text>
       <text x="34" y="112" font-family="Inter" font-size="8.6" fill="#3d5763">nurse-skills: findings,</text>
       <text x="34" y="124" font-family="Inter" font-size="8.6" fill="#3d5763">criteria, ratio columns</text>
-      <text x="34" y="142" font-family="Inter" font-size="8.6" fill="#3d5763">generated_data: hourly</text>
 
       <rect x="210" y="40" width="160" height="120" rx="10" fill="#e3f4f4" stroke="#0e8a8f"/>
       <text x="224" y="64" font-family="Inter" font-size="10.5" font-weight="700" fill="#08565a">Python parsers</text>
       <text x="224" y="82" font-family="Inter" font-size="8.6" fill="#3d5763">data_loader.py</text>
       <text x="224" y="96" font-family="Inter" font-size="8.6" fill="#3d5763">acuity_tool.py</text>
-      <text x="224" y="110" font-family="Inter" font-size="8.6" fill="#3d5763">timeseries.py</text>
       <text x="224" y="132" font-family="Inter" font-size="8.4" fill="#74909c">Validates shape,</text>
       <text x="224" y="144" font-family="Inter" font-size="8.4" fill="#74909c">rejects weak entries</text>
 
@@ -447,7 +438,6 @@
       <text x="424" y="64" font-family="Inter" font-size="10.5" font-weight="700" fill="#122b36">Data bundles</text>
       <text x="424" y="82" font-family="Inter" font-size="8.6" fill="#3d5763">neostay-data.js</text>
       <text x="424" y="96" font-family="Inter" font-size="8.6" fill="#3d5763">neostay-acuity.js</text>
-      <text x="424" y="110" font-family="Inter" font-size="8.6" fill="#3d5763">neostay-timeseries.js</text>
       <text x="424" y="132" font-family="Inter" font-size="8.4" fill="#74909c">Built by</text>
       <text x="424" y="144" font-family="Inter" font-size="8.4" fill="#74909c">build_frontend_data.py</text>
 
@@ -838,34 +828,52 @@ NHPPD         = total nurse-hours ÷ length of stay
 
 <!-- ============================ 9 ============================ -->
 <section id="s9">
-  <div class="sec-head"><span class="sec-num">09</span><h2>The hourly timeline and analytics</h2>
-    <p>What a whole year of this unit looks like, hour by hour.</p></div>
+  <div class="sec-head"><span class="sec-num">09</span><h2>Population analytics</h2>
+    <p>What a decade of recorded outcomes looks like, band by band.</p></div>
 
-  <div class="plain"><b>In plain words.</b> To show how demand rises and falls, NeoStay includes a
-  simulated year of unit activity. It is not real patient data and never feeds a prediction. It is built
-  by drawing babies whose numbers match the real recorded medians, quartiles and discharge proportions,
-  so the shape of the year is realistic while every individual baby is invented.</div>
+  <div class="plain"><b>In plain words.</b> The Analytics page does not model anything. It draws the
+  recorded figures exactly as the centre reported them, so that a reader can see the gradient the
+  forecast rests on: smaller and younger babies stay longer and die more often. Nothing on this page is
+  simulated, and no individual baby appears anywhere.</div>
 
   <table>
-    <caption>Table 10 — The simulated unit (deterministic: the same every time it is generated)</caption>
-    <thead><tr><th>Measure</th><th class="num">Value</th><th>How it is produced</th></tr></thead>
+    <caption>Table 10 — The three charts and what each one reads</caption>
+    <thead><tr><th style="width:52mm">Chart</th><th>Reads</th><th>Shows</th></tr></thead>
     <tbody>
-      <tr><td>Infants simulated</td><td class="num">709</td><td>Counts per birth-weight band follow the real N values.</td></tr>
-      <tr><td>Nurses simulated</td><td class="num">42</td><td>Experience drawn across the four levels, with hire dates.</td></tr>
-      <tr><td>Average census</td><td class="num">12.28</td><td>Babies present, averaged over every hour of the decade.</td></tr>
-      <tr><td>Peak census</td><td class="num">23</td><td>The busiest hour recorded.</td></tr>
-      <tr><td>Average nurses on duty</td><td class="num">9.55</td><td>Rostered from the hourly demand.</td></tr>
-      <tr><td>Care-phase mix</td><td class="num">40.8 / 34.3 / 25.0 %</td><td>Intensive / intermediate / convalescent, across all infant-hours.</td></tr>
-      <tr><td>Discharge mix</td><td class="num">553 / 73 / 83</td><td>Home / transferred / died, drawn using the real proportions.</td></tr>
+      <tr><td><strong>Length of stay by birth weight</strong></td>
+        <td><em>Total Length Of Stay</em> for the 11 weight bands</td>
+        <td>A bar spanning Q1 to Q3, with the median as a line across the tops.</td></tr>
+      <tr><td><strong>Length of stay by gestational age</strong></td>
+        <td>The same measure for the 18 gestational-age groups</td>
+        <td>The same bar-and-median form, so the two gradients can be compared directly.</td></tr>
+      <tr><td><strong>Disposition mix by birth weight</strong></td>
+        <td>The by-disposition tables: home, transfer, died</td>
+        <td>Each band as percentages of its own admissions, stacked to 100%.</td></tr>
     </tbody>
   </table>
 
-  <p>Lengths of stay are drawn from a log-normal distribution whose median and interquartile range are
-  fitted to the real figures for that band and outcome, then clamped to between 1 and 250 days. The
-  generator is seeded, so reviewers can reproduce the identical dataset and inspect it as plain CSV.</p>
+  <p>Every value is read from the same bundle the forecast uses, so a chart and a prediction can never
+  disagree. Across the whole cohort of 708 infants with a recorded total stay, the median is 60 days
+  with an interquartile range of 40 to 95 days.</p>
 
-  <p>The Analytics page reads the aggregated tables directly and plots length of stay across all 11
-  weight bands and all 18 gestational-age groups, with the discharge mix per band.</p>
+  <table>
+    <caption>Table 11 — The gradient, in the recorded figures (selected bands)</caption>
+    <thead><tr><th>Birth-weight band</th><th class="num">N</th><th class="num">Median stay</th>
+      <th class="num">Q1–Q3</th><th class="num">Home</th><th class="num">Died</th></tr></thead>
+    <tbody>
+      <tr><td>&lt; 501 g</td><td class="num">38</td><td class="num">43.5 d</td><td class="num">10–149</td><td class="num">38%</td><td class="num">51%</td></tr>
+      <tr><td>701–800 g</td><td class="num">64</td><td class="num">100.0 d</td><td class="num">77–125</td><td class="num">69%</td><td class="num">14%</td></tr>
+      <tr><td>901–1000 g</td><td class="num">63</td><td class="num">73.0 d</td><td class="num">57–94</td><td class="num">87%</td><td class="num">5%</td></tr>
+      <tr><td>1201–1300 g</td><td class="num">63</td><td class="num">52.0 d</td><td class="num">36–65</td><td class="num">86%</td><td class="num">10%</td></tr>
+      <tr><td>&gt; 1400 g</td><td class="num">105</td><td class="num">42.0 d</td><td class="num">25–54</td><td class="num">85%</td><td class="num">8%</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note"><b>Why the smallest band has the shortest median.</b> At under 501 g, half of the
+  admissions did not survive, and a death often ends the stay early. The median of 43.5 days therefore
+  sits below the next band's 119.5 days, while the quartiles (10 to 149 days) show the two very
+  different courses behind it. The page shows the disposition mix beside the stay for exactly this
+  reason, and the Predict page separates the two in the same way (Section 5).</div>
 </section>
 
 <!-- ============================ 10 ============================ -->
@@ -934,7 +942,7 @@ NHPPD         = total nurse-hours ÷ length of stay
   </figure>
 
   <table>
-    <caption>Table 11 — Security parameters, as implemented</caption>
+    <caption>Table 12 — Security parameters, as implemented</caption>
     <thead><tr><th>Control</th><th>Setting</th></tr></thead>
     <tbody>
       <tr><td>Password storage</td><td>PBKDF2-HMAC-SHA256, 600,000 iterations, random 16-byte salt per account, 32-byte hash</td></tr>
@@ -1018,7 +1026,7 @@ NEOSTAY_SMOKE_PASSWORD='…' scripts/smoke_test.sh \
     https://neostay.hospital.local first.admin@hospital.org</pre>
 
   <table>
-    <caption>Table 12 — Managing who can sign in</caption>
+    <caption>Table 13 — Managing who can sign in</caption>
     <thead><tr><th>Task</th><th>Command (run on the server)</th></tr></thead>
     <tbody>
       <tr><td>Add a person</td><td><code>docker compose exec app python -m app.accounts add name@hospital.org --name "Full Name"</code></td></tr>
@@ -1038,7 +1046,7 @@ NEOSTAY_SMOKE_PASSWORD='…' scripts/smoke_test.sh \
     <p>What runs before any change reaches a hospital or the published site.</p></div>
 
   <table>
-    <caption>Table 13 — The automated test suite (97 tests passing)</caption>
+    <caption>Table 14 — The automated test suite (105 tests passing)</caption>
     <thead><tr><th style="width:52mm">Test file</th><th>What it proves</th></tr></thead>
     <tbody>
       <tr><td><code>tests/test_engine_parity.py</code></td><td>The browser engine and the Python engine give identical answers: 512 acuity classification cases plus a full unit schedule and 24-hour roster, compared value by value.</td></tr>
@@ -1068,7 +1076,7 @@ NEOSTAY_SMOKE_PASSWORD='…' scripts/smoke_test.sh \
   customisation is a code change, and is the first item on the roadmap in Section 14.</p>
 
   <table>
-    <caption>Table 14 — Mapping local grades onto NeoStay's four levels (worked examples)</caption>
+    <caption>Table 15 — Mapping local grades onto NeoStay's four levels (worked examples)</caption>
     <thead><tr><th>NeoStay level</th><th>NHS Agenda for Change</th><th>US clinical ladder</th><th>Typical local title</th><th class="num">Counts as</th></tr></thead>
     <tbody>
       <tr><td><span class="tag t1">L1 Novice</span></td><td>Band 5, first year</td><td>Clinical Nurse I</td><td>Newly qualified staff nurse</td><td class="num">0.75</td></tr>
@@ -1120,7 +1128,7 @@ NEOSTAY_SMOKE_PASSWORD='…' scripts/smoke_test.sh \
     <p>What would make NeoStay usable by any hospital, in the order it should be built.</p></div>
 
   <table>
-    <caption>Table 15 — Roadmap, highest value first</caption>
+    <caption>Table 16 — Roadmap, highest value first</caption>
     <thead><tr><th style="width:44mm">Step</th><th>Why it matters</th><th>Effort</th></tr></thead>
     <tbody>
       <tr><td><strong>1 · A staffing-policy file per hospital</strong></td>
@@ -1163,7 +1171,6 @@ NEOSTAY_SMOKE_PASSWORD='…' scripts/smoke_test.sh \
       <tr><td><code>frontend/</code></td><td>Seven pages, the sign-in gate, the engine, the design system, prebuilt data bundles.</td></tr>
       <tr><td><code>backend/app/</code></td><td>FastAPI application, prediction, nursing model, acuity classifier, accounts and sign-in.</td></tr>
       <tr><td><code>datasets/</code></td><td>Source outcome tables and the nurse-skills classifier (CSV, plus the original scan).</td></tr>
-      <tr><td><code>generated_data/</code></td><td>The synthetic year of unit activity used by the Timeline page.</td></tr>
       <tr><td><code>scripts/</code></td><td>Data-bundle build, published-site build, end-to-end smoke test.</td></tr>
       <tr><td><code>tests/</code></td><td>Sign-in, published site, page gating, engine parity.</td></tr>
       <tr><td><code>deploy/</code>, <code>Dockerfile</code>, <code>docker-compose.yml</code></td><td>Hospital deployment, including the optional HTTPS proxy.</td></tr>
@@ -1182,7 +1189,6 @@ NEOSTAY_SMOKE_PASSWORD='…' scripts/smoke_test.sh \
       <tr><td>GET</td><td><code>/api/acuity-tool</code></td><td>The whole classifier, with the finding identifiers.</td></tr>
       <tr><td>POST</td><td><code>/api/predict</code></td><td>Outcome and staffing forecast for one infant.</td></tr>
       <tr><td>POST</td><td><code>/api/schedule</code></td><td>Unit staffing, skill mix and optional roster from a census.</td></tr>
-      <tr><td>GET</td><td><code>/api/ts/*</code></td><td>Hourly timeline aggregations.</td></tr>
     </tbody>
   </table>
   <p class="small">Everything except <code>/api/health</code> and the sign-in routes requires a valid session.</p>

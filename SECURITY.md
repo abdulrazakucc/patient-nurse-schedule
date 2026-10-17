@@ -1,8 +1,8 @@
 # Security and privacy policy
 
 NeoStay is a decision-support prototype built on **aggregated** neonatal outcome
-statistics and synthetic timeline data. It is not a medical device, and it is
-not a place to enter, store or process patient-level data.
+statistics. It is not a medical device, and it is not a place to enter, store
+or process patient-level data.
 
 ## Report a vulnerability
 
@@ -68,7 +68,7 @@ Its limits, which a server does not share:
 ### The repository itself
 
 **Sign-in protects the website, not this Git repository.** While the repository
-is public, its source datasets (`datasets/`, `generated_data/`) and data bundles
+is public, its source datasets (`datasets/`) and data bundles
 (`frontend/data/`) — and every earlier copy in the `gh-pages` branch history —
 can be read on GitHub by anyone. If the data must be restricted, make the
 repository private (GitHub Pages for private repositories needs a paid GitHub
@@ -76,7 +76,7 @@ plan) or remove the data from the repository and its history.
 
 ## Data boundary
 
-- Only aggregated statistics and synthetic data belong in this project.
+- Only aggregated statistics belong in this project; never patient-level data.
 - Accounts, session secrets, environment files, certificates and keys are
   excluded from Git and from Docker images (`.gitignore`, `.dockerignore`).
 - What people type into the tools is computed in their browser and is not sent

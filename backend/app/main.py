@@ -28,7 +28,7 @@ from fastapi.responses import JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from . import auth, config, timeseries
+from . import auth, config
 from .acuity_tool import TOOL as ACUITY_TOOL
 from .data_loader import DATASET, GA_BINS, WEIGHT_BINS
 from .nursing import NURSE_LEVELS, build_roster, estimate_staffing, schedule_unit
@@ -180,43 +180,6 @@ def api_schedule(req: ScheduleRequest) -> dict:
             result["infants"], req.available_nurses, req.shifts_per_day
         )
     return result
-
-
-# ---------------------------------------------------------------------------
-# Time series analysis (over the generated datasets)
-# ---------------------------------------------------------------------------
-@api.get("/api/ts/available")
-def ts_available() -> dict:
-    return {"available": timeseries.available()}
-
-
-@api.get("/api/ts/summary")
-def ts_summary() -> dict:
-    if not timeseries.available():
-        raise HTTPException(status_code=404, detail="Generated data not found. Run datagen/generate.py")
-    return timeseries.summary()
-
-
-@api.get("/api/ts/infants")
-def ts_infants() -> dict:
-    if not timeseries.available():
-        raise HTTPException(status_code=404, detail="Generated data not found.")
-    return {"infants": timeseries.representative_infants()}
-
-
-@api.get("/api/ts/infant/{infant_id}")
-def ts_infant(infant_id: str) -> dict:
-    data = timeseries.infant_series(infant_id)
-    if not data:
-        raise HTTPException(status_code=404, detail="Infant not found")
-    return data
-
-
-@api.get("/api/ts/unit-week")
-def ts_unit_week() -> dict:
-    if not timeseries.available():
-        raise HTTPException(status_code=404, detail="Generated data not found.")
-    return timeseries.busiest_week()
 
 
 # ---------------------------------------------------------------------------

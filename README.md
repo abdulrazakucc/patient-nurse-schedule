@@ -59,7 +59,7 @@ from real historical outcomes.
 
 ---
 
-## 🖥️ The six pages
+## 🖥️ The five pages
 
 | Page | What you do there | Who it helps |
 |------|-------------------|--------------|
@@ -67,7 +67,6 @@ from real historical outcomes.
 | **Predict** | Enter one baby's weight, age & condition → get stay / survival / nursing forecast | Neonatologists, counsellors, families |
 | **Scheduling** | Classify each baby on the acuity tool to build the census → get nurses needed per shift | Charge nurses, managers |
 | **Acuity tool** | Read Dr. Altaf's nurse skills classifier: acuity tool and levels of care | Charge nurses, educators |
-| **Timeline** | Watch care intensity change hour-by-hour across a simulated year | Educators, planners |
 | **Analytics** | Interactive population charts across all weight bands & weeks | Researchers, QI teams |
 
 ---
@@ -127,15 +126,13 @@ full on the Acuity tool page:
   intermediate L2, continuing L1, and N1–N4 → L1–L4.
 
 The build reads only the CSVs transcribed from the scanned PDF; the handwritten
-annotations are ignored. The Predict and Timeline pages forecast a whole stay
-rather than a shift, so they still use the modelled acuity below.
+annotations are ignored. The Predict page forecasts a whole stay rather than a
+shift, so it still uses the modelled acuity below.
 
 In that model, Level 4 is deliberately scarce — reserved for infants who are *both* critically
 ill and ventilated. Proficient nurses routinely care for ventilated VLBW
 infants, and a unit cannot roster an expert to a third of its cots; making every
 sick infant expert-only would produce a requirement no real unit could meet.
-About 19% of the simulated cohort needs an Expert, against an expert workforce
-share of 26%.
 
 ## 🕐 Rostering the nurses you actually have
 
@@ -236,8 +233,8 @@ classifications, unit schedules and rosters with the Python engine, value for va
 ```
 patient-nurse-schedule/
 ├── frontend/                  ← the web app
-│   ├── index.html · predict.html · schedule.html · acuity.html
-│   │   timeline.html · analytics.html · about.html
+│   ├── index.html · predict.html · schedule.html
+│   │   acuity.html · analytics.html · about.html
 │   ├── access.js              ← sign-in gate: loads data + engine after sign-in
 │   ├── access-config.js       ← "server" here; the Pages build writes "sealed"
 │   ├── sealed.js              ← opens the encrypted GitHub Pages data
@@ -249,12 +246,10 @@ patient-nurse-schedule/
 ├── backend/app/               ← FastAPI server
 │   ├── main.py · config.py    ← app, security headers, settings
 │   ├── auth.py · accounts.py  ← sign-in, sessions, accounts command line
-│   └── predictor.py · nursing.py · acuity_tool.py · data_loader.py · timeseries.py
+│   └── predictor.py · nursing.py · acuity_tool.py · data_loader.py
 ├── datasets/
 │   ├── losdata/               ← source aggregated CSVs (N / median / Q1 / Q3)
 │   └── nurse-skills/          ← Dr. Altaf's classifier: scanned PDF + one CSV per page
-├── generated_data/            ← simulated year of hourly unit activity
-├── datagen/generate.py        ← regenerates the simulated data
 ├── scripts/
 │   ├── build_frontend_data.py ← rebuilds frontend/data/ from the CSVs
 │   ├── build_pages_site.py    ← builds the (sealed) GitHub Pages site
@@ -316,7 +311,6 @@ Every endpoint except `/api/health` and `/api/auth/*` requires a signed-in sessi
 | POST | `/api/predict` | Per-infant forecast `{weight_g, ga_weeks, condition, resp_support}` |
 | GET | `/api/acuity-tool` | Dr. Altaf's classifier, with the finding ids `/api/schedule` accepts |
 | POST | `/api/schedule` | Unit staffing from a census `{infants:[{..., findings}], shifts_per_day}` |
-| GET | `/api/ts/*` | Hourly timeline aggregations |
 
 ---
 
@@ -329,7 +323,7 @@ Every endpoint except `/api/health` and `/api/auth/*` requires a signed-in sessi
   `HttpOnly` session cookie, slows repeated failed sign-ins, and ends sessions
   at once when an account is removed or its password changes.
 - **No patient-level data anywhere.** Only aggregated statistics (counts, medians,
-  quartiles) and synthetic timeline data.
+  quartiles) built from published cohort tables.
 - **Calculations stay in the browser.** What you type into the tools is not sent
   to any server. There is no tracker or analytics.
 - **Sign-in protects the website, not this repository.** While the repository is
@@ -372,7 +366,7 @@ kept what they saw.
 - **[docs/USER_GUIDE.md](docs/USER_GUIDE.md)** — a walkthrough of every page,
   written for non-technical readers, with worked examples.
 - **[docs/NeoStay-Architecture.pdf](docs/NeoStay-Architecture.pdf)** — the full architecture and
-  methods reference (26 pages): data, algorithms with worked examples, security, deployment,
+  methods reference (25 pages): data, algorithms with worked examples, security, deployment,
   adapting it to another hospital, and the roadmap. Source: `docs/architecture/`.
 - **[docs/NeoStay-Project-Dossier.pdf](docs/NeoStay-Project-Dossier.pdf)** — goals, the statistical and
   machine-learning models to be built and tested, the features they need, role-by-role use,
@@ -385,11 +379,11 @@ kept what they saw.
   server, HTTPS, and managing accounts.
 - **[docs/CLOUD.md](docs/CLOUD.md)** — deploying the same container to a cloud
   platform, and what keeps it portable between providers.
+- **[docs/NeoStay-Feature-Inventory.xlsx](docs/NeoStay-Feature-Inventory.xlsx)** — all 95
+  features, each marked Have, Partial or Not yet, with a summary that recounts itself.
 - **[SECURITY.md](SECURITY.md)** — how sign-in protects NeoStay, and its limits.
 - **[datasets/losdata/](datasets/losdata/)** — the source aggregated datasets with PNG/PDF charts.
 - **[datasets/nurse-skills/](datasets/nurse-skills/)** — Dr. Altaf's nurse skills classifier.
-- **[generated_data/README.md](generated_data/README.md)** — how the simulated
-  hourly data is produced.
 
 ## 🗺️ Roadmap
 

@@ -12,8 +12,8 @@
   const gate = document.currentScript;
   const APP_SCRIPTS = (gate.getAttribute("data-app") || "").split(/\s+/).filter(Boolean);
   const MODE = (window.NEOSTAY_ACCESS && window.NEOSTAY_ACCESS.mode) || "server";
-  const DATA_SCRIPTS = ["data/neostay-data.js", "data/neostay-acuity.js", "data/neostay-timeseries.js"];
-  const SEALED_GLOBALS = ["NEOSTAY_DATA", "NEOSTAY_ACUITY", "NEOSTAY_TS"];
+  const DATA_SCRIPTS = ["data/neostay-data.js", "data/neostay-acuity.js"];
+  const SEALED_GLOBALS = ["NEOSTAY_DATA", "NEOSTAY_ACUITY"];
   const STORE = "neostay-sealed-session";
   const WRONG = "Email or password is incorrect.";
 
@@ -203,8 +203,6 @@
       "Dr. Waseem Altaf's neonatal acuity tool and nursing levels of care set each infant's nurse:patient ratio and the minimum competency of the nurse assigned."],
     ["nurse", "ic-slate", "Nurse competency",
       "Nurses are grouped by Benner's novice-to-expert stages, so every plan checks not only how many nurses are on shift, but whether they are experienced enough."],
-    ["clock", "ic-teal", "Hourly timeline",
-      "Follow individual infant journeys and whole-unit nursing demand hour by hour across a simulated year of care."],
     ["chart", "ic-gold", "Population analytics",
       "Interactive charts of length of stay and discharge outcomes across every birth-weight band and gestational week."],
   ];
@@ -259,7 +257,7 @@
         <section class="panel" aria-labelledby="landingTools">
           <div class="panel-head">
             <h3 id="landingTools">What you can do in NeoStay</h3>
-            <p>Six connected tools, from one infant's forecast to the whole unit's staffing plan.</p>
+            <p>Five connected tools, from one infant's forecast to the whole unit's staffing plan.</p>
           </div>
           <div class="feature-grid">
             ${FEATURES.map(([name, tone, title, text]) => `

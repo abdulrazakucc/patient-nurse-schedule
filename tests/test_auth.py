@@ -23,10 +23,8 @@ PROTECTED_GET = [
     "/api/meta",
     "/api/analytics",
     "/api/acuity-tool",
-    "/api/ts/summary",
     "/data/neostay-data.js",
     "/data/neostay-acuity.js",
-    "/data/neostay-timeseries.js",
 ]
 
 

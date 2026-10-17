@@ -67,6 +67,11 @@
     patient-level data is stored in the product itself.
   </div>
 
+  <div class="note" style="margin-top:6mm"><b>A companion workbook comes with this document.</b>
+  <code>docs/NeoStay-Feature-Inventory.xlsx</code> lists all 95 features of the application, one per row,
+  each marked Have, Partial or Not yet, with the dataset it waits on. Management can change any status
+  in the workbook during the meeting; its summary sheet recounts itself.</div>
+
   <div class="grid3" style="margin-top:6mm">
     <div class="kpi"><b>8</b><span>Datasets requested</span></div>
     <div class="kpi"><b>5 yrs</b><span>Preferred history (2 minimum)</span></div>
@@ -125,10 +130,6 @@
         <td>11 body systems with 108 selectable findings across four nurse:patient ratio columns, and 64 level-of-care criteria (45 general, 19 hyperbilirubinemia).</td>
         <td>Policy document, transcribed</td>
         <td>Classifying each cot; setting ratios and minimum nurse level</td></tr>
-      <tr><td><strong>Synthetic unit activity</strong></td>
-        <td>A deterministic simulation of 709 infants and 42 nurses over a decade, anchored to the real medians and outcome shares.</td>
-        <td>Hourly, synthetic</td>
-        <td>Demonstration of the timeline only — never used for prediction</td></tr>
     </tbody>
   </table>
 
@@ -168,7 +169,7 @@
         <td>Historical record: level of care and ratio applied per infant per shift, with the findings that justified it</td>
         <td><span class="tag t4">Must</span></td></tr>
       <tr><td><strong>Unit census and flow</strong></td>
-        <td>Synthetic only</td>
+        <td>Nothing</td>
         <td>Real census by hour or shift; admissions, discharges, transfers in and out, deaths with timestamps; cot capacity and closures; refused admissions</td>
         <td><span class="tag t4">Must</span></td></tr>
       <tr><td><strong>Workforce</strong></td>

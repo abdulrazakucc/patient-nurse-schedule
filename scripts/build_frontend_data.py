@@ -8,9 +8,8 @@ source datasets into small JavaScript files:
 
   frontend/data/neostay-data.js        aggregated LOS / survival statistics + bins
   frontend/data/neostay-acuity.js      Dr. Altaf's nurse-skills classifier
-  frontend/data/neostay-timeseries.js  precomputed hourly timeline payloads
 
-Run it whenever the CSVs in datasets/ or generated_data/ change:
+Run it whenever the CSVs in datasets/ change:
 
     python3 scripts/build_frontend_data.py
 """
@@ -28,9 +27,6 @@ from app.data_loader import DATASET, GA_BINS, WEIGHT_BINS  # noqa: E402
 
 OUT_DIR = ROOT / "frontend" / "data"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
-
-PHASES = ["intensive", "intermediate", "convalescent"]
-
 
 def _bins(bins):
     return [
@@ -73,52 +69,8 @@ def build_acuity() -> None:
     print(f"wrote {out.relative_to(ROOT)} ({out.stat().st_size / 1024:.1f} KB)")
 
 
-def build_timeseries() -> None:
-    if not (ROOT / "generated_data" / "infants.csv").exists():
-        print("generated_data/ not found - skipping timeline bundle")
-        return
-
-    try:
-        from app import timeseries  # noqa: E402  (needs pandas)
-    except ImportError:
-        print("pandas not installed - skipping timeline bundle (existing bundle kept)")
-        return
-
-    infants = timeseries.representative_infants()
-    series = {}
-    for inf in infants:
-        data = timeseries.infant_series(inf["infant_id"])
-        pts = data["points"]
-        # Downsample long stays so the bundle stays lightweight on mobile:
-        # hourly resolution up to 14 days, then every 3 hours.
-        step_pts = [p for p in pts if p["hour_of_stay"] <= 336 or p["hour_of_stay"] % 3 == 0]
-        series[inf["infant_id"]] = {
-            "infant": data["infant"],
-            "pts": [
-                [
-                    p["hour_of_stay"],
-                    PHASES.index(p["care_phase"]) if p["care_phase"] in PHASES else -1,
-                    round(p["nurses_required"], 3),
-                ]
-                for p in step_pts
-            ],
-        }
-
-    payload = {
-        "summary": timeseries.summary(),
-        "infants": infants,
-        "series": series,
-        "week": timeseries.busiest_week(),
-        "phases": PHASES,
-    }
-    out = OUT_DIR / "neostay-timeseries.js"
-    out.write_text(
-        "window.NEOSTAY_TS = " + json.dumps(payload, separators=(",", ":")) + ";\n"
-    )
-    print(f"wrote {out.relative_to(ROOT)} ({out.stat().st_size / 1024:.1f} KB)")
 
 
 if __name__ == "__main__":
     build_dataset()
     build_acuity()
-    build_timeseries()

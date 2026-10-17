@@ -46,7 +46,6 @@ expect 401 /api/meta
 expect 200 /api/auth/login --header 'Content-Type: application/json' --data-binary "@$workdir/login.json"
 expect 200 /data/neostay-data.js
 expect 200 /data/neostay-acuity.js
-expect 200 /data/neostay-timeseries.js
 expect 200 /api/meta
 expect 204 /api/auth/logout --request POST
 expect 401 /data/neostay-data.js

@@ -180,15 +180,6 @@ the exact reinforcement needed — for example *"+2 × L3 Proficient"*. Those co
 turn red in the census table too. Press **Auto-fill to meet demand** and the app
 raises staffing until every infant is covered.
 
-### ⏱️ Timeline — *"How does care change hour by hour?"*
-
-Follows a simulated (but statistically realistic) year of unit activity:
-
-- **Single infant journey** — pick a baby and watch nursing need fall as it
-  moves from intensive → intermediate → convalescent care.
-- **Busiest week** — nurses on duty vs. demand vs. babies present, hourly.
-- **Around the clock** — average demand by hour of day (spoiler: it never stops).
-
 ### 📊 Analytics — *"What does a decade of outcomes look like?"*
 
 Three interactive charts. The consistent message:

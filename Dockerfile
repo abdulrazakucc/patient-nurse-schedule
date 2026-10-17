@@ -22,7 +22,6 @@ COPY backend/app/ ./app/
 COPY frontend/ /srv/frontend/
 COPY datasets/losdata/*.csv /srv/datasets/losdata/
 COPY datasets/nurse-skills/*.csv /srv/datasets/nurse-skills/
-COPY generated_data/*.csv /srv/generated_data/
 COPY deploy/entrypoint.sh /usr/local/bin/neostay-entrypoint
 COPY deploy/serve.sh /usr/local/bin/neostay-serve
 

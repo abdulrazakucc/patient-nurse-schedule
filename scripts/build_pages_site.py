@@ -61,7 +61,6 @@ CONTEXT = "neostay-sealed-v1"
 BUNDLES = {
     "NEOSTAY_DATA": "data/neostay-data.js",
     "NEOSTAY_ACUITY": "data/neostay-acuity.js",
-    "NEOSTAY_TS": "data/neostay-timeseries.js",
 }
 SEALED_CONFIG = """/* Written by scripts/build_pages_site.py: this copy opens its data in the
    browser, from data.sealed, with a registered account's password. */
@@ -165,7 +164,7 @@ def plaintext_markers(globals_: dict, users: dict[str, accounts.User]) -> list[b
     """Strings that must never appear outside the ciphertext."""
     tool = globals_["NEOSTAY_ACUITY"]
     markers = [c["label"] for c in tool["levels_of_care"]["general"]["criteria"][:8]]
-    markers += list(globals_["NEOSTAY_TS"]["series"])[:8]
+    markers += [b["label"] for b in globals_["NEOSTAY_DATA"]["weight_bins"]][:4]
     # Names are never written by the build, and people named on the site (the
     # project leads) may well hold accounts, so names are not markers.
     markers += [user.email for user in users.values()]

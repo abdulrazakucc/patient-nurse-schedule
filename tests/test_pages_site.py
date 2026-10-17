@@ -113,11 +113,9 @@ class TestSealedApplication:
     def test_no_data_appears_outside_the_ciphertext(self, sealed_site) -> None:
         globals_ = _open(sealed_site)["globals"]
         labels = [c["label"] for c in globals_["NEOSTAY_ACUITY"]["levels_of_care"]["general"]["criteria"]]
-        infants = list(globals_["NEOSTAY_TS"]["series"])
         for name in _published(sealed_site) - {"data.sealed"}:
             content = (sealed_site / name).read_text(errors="ignore")
             assert not any(label in content for label in labels), name
-            assert not any(infant in content for infant in infants), name
 
     def test_every_account_opens_the_same_data(self, sealed_site) -> None:
         first = _open(sealed_site)
@@ -228,7 +226,6 @@ const attempt = async (email, password) => {
   const bundle = await NeoSealed.openBundle(key, fetcher);
   console.log(JSON.stringify({
     title: bundle.globals.NEOSTAY_ACUITY.title,
-    series: Object.keys(bundle.globals.NEOSTAY_TS.series).length,
     wrong: await attempt(process.argv[4], "not the right password"),
     unknown: await attempt("stranger@hospital.example", process.argv[5]),
   }));
@@ -250,5 +247,4 @@ def test_the_browser_code_opens_the_python_sealed_copy(sealed_site, tmp_path) ->
     assert result.returncode == 0, result.stderr
     opened = json.loads(result.stdout)
     assert opened["title"] == read_bundle("NEOSTAY_ACUITY", BUNDLES["NEOSTAY_ACUITY"])["title"]
-    assert opened["series"] > 0
     assert opened["wrong"] == opened["unknown"] == "auth"

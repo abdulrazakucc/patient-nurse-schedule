@@ -47,7 +47,7 @@ run: setup ## Start NeoStay with sign-in on http://127.0.0.1:8000
 test: setup-dev ## Run every test, including browser/Python engine parity
 	@$(PY) -m pytest
 
-data: setup ## Rebuild frontend/data/ from the CSVs in datasets/ and generated_data/
+data: setup ## Rebuild frontend/data/ from the CSVs in datasets/
 	@$(PY) scripts/build_frontend_data.py
 
 site: setup-dev ## Build the GitHub Pages site into site/ (sealed for local accounts, if any)
