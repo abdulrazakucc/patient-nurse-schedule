@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>NeoStay — Executive Brief</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="neostay-doc.css" />
+</head>
+<body>
+
+<div class="cover">
+  <div class="cover-art"></div>
+  <div class="cover-top">
+    <span class="cover-badge">Executive Brief · Version 1.0 · October 2026</span>
+    <h1>NeoStay<br /><em>The short version</em></h1>
+    <p class="sub">Forecast how long a very small baby will stay, and staff the neonatal unit for the
+    acuity actually present — from the unit's own data and its own policy. Four pages: what it does,
+    what we want to prove, what we need, and the decisions we are asking for.</p>
+  </div>
+
+  <div class="cover-leads">
+    <div class="lead-card">
+      <b>Waseem Altaf, MD</b>
+      <span>Project and Clinical Lead · Neonatologist</span>
+    </div>
+    <div class="lead-card tech">
+      <b>Abdul Razak, PhD</b>
+      <span>Technical Lead, Lead Developer and Applied AI/Data Science Lead</span>
+    </div>
+  </div>
+
+  <dl class="cover-meta">
+    <div><dt>Document</dt><dd>Executive brief</dd></div>
+    <div><dt>Audience</dt><dd>Hospital executive and service managers</dd></div>
+    <div><dt>Detail</dt><dd>Full dossier and data request available</dd></div>
+    <div><dt>Status</dt><dd>Decision-support prototype — not a medical device</dd></div>
+  </dl>
+</div>
+
+<section class="flow">
+  <div class="sec-head"><span class="sec-num">01</span><h2>The case in one page</h2>
+    <p>Problem, answer, and where the project stands.</p></div>
+
+  <p class="lead"><strong>The problem.</strong> Neonatal units plan two things under uncertainty: how
+  long each baby will stay, and how many skilled nurses each shift needs. Both are usually judged from
+  experience, and neither leaves evidence behind when an establishment is questioned.</p>
+
+  <p class="lead"><strong>The answer.</strong> NeoStay turns a decade of the unit's own recorded
+  outcomes into an expected length of stay with a realistic range, and turns the unit's own acuity
+  policy into nurses per shift, the required skill mix, and a 24-hour roster that names any cot left
+  without a qualified nurse. It runs in a web browser, behind sign-in, with no patient-level data.</p>
+
+  <div class="grid4" style="margin:5mm 0">
+    <div class="kpi"><b>712</b><span>VLBW infants behind the figures</span></div>
+    <div class="kpi"><b>108</b><span>Acuity findings encoded</span></div>
+    <div class="kpi"><b>&lt;5 min</b><span>To classify a full unit</span></div>
+    <div class="kpi"><b>111</b><span>Automated tests passing</span></div>
+  </div>
+
+  <h3>What exists today</h3>
+  <table>
+    <thead><tr><th style="width:42mm">Capability</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>Length of stay, discharge outcome, survival, with confidence</td><td><span class="tag t2">Working</span> — interpolated from the unit's recorded statistics</td></tr>
+      <tr><td>Acuity classification from the unit's own tool</td><td><span class="tag t2">Working</span> — 11 body systems, 64 level-of-care criteria</td></tr>
+      <tr><td>Nurses per shift, skill mix, 24-hour roster, uncovered cots</td><td><span class="tag t2">Working</span> — rules-based, policy-driven</td></tr>
+      <tr><td>Security: named accounts, encrypted published copy, audit-ready deployment</td><td><span class="tag t2">Working</span></td></tr>
+      <tr><td>Fitted statistical or machine-learning models</td><td><span class="tag t3">Not yet</span> — requires hospital data (Section 3)</td></tr>
+      <tr><td>Prospective clinical validation</td><td><span class="tag t3">Not yet</span> — planned, Phase 2</td></tr>
+    </tbody>
+  </table>
+
+  <div class="warn"><b>Stated plainly.</b> NeoStay is a decision-support prototype. It is not a medical
+  device, it has not been clinically validated, and it never replaces clinical judgment. Every
+  recommendation is advisory and requires a human decision.</div>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">02</span><h2>What we want to prove, and how</h2>
+    <p>The analytical plan in brief. Full detail in the dossier.</p></div>
+
+  <table>
+    <caption>Table 1 — Four questions, four methods, one way to judge them</caption>
+    <thead><tr><th style="width:34mm">Question</th><th>Models to be tested</th><th>Judged by</th></tr></thead>
+    <tbody>
+      <tr><td><strong>How long will this baby stay?</strong></td>
+        <td>Survival models with competing risks (home, transfer, death); gradient boosting; quantile and Bayesian hierarchical variants</td>
+        <td>Error in days and calibration, against today's method</td></tr>
+      <tr><td><strong>What care level will this baby need next shift?</strong></td>
+        <td>Multi-state and ordinal models; cost-weighted gradient boosting</td>
+        <td>Accuracy, with under-calling penalised</td></tr>
+      <tr><td><strong>What will the unit need over the next fortnight?</strong></td>
+        <td>Seasonal time-series and state-space models; queueing approximation; simulation</td>
+        <td>Error in nurse-hours, and whether the stated range holds</td></tr>
+      <tr><td><strong>Who should take which cot tonight?</strong></td>
+        <td>Constraint-based optimisation, with today's rule as fallback</td>
+        <td>Uncovered cots and planner acceptance</td></tr>
+    </tbody>
+  </table>
+
+  <div class="plain"><b>The rule we have set ourselves.</b> A new model replaces the current method only
+  if it is better on data it has never seen, stays calibrated, can be explained to the clinical lead,
+  and runs fast enough to use at handover. Otherwise the simpler method stays. Everything is reported
+  to the TRIPOD+AI standard, with performance published per birth-weight band and per branch.</div>
+
+  <h3>Rollout in three phases</h3>
+  <div class="grid3">
+    <div class="phase"><span>Phase 1</span><b>Pilot</b><p class="small">Configure one unit's grades and
+      ratios, run in parallel with the current method for four weeks, measure task time and acceptance.</p></div>
+    <div class="phase"><span>Phase 2</span><b>Evidence</b><p class="small">Historical data under
+      governance; build and validate models; silent prospective run; published validation report.</p></div>
+    <div class="phase"><span>Phase 3</span><b>Group</b><p class="small">Branch-by-branch rollout by
+      configuration, roster optimisation, dashboards, annual revalidation.</p></div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">03</span><h2>What we need, and the decisions we are asking for</h2>
+    <p>Short list. The data request is set out field by field in the companion document.</p></div>
+
+  <table>
+    <caption>Table 2 — What the hospital provides</caption>
+    <thead><tr><th style="width:38mm">Item</th><th>Why</th><th>When</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Historical admissions data</strong>, pseudonymised</td><td>To fit and validate the length-of-stay and acuity models; without it NeoStay stays deterministic</td><td>Phase 2 start</td></tr>
+      <tr><td><strong>Census and staffing history</strong></td><td>To forecast demand and compare recommended with actual staffing</td><td>Phase 2 start</td></tr>
+      <tr><td><strong>Local nursing policy</strong>: grades, ratios, supervision rules</td><td>So the tool reflects this hospital, not the one it was written in</td><td>Phase 1</td></tr>
+      <tr><td><strong>A pilot unit and two champions</strong></td><td>Parallel running and honest feedback</td><td>Phase 1</td></tr>
+      <tr><td><strong>Information-governance route</strong>: named data owner, DPIA, sharing agreement</td><td>Legal basis for any patient-level extract</td><td>Phase 1</td></tr>
+      <tr><td><strong>Hosting</strong>: one small server or container platform, HTTPS, single sign-on if required</td><td>To run the service inside the hospital's boundary</td><td>Phase 1</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Decisions requested</h3>
+  <ol class="steps">
+    <li><strong>Approve the pilot</strong> in one neonatal unit, with parallel running for four weeks.</li>
+    <li><strong>Name a data owner</strong> and start the governance route for a pseudonymised historical extract.</li>
+    <li><strong>Confirm the nursing policy</strong> to configure: grade ladder, ratios, supervision rules.</li>
+    <li><strong>Choose the hosting model</strong>: hospital server, hospital cloud tenancy, or managed container platform.</li>
+    <li><strong>Agree the success measures</strong> in Table 1 of the dossier, so adoption is decided on evidence.</li>
+  </ol>
+
+  <div class="note"><b>What the hospital gets, whatever the models show.</b> Even before any model is
+  fitted, the unit gains a consistent way to classify acuity, a defensible figure for nurses per shift
+  and skill mix, a record of shifts where cover was short, and a shared reference for its own policy.
+  The modelling work adds accuracy and foresight on top of that.</div>
+
+  <div class="end">
+    <strong>NeoStay — Executive Brief, version 1.0.</strong>
+    Project and Clinical Lead: Waseem Altaf, MD, Neonatologist.
+    Technical Lead, Lead Developer and Applied AI/Data Science Lead: Abdul Razak, PhD.
+    Decision support only — not for clinical use. © 2026 Waseem Altaf, MD.
+    Source: <code>docs/architecture/neostay-executive-brief.html</code>.
+  </div>
+</section>
+
+</body>
+</html>

@@ -374,6 +374,13 @@ kept what they saw.
 - **[docs/NeoStay-Architecture.pdf](docs/NeoStay-Architecture.pdf)** — the full architecture and
   methods reference (26 pages): data, algorithms with worked examples, security, deployment,
   adapting it to another hospital, and the roadmap. Source: `docs/architecture/`.
+- **[docs/NeoStay-Project-Dossier.pdf](docs/NeoStay-Project-Dossier.pdf)** — goals, the statistical and
+  machine-learning models to be built and tested, the features they need, role-by-role use,
+  multi-branch installation, scaling and governance (26 pages).
+- **[docs/NeoStay-Executive-Brief.pdf](docs/NeoStay-Executive-Brief.pdf)** — the same case in four
+  pages, for hospital executives.
+- **[docs/NeoStay-Data-Requirements.pdf](docs/NeoStay-Data-Requirements.pdf)** — the data request for
+  hospital management: datasets field by field, how much is needed and why, governance and sign-off.
 - **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** — installing NeoStay on a hospital
   server, HTTPS, and managing accounts.
 - **[docs/CLOUD.md](docs/CLOUD.md)** — deploying the same container to a cloud

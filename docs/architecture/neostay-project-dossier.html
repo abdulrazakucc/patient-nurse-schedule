@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>NeoStay — Project Dossier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="neostay-doc.css" />
+</head>
+<body>
+
+<!-- ============================ COVER ============================ -->
+<div class="cover">
+  <div class="cover-art"></div>
+  <div class="cover-top">
+    <span class="cover-badge">Project Dossier · Version 1.0 · October 2026</span>
+    <h1>NeoStay<br /><em>Aims, methods, and the road to a hospital-grade service</em></h1>
+    <p class="sub">What the platform is for, the statistical and machine-learning work that will make
+    its forecasts trustworthy, how each role uses it day to day, and everything required to install it
+    across a hospital group with several branches.</p>
+  </div>
+
+  <div class="cover-leads">
+    <div class="lead-card">
+      <b>Waseem Altaf, MD</b>
+      <span>Project and Clinical Lead · Neonatologist</span>
+      <span>Clinical direction, outcome interpretation, data stewardship, domain validation, hospital coordination.</span>
+    </div>
+    <div class="lead-card tech">
+      <b>Abdul Razak, PhD</b>
+      <span>Technical Lead, Lead Developer and Applied AI/Data Science Lead</span>
+      <span>Architecture, analytical and algorithmic design, implementation, software validation, deployment.</span>
+    </div>
+  </div>
+
+  <dl class="cover-meta">
+    <div><dt>Document</dt><dd>Detailed project dossier</dd></div>
+    <div><dt>Audience</dt><dd>Clinical leadership, nursing management, hospital IT, data partners</dd></div>
+    <div><dt>Companion documents</dt><dd>Executive brief · Data &amp; feature requirements · Architecture reference</dd></div>
+    <div><dt>Status</dt><dd>Decision-support prototype — not a medical device, not clinically validated</dd></div>
+  </dl>
+</div>
+
+<!-- ============================ CONTENTS ============================ -->
+<section class="flow">
+  <div class="sec-head"><span class="sec-num">00</span><h2>Contents</h2>
+    <p>Sections 1–4 describe what exists. Sections 5–6 describe what is proposed and how it will be proven.</p></div>
+  <div class="toc">
+    <a href="#s1"><span>1 · Purpose, goals and success measures</span><span>3</span></a>
+    <a href="#s2"><span>2 · Scope, and what this project is not</span><span>5</span></a>
+    <a href="#s3"><span>3 · Where the project stands today</span><span>6</span></a>
+    <a href="#s4"><span>4 · The analytical problem, stated precisely</span><span>7</span></a>
+    <a href="#s5"><span>5 · Models to be built and tested</span><span>8</span></a>
+    <a href="#s6"><span>6 · Features: the variables the models need</span><span>11</span></a>
+    <a href="#s7"><span>7 · Validation, governance and monitoring of models</span><span>13</span></a>
+    <a href="#s8"><span>8 · How each role uses NeoStay</span><span>15</span></a>
+    <a href="#s9"><span>9 · Design and accessibility standards</span><span>17</span></a>
+    <a href="#s10"><span>10 · Engineering standards and quality gates</span><span>18</span></a>
+    <a href="#s11"><span>11 · Installing across a multi-branch hospital group</span><span>19</span></a>
+    <a href="#s12"><span>12 · Scaling as usage grows</span><span>21</span></a>
+    <a href="#s13"><span>13 · Information governance, safety and compliance</span><span>22</span></a>
+    <a href="#s14"><span>14 · Risks and how they are managed</span><span>23</span></a>
+    <a href="#s15"><span>15 · Delivery plan</span><span>24</span></a>
+    <a href="#s16"><span>16 · Appendices</span><span>25</span></a>
+  </div>
+
+  <div class="plain" style="margin-top:8mm">
+    <b>How to read this dossier.</b> Statements about the <strong>current</strong> system were checked
+    against the source code and are reproducible by running it. Statements about <strong>models</strong>,
+    <strong>features</strong> and <strong>rollout</strong> are proposals for review: they describe what
+    will be built, tested and reported, and each one names the evidence that would justify adopting it.
+  </div>
+
+  <div class="grid4" style="margin-top:6mm">
+    <div class="kpi"><b>4</b><span>Prediction problems</span></div>
+    <div class="kpi"><b>12</b><span>Candidate model families</span></div>
+    <div class="kpi"><b>6</b><span>User roles supported</span></div>
+    <div class="kpi"><b>3</b><span>Rollout phases</span></div>
+  </div>
+</section>
+
+<!-- ============================ 1 ============================ -->
+<section id="s1">
+  <div class="sec-head"><span class="sec-num">01</span><h2>Purpose, goals and success measures</h2>
+    <p>Why the project exists, and how we will know it worked.</p></div>
+
+  <p class="lead">Neonatal units plan under two kinds of uncertainty: how long each baby will stay, and
+  how much skilled nursing the unit will need shift by shift. Both are usually answered from memory and
+  experience. NeoStay's purpose is to answer them from the unit's own recorded outcomes and its own
+  acuity policy, in a form a clinician can read in under a minute and a manager can defend in a staffing
+  review.</p>
+
+  <h3>Aims</h3>
+  <table>
+    <caption>Table 1 — Aims and the measurable goals beneath them</caption>
+    <thead><tr><th style="width:44mm">Aim</th><th>Goal</th><th>How success is measured</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Anticipate the journey</strong></td>
+        <td>Give every admission an expected length of stay, a realistic range, and the likely discharge outcome, with an honest confidence signal.</td>
+        <td>Prediction error and calibration against the unit's own subsequent outcomes, reported per birth-weight band (Section 7).</td></tr>
+      <tr><td><strong>Make staffing defensible</strong></td>
+        <td>Convert the unit's acuity policy into nurses per shift, the required skill mix, and a roster that names gaps before the shift starts.</td>
+        <td>Agreement between NeoStay's recommended establishment and the staffing a senior charge nurse would set, measured on recorded shifts.</td></tr>
+      <tr><td><strong>Protect skill mix, not just headcount</strong></td>
+        <td>Surface when a shift is numerically adequate but too junior for the babies present.</td>
+        <td>Number of shifts flagged, and whether the flag matched the unit's own retrospective judgement.</td></tr>
+      <tr><td><strong>Be usable in a busy unit</strong></td>
+        <td>A full census classified and a roster produced in under five minutes, on a ward computer or a phone.</td>
+        <td>Timed task completion with real charge nurses; fewer than two support questions per user in month one.</td></tr>
+      <tr><td><strong>Travel between hospitals</strong></td>
+        <td>A second site adopts NeoStay by configuration — its own grades, ratios and acuity policy — not by code changes.</td>
+        <td>Time to onboard branch two, and the number of code changes required to do it (target: zero).</td></tr>
+      <tr><td><strong>Be safe and auditable</strong></td>
+        <td>Every number traceable to a source; access restricted to named accounts; no patient-level data held.</td>
+        <td>Successful information-governance review at the host hospital, and a clean security review.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Who benefits, and how</h3>
+  <div class="grid3">
+    <div class="card"><h4>The baby and family</h4><p>Earlier, better-informed conversations about likely
+      length of stay, and a unit more reliably staffed to the acuity actually present.</p></div>
+    <div class="card"><h4>The nursing team</h4><p>A transparent basis for the shift's establishment and
+      skill mix, and an explicit record of what was requested when cover was short.</p></div>
+    <div class="card"><h4>The hospital</h4><p>Objective evidence for establishment reviews, bank and
+      agency decisions, and cross-branch comparison of demand.</p></div>
+  </div>
+
+  <div class="note"><b>A deliberate limit.</b> NeoStay recommends; it never assigns. Final decisions on
+  cot allocation, escalation and individual nurse assignment rest with the charge nurse and the
+  consultant on duty. The interface is written so that this is never ambiguous.</div>
+</section>
+
+<!-- ============================ 2 ============================ -->
+<section id="s2">
+  <div class="sec-head"><span class="sec-num">02</span><h2>Scope, and what this project is not</h2>
+    <p>Boundaries agreed before any data arrives.</p></div>
+
+  <div class="grid2">
+    <div class="card"><h4>In scope</h4>
+      <ul>
+        <li>Forecasting length of stay, discharge outcome and survival for very low birth weight infants.</li>
+        <li>Translating an acuity policy into nurse:patient ratios and minimum nurse competency.</li>
+        <li>Unit-level demand, skill mix and a 24-hour roster of the nurses actually available.</li>
+        <li>Population analytics and an hourly view of demand.</li>
+        <li>Multi-branch deployment, per-branch configuration, and roll-up reporting.</li>
+      </ul>
+    </div>
+    <div class="card"><h4>Out of scope</h4>
+      <ul>
+        <li>Diagnosis, treatment recommendation, drug dosing, or any individual clinical decision.</li>
+        <li>Storing patient-identifiable records, notes or images.</li>
+        <li>Replacing the hospital's rostering or payroll system of record.</li>
+        <li>Automatic assignment of named nurses without human approval.</li>
+        <li>Regulatory medical-device claims (see Section 13 for the boundary and what would cross it).</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Principles that constrain every design decision</h3>
+  <table>
+    <thead><tr><th style="width:46mm">Principle</th><th>What it means in practice</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Traceability before cleverness</strong></td><td>Every figure can be traced to a source row, a policy line, or a stated assumption. A model that cannot explain a number does not ship.</td></tr>
+      <tr><td><strong>Aggregate by default</strong></td><td>The product runs on aggregated statistics. Patient-level data, where it is used for model development, stays inside the hospital's governance boundary.</td></tr>
+      <tr><td><strong>Local policy wins</strong></td><td>Ratios, grades, supervision rules and levels of care are the hospital's, not the software's.</td></tr>
+      <tr><td><strong>Degrade honestly</strong></td><td>Low sample size, missing data or an unfamiliar case is shown as such, never smoothed into false confidence.</td></tr>
+      <tr><td><strong>Portable by construction</strong></td><td>One container, environment-variable configuration, no managed cloud service required.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================ 3 ============================ -->
+<section id="s3">
+  <div class="sec-head"><span class="sec-num">03</span><h2>Where the project stands today</h2>
+    <p>Verified against the code, October 2026.</p></div>
+
+  <div class="grid4">
+    <div class="kpi"><b>712</b><span>VLBW infants behind the statistics</span></div>
+    <div class="kpi"><b>108</b><span>Acuity findings encoded</span></div>
+    <div class="kpi"><b>64</b><span>Level-of-care criteria</span></div>
+    <div class="kpi"><b>111</b><span>Automated tests passing</span></div>
+  </div>
+
+  <h3>What works now</h3>
+  <table class="long">
+    <caption>Table 2 — Current capability, and the method behind it</caption>
+    <thead><tr><th style="width:40mm">Capability</th><th>Method today</th><th>Maturity</th></tr></thead>
+    <tbody>
+      <tr><td>Length of stay, discharge outcome, survival</td>
+        <td>Linear interpolation between birth-weight and gestational-age band statistics (median, Q1, Q3) from one centre, 2016–2026; the two views are averaged; outcome shares come from recorded counts; confidence is graded by sample size.</td>
+        <td><span class="tag t2">Working, deterministic</span></td></tr>
+      <tr><td>Per-infant nursing workload</td>
+        <td>A severity score from weight and gestational age, raised by admission condition and respiratory support, splits the stay into intensive, intermediate and convalescent phases at 1:1, 1:2 and 1:3.</td>
+        <td><span class="tag t3">Working, assumption-based</span></td></tr>
+      <tr><td>Acuity classification</td>
+        <td>The hospital's acuity tool, transcribed to data: the most intensive finding across 11 body systems sets the ratio; the highest level-of-care criterion sets N1–N4; the minimum nurse level is the higher of the two.</td>
+        <td><span class="tag t2">Working, policy-driven</span></td></tr>
+      <tr><td>Unit staffing and rostering</td>
+        <td>Demand summed across cots; skill mix accumulated from the expert tier downward; novice cap and preceptor rule applied; nurses dealt across shifts and matched to cots, with uncovered cots named.</td>
+        <td><span class="tag t2">Working, rules-based</span></td></tr>
+      <tr><td>Hourly timeline and analytics</td>
+        <td>A deterministic synthetic year (709 infants, 42 nurses) anchored to the real medians and outcome shares, used for demonstration only.</td>
+        <td><span class="tag t3">Demonstration data</span></td></tr>
+      <tr><td>Access control</td>
+        <td>Named accounts, PBKDF2-hashed passwords, signed expiring session cookies, rate-limited sign-in; a published copy can be encrypted so only accounts can open it.</td>
+        <td><span class="tag t2">Working</span></td></tr>
+      <tr><td>Deployment</td>
+        <td>One container: hospital server with Docker Compose and HTTPS, any Kubernetes cluster, or a serverless container host with no writable disk.</td>
+        <td><span class="tag t2">Working</span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="warn"><b>The honest gap.</b> Nothing in the current system is a fitted statistical model.
+  Predictions are interpolations of recorded group statistics, and the staffing model rests on stated
+  assumptions. No prospective validation has been performed. Sections 5 to 7 exist to close that gap.</div>
+</section>
+
+<!-- ============================ 4 ============================ -->
+<section id="s4">
+  <div class="sec-head"><span class="sec-num">04</span><h2>The analytical problem, stated precisely</h2>
+    <p>Four questions, four modelling tasks, four kinds of evidence.</p></div>
+
+  <figure>
+    <svg viewBox="0 0 780 250" role="img" aria-label="Four analytical problems">
+      <defs><marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M0 0 L10 5 L0 10 z" fill="#74909c"/></marker></defs>
+      <rect x="1" y="1" width="778" height="248" rx="12" fill="#fbfdfd" stroke="#e3ebef"/>
+      <rect x="20" y="30" width="170" height="86" rx="10" fill="#e3f4f4" stroke="#0e8a8f"/>
+      <text x="34" y="52" font-family="Inter" font-size="10" font-weight="700" fill="#08565a">P1 · Length of stay</text>
+      <text x="34" y="70" font-family="Inter" font-size="8.6" fill="#3d5763">Time to discharge, with</text>
+      <text x="34" y="83" font-family="Inter" font-size="8.6" fill="#3d5763">death and transfer as</text>
+      <text x="34" y="96" font-family="Inter" font-size="8.6" fill="#3d5763">competing outcomes</text>
+      <rect x="210" y="30" width="170" height="86" rx="10" fill="#fff" stroke="#c9a24b"/>
+      <text x="224" y="52" font-family="Inter" font-size="10" font-weight="700" fill="#a76f1e">P2 · Acuity trajectory</text>
+      <text x="224" y="70" font-family="Inter" font-size="8.6" fill="#3d5763">Which care level a baby</text>
+      <text x="224" y="83" font-family="Inter" font-size="8.6" fill="#3d5763">will need next shift,</text>
+      <text x="224" y="96" font-family="Inter" font-size="8.6" fill="#3d5763">and when it steps down</text>
+      <rect x="400" y="30" width="170" height="86" rx="10" fill="#fff" stroke="#0e8a8f"/>
+      <text x="414" y="52" font-family="Inter" font-size="10" font-weight="700" fill="#08565a">P3 · Unit demand</text>
+      <text x="414" y="70" font-family="Inter" font-size="8.6" fill="#3d5763">Census and nurse-hours</text>
+      <text x="414" y="83" font-family="Inter" font-size="8.6" fill="#3d5763">per shift, 1–14 days</text>
+      <text x="414" y="96" font-family="Inter" font-size="8.6" fill="#3d5763">ahead, with a range</text>
+      <rect x="590" y="30" width="170" height="86" rx="10" fill="#fff" stroke="#d5637a"/>
+      <text x="604" y="52" font-family="Inter" font-size="10" font-weight="700" fill="#b5445f">P4 · Roster</text>
+      <text x="604" y="70" font-family="Inter" font-size="8.6" fill="#3d5763">Assign the nurses on</text>
+      <text x="604" y="83" font-family="Inter" font-size="8.6" fill="#3d5763">duty to cots, subject to</text>
+      <text x="604" y="96" font-family="Inter" font-size="8.6" fill="#3d5763">competence and policy</text>
+
+      <rect x="20" y="150" width="740" height="76" rx="10" fill="#fff" stroke="#d1dde3"/>
+      <text x="36" y="172" font-family="Inter" font-size="9.6" font-weight="700" fill="#122b36">What each one feeds</text>
+      <text x="36" y="192" font-family="Inter" font-size="8.8" fill="#3d5763">P1 → the Predict page, bed planning, family conversations, and the nurse-hours a stay will consume.</text>
+      <text x="36" y="206" font-family="Inter" font-size="8.8" fill="#3d5763">P2 → tomorrow's cot-by-cot requirement; P3 → the establishment for the coming fortnight; P4 → tonight's assignment sheet.</text>
+      <text x="36" y="220" font-family="Inter" font-size="8.8" fill="#3d5763">P1 and P2 are clinical predictions. P3 is an operational forecast. P4 is an optimisation, not a prediction.</text>
+      <line x1="105" y1="118" x2="105" y2="146" stroke="#74909c" marker-end="url(#a1)"/>
+      <line x1="295" y1="118" x2="295" y2="146" stroke="#74909c" marker-end="url(#a1)"/>
+      <line x1="485" y1="118" x2="485" y2="146" stroke="#74909c" marker-end="url(#a1)"/>
+      <line x1="675" y1="118" x2="675" y2="146" stroke="#74909c" marker-end="url(#a1)"/>
+    </svg>
+    <figcaption><b>Figure 1 — The four problems.</b> They are deliberately separated: each has its own
+    data requirement, its own metric, and its own failure mode.</figcaption>
+  </figure>
+
+  <table>
+    <caption>Table 3 — Problem definitions</caption>
+    <thead><tr><th>Ref</th><th>Prediction target</th><th>Unit of analysis</th><th>Primary metric</th><th>Baseline to beat</th></tr></thead>
+    <tbody>
+      <tr><td><strong>P1</strong></td><td>Days to discharge; competing outcomes home / transfer / death</td><td>One admission</td><td>Concordance and calibration; absolute error in days</td><td>Today's band interpolation</td></tr>
+      <tr><td><strong>P2</strong></td><td>Care level (N1–N4) and ratio at the next shift</td><td>One infant-shift</td><td>Balanced accuracy; cost-weighted error (under-calling is worse)</td><td>Carry forward today's level</td></tr>
+      <tr><td><strong>P3</strong></td><td>Census and total nurse-hours per shift, 1–14 days ahead</td><td>One unit-shift</td><td>Mean absolute error; pinball loss for the range; coverage</td><td>Seasonal naive (same shift last week)</td></tr>
+      <tr><td><strong>P4</strong></td><td>Feasible assignment maximising covered cots and skill fit</td><td>One shift</td><td>Uncovered cots; constraint violations; planner acceptance rate</td><td>Today's greedy rule-based assignment</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================ 5 ============================ -->
+<section id="s5">
+  <div class="sec-head"><span class="sec-num">05</span><h2>Models to be built and tested</h2>
+    <p>Shortlists, with the reason each is a candidate and the evidence that would retire it.</p></div>
+
+  <div class="plain"><b>Method, in one paragraph.</b> For each problem we start from the simplest model
+  that could work, add complexity only when it earns its place on held-out data, and prefer models whose
+  output can be explained at the cot side. Every candidate is scored on the same split, against the same
+  baseline, with the same reporting checklist. A model that wins on error but cannot be calibrated or
+  explained does not go into the product.</div>
+
+  <h3>P1 · Length of stay and discharge outcome</h3>
+  <table class="long">
+    <caption>Table 4 — Candidate models for P1</caption>
+    <thead><tr><th style="width:42mm">Model family</th><th>Why it is a candidate</th><th>Main risk</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Parametric survival (AFT: log-normal, Weibull)</strong></td>
+        <td>Length of stay is a time-to-event with censoring (still inpatient at extract). AFT gives a median and quantiles directly, which is what the interface already shows.</td>
+        <td>Distributional assumption may not hold across weight bands.</td></tr>
+      <tr><td><strong>Cox proportional hazards</strong></td>
+        <td>Standard, well-understood, no distributional assumption; good for effect sizes and for clinical review of which variables matter.</td>
+        <td>Needs a baseline hazard to produce days; proportionality often violated by respiratory support.</td></tr>
+      <tr><td><strong>Competing-risks (Fine–Gray, cause-specific hazards)</strong></td>
+        <td>Discharge home, transfer and death compete. Treating death as censoring biases stay estimates upward — the clinically important correction.</td>
+        <td>More parameters, needs enough events in each outcome.</td></tr>
+      <tr><td><strong>Multi-state model</strong></td>
+        <td>Represents the real pathway: intensive → intermediate → convalescent → discharge, with readmission to a higher level. Produces P1 and P2 from one structure.</td>
+        <td>Data hungry; needs reliable daily level-of-care records.</td></tr>
+      <tr><td><strong>Gradient boosting (XGBoost / LightGBM) with survival objective</strong></td>
+        <td>Handles non-linearity and interactions (weight × respiratory support) without hand-crafting; strong tabular baseline.</td>
+        <td>Needs calibration and explanation work; risks fitting one unit's practice.</td></tr>
+      <tr><td><strong>Quantile regression / quantile forests</strong></td>
+        <td>The product shows a range, not a point. Modelling Q1 and Q3 directly optimises exactly what is displayed.</td>
+        <td>Quantile crossing; less familiar to clinical reviewers.</td></tr>
+      <tr><td><strong>Bayesian hierarchical model</strong></td>
+        <td>Partial pooling across branches: a small unit borrows strength from the group without losing its own signal. Natural uncertainty intervals.</td>
+        <td>Slower to fit; requires care in prior choice and explanation.</td></tr>
+      <tr><td><strong>Conformal prediction wrapper</strong></td>
+        <td>Distribution-free intervals with a guaranteed coverage rate, on top of whichever model wins.</td>
+        <td>Intervals can be wide; needs a clean calibration set.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>P2 · Acuity trajectory</h3>
+  <table>
+    <thead><tr><th style="width:42mm">Model family</th><th>Why it is a candidate</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Markov / multi-state transition model</strong></td><td>Care level is a small ordered state space; transition probabilities per shift are directly interpretable and easy to audit with the clinical lead.</td></tr>
+      <tr><td><strong>Ordinal logistic regression</strong></td><td>Respects the ordering N1 &lt; N2 &lt; N3 &lt; N4 and gives odds ratios clinicians can challenge.</td></tr>
+      <tr><td><strong>Gradient boosting with cost-sensitive loss</strong></td><td>Under-calling acuity is more harmful than over-calling; the loss can be weighted accordingly.</td></tr>
+      <tr><td><strong>Sequence model (GRU/temporal convolution)</strong></td><td>Only if daily records prove rich enough; held as a stretch option, never as the first choice.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>P3 · Unit demand forecasting</h3>
+  <table>
+    <thead><tr><th style="width:42mm">Model family</th><th>Why it is a candidate</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Seasonal naive and moving average</strong></td><td>The baseline every other model must beat; often strong for ward census.</td></tr>
+      <tr><td><strong>SARIMA / state-space (ETS, structural time series)</strong></td><td>Captures weekday and seasonal patterns with interpretable components and prediction intervals.</td></tr>
+      <tr><td><strong>Gradient boosting on calendar and census features</strong></td><td>Easily absorbs admissions pipeline, bed closures, school holidays, local events.</td></tr>
+      <tr><td><strong>Queueing approximation (Erlang / M/M/c)</strong></td><td>Converts a demand distribution into a staffing level at a stated risk of shortfall — the question management actually asks.</td></tr>
+      <tr><td><strong>Discrete-event simulation</strong></td><td>Stress-tests a proposed establishment against arrival and length-of-stay distributions; answers "what if two cots close".</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note"><b>Selection rule, agreed in advance.</b> A candidate replaces the incumbent only if
+  it improves the primary metric on a temporal hold-out <em>and</em> on at least one external branch,
+  keeps calibration within agreed bounds, produces an explanation the clinical lead accepts, and runs
+  inside the interaction budget (Section 12). Otherwise the simpler incumbent stays.</div>
+
+  <h3>P4 · Roster optimisation</h3>
+  <table>
+    <thead><tr><th style="width:42mm">Approach</th><th>Why it is a candidate</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Constraint programming / integer programming (CP-SAT, MILP)</strong></td><td>Hard rules (competence, ratios, one assignment per nurse, charge nurse free) as constraints; soft goals (continuity of care, fairness of nights, preferences) as weighted objectives. Produces a provably feasible roster or a precise reason none exists.</td></tr>
+      <tr><td><strong>Greedy heuristic (today's algorithm)</strong></td><td>Instant, explainable, already in production; remains the fallback when the solver cannot finish inside the interaction budget.</td></tr>
+      <tr><td><strong>Local search / simulated annealing</strong></td><td>Improves a feasible roster within a time budget; useful for large units with many soft preferences.</td></tr>
+    </tbody>
+  </table>
+
+</section>
+
+<!-- ============================ 6 ============================ -->
+<section id="s6">
+  <div class="sec-head"><span class="sec-num">06</span><h2>Features: the variables the models need</h2>
+    <p>What each model would learn from, grouped by where it comes from.</p></div>
+
+  <p class="lead">Feature choice is a clinical decision as much as a statistical one. The list below is
+  the proposed candidate set, drawn from established neonatal risk scores (CRIB-II, SNAPPE-II) and from
+  the operational variables a charge nurse already uses. The companion
+  <strong>Data &amp; Feature Requirements</strong> document turns this into a request to hospital
+  management, field by field.</p>
+
+  <table class="long">
+    <caption>Table 5 — Candidate feature set</caption>
+    <thead><tr><th style="width:34mm">Group</th><th>Features</th><th>Serves</th><th>Priority</th></tr></thead>
+    <tbody>
+      <tr><td><strong>At birth</strong></td>
+        <td>Birth weight; gestational age (weeks + days); sex; singleton or multiple; antenatal steroids; mode of delivery; place of birth (inborn or outborn); Apgar at 1 and 5 minutes; admission temperature; birth head circumference.</td>
+        <td>P1, P2</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td><strong>Admission severity</strong></td>
+        <td>Base excess or pH in the first hour; FiO₂ and oxygenation index; blood pressure support; CRIB-II or SNAPPE-II where recorded; major congenital anomaly.</td>
+        <td>P1, P2</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td><strong>Clinical course</strong></td>
+        <td>Respiratory support type and duration by day (ventilation, HFOV, NIPPV, CPAP, high flow, nasal cannula, room air); surfactant doses; inotropes; sepsis episodes (culture-positive and clinical); NEC stage; IVH grade; PDA treatment; ROP treatment; BPD at 36 weeks; surgery; therapeutic hypothermia.</td>
+        <td>P1, P2</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td><strong>Feeding and growth</strong></td>
+        <td>Day of first enteral feed; day of full enteral feeds; parenteral nutrition days; central line days; weight at 7, 14, 28 days and at discharge.</td>
+        <td>P1, P2</td><td><span class="tag t3">Should</span></td></tr>
+      <tr><td><strong>Daily acuity</strong></td>
+        <td>Level of care per shift (N1–N4); nurse:patient ratio applied; the acuity-tool findings ticked; assessment frequency; 1:1 criteria met.</td>
+        <td>P2, P3, P4</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td><strong>Unit operations</strong></td>
+        <td>Hourly or shift census; admissions, discharges, transfers in and out, deaths with timestamps; cot capacity and any closures; occupancy; refused admissions.</td>
+        <td>P3</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td><strong>Workforce</strong></td>
+        <td>Establishment by grade; per-shift actual staffing by grade; bank and agency use; sickness and vacancy rate; preceptor pairings; contracted hours; qualified-in-speciality proportion.</td>
+        <td>P3, P4</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td><strong>Branch context</strong></td>
+        <td>Branch identifier; designated level of the unit; catchment; transfer agreements; local ratio policy; local grade ladder.</td>
+        <td>All, and multi-site pooling</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td><strong>Calendar</strong></td>
+        <td>Date, weekday, public holiday, season; school holidays; local events affecting transfers.</td>
+        <td>P3</td><td><span class="tag t3">Should</span></td></tr>
+      <tr><td><strong>Outcome labels</strong></td>
+        <td>Discharge date and destination; death date; transfer destination and reason; readmission within 28 days.</td>
+        <td>P1</td><td><span class="tag t4">Must</span></td></tr>
+    </tbody>
+  </table>
+
+  <div class="warn"><b>Features deliberately excluded.</b> Ethnicity, postcode, religion, insurance
+  status and any socio-economic proxy are excluded from the modelling set unless the hospital and its
+  ethics process explicitly request their inclusion for an equity analysis — and then only as a fairness
+  audit variable, never as a predictor that changes a staffing recommendation.</div>
+</section>
+
+<!-- ============================ 7 ============================ -->
+<section id="s7">
+  <div class="sec-head"><span class="sec-num">07</span><h2>Validation, governance and monitoring of models</h2>
+    <p>How a candidate earns its place, and how it is watched afterwards.</p></div>
+
+  <h3>Validation protocol</h3>
+  <ol class="steps">
+    <li><strong>Split by time, not at random.</strong> Train on the earlier period, test on the most
+      recent 12 months, so the evaluation answers "would it have worked last year".</li>
+    <li><strong>Hold out a branch.</strong> With more than one site, leave-one-branch-out tells us
+      whether the model transfers or has learned one unit's habits.</li>
+    <li><strong>Report discrimination and calibration together.</strong> Concordance or balanced
+      accuracy alone is not enough: a calibration plot and slope decide whether numbers can be shown to
+      clinicians.</li>
+    <li><strong>Quantify the interval, not just the point.</strong> Pinball loss and empirical coverage
+      for every published range; conformal intervals where coverage must be guaranteed.</li>
+    <li><strong>Compare against the incumbent.</strong> Every metric is reported beside today's
+      interpolation or rule, with a confidence interval on the difference.</li>
+    <li><strong>Clinical review of errors.</strong> The clinical lead reviews the worst 20 predictions,
+      not just the averages. A systematic failure mode blocks adoption regardless of mean error.</li>
+    <li><strong>Prospective silent run.</strong> The model runs beside the unit for an agreed period,
+      recording what it would have said, with no influence on care, before anything is displayed.</li>
+  </ol>
+
+  <table>
+    <caption>Table 6 — Metrics by problem</caption>
+    <thead><tr><th>Problem</th><th>Primary</th><th>Secondary</th><th>Guardrail</th></tr></thead>
+    <tbody>
+      <tr><td>P1 Length of stay</td><td>Median absolute error (days)</td><td>Concordance; calibration slope; Brier score for outcome</td><td>No band with error worse than today's method</td></tr>
+      <tr><td>P2 Acuity trajectory</td><td>Balanced accuracy</td><td>Confusion matrix by level; cost-weighted error</td><td>Under-calling rate below an agreed ceiling</td></tr>
+      <tr><td>P3 Demand</td><td>Mean absolute error (nurse-hours)</td><td>Pinball loss; interval coverage</td><td>Never below seasonal naive on any horizon</td></tr>
+      <tr><td>P4 Roster</td><td>Uncovered cots</td><td>Constraint violations; planner acceptance</td><td>Solve inside the interaction budget, or fall back</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Reporting and governance</h3>
+  <div class="grid2">
+    <div class="card"><h4>Reporting standards</h4><p>Model development and validation reported to
+      <strong>TRIPOD+AI</strong>; risk of bias assessed with <strong>PROBAST</strong>; any prospective
+      evaluation follows <strong>DECIDE-AI</strong>. Each released model carries a one-page model card:
+      intended use, data, performance by subgroup, known failure modes, and the date it must be reviewed.</p></div>
+    <div class="card"><h4>Change control</h4><p>Models are versioned artefacts with the data snapshot
+      that produced them. A model change follows the same review, test and approval path as a code
+      change, and the clinical lead signs the model card before release.</p></div>
+    <div class="card"><h4>Monitoring in service</h4><p>Input drift (case mix, missingness), output drift
+      (distribution of predictions), and realised error once outcomes are known. Alert thresholds agreed
+      per branch; breach triggers review, not silent retraining.</p></div>
+    <div class="card"><h4>Human factors</h4><p>Predictions are shown with their range and confidence,
+      never as a single authoritative number. The interface requires an explicit human action for every
+      staffing decision, and records that the recommendation was advisory.</p></div>
+  </div>
+
+  <div class="note"><b>Fairness and equity.</b> Performance is reported by gestational-age band, birth
+  weight, inborn versus outborn, and branch. A model that is materially worse for the smallest babies,
+  or for one site, is not released even if its average is better.</div>
+</section>
+
+<!-- ============================ 8 ============================ -->
+<section id="s8">
+  <div class="sec-head"><span class="sec-num">08</span><h2>How each role uses NeoStay</h2>
+    <p>Six roles, each with the task they come to do and the path they take.</p></div>
+
+  <div class="role">
+    <span class="who">Role 1 · Charge nurse / shift coordinator — the primary user</span>
+    <h4>"How many nurses do I need tonight, and who should take which cot?"</h4>
+    <p><strong>When:</strong> at each shift handover, and whenever a cot changes acuity.
+    <strong>Time budget:</strong> under five minutes for a full unit.</p>
+    <ol>
+      <li>Sign in; the unit's census from the previous shift is the starting point.</li>
+      <li>For each cot, tick the most intensive finding per body system, the 1:1 box if the baby meets
+        the footnoted criteria, and the highest level-of-care criterion met. The preview shows the ratio,
+        care level and minimum nurse level before the cot is added.</li>
+      <li>Enter the nurses actually available by grade, and the shift pattern.</li>
+      <li>Read the verdict: nurses per shift, recommended skill mix, effective capacity against demand,
+        and the 24-hour roster. Any cot without a qualified nurse is named in red, with the grade and
+        number of extra nurses that would close the gap.</li>
+      <li>Export or record the decision; escalate with the figure if cover is short.</li>
+    </ol>
+  </div>
+
+  <div class="role">
+    <span class="who">Role 2 · Neonatologist / consultant</span>
+    <h4>"What should I tell these parents, and what will this baby need?"</h4>
+    <p>Opens <strong>Predict</strong>, enters birth weight, gestational age, condition and respiratory
+    support. Reads the expected stay with its realistic range, the chance of going home, transfer or
+    death, the survival figure, and the confidence grade with the number of comparable babies behind it.
+    Uses the per-phase nursing profile when planning cot moves and discharge preparation. Every figure
+    carries the caveat that it describes groups, not this baby.</p>
+  </div>
+
+  <div class="role">
+    <span class="who">Role 3 · Unit manager / matron</span>
+    <h4>"Is my establishment right, and what do I take to the staffing review?"</h4>
+    <p>Uses the hourly timeline and analytics to see demand by hour, day and season; compares recommended
+    establishment with actual staffing over a period; collects the record of shifts where cover was
+    short and by which grade. The output is evidence for an establishment case, not a rota.</p>
+  </div>
+
+  <div class="role">
+    <span class="who">Role 4 · Practice educator</span>
+    <h4>"Who needs supervision, and where are my skill gaps?"</h4>
+    <p>Reads the skill-mix panel's preceptor requirement and novice share across shifts, and the Acuity
+    tool page as a teaching reference for the unit's own policy.</p>
+  </div>
+
+  <div class="role">
+    <span class="who">Role 5 · NeoStay administrator (nursing or informatics)</span>
+    <h4>"Who has access, and is the service healthy?"</h4>
+    <p>Creates and removes accounts, resets passwords, checks the health endpoint and the service status.
+    Account changes take effect immediately; removing an account signs that person out everywhere.</p>
+  </div>
+
+  <div class="role">
+    <span class="who">Role 6 · Hospital IT / platform team</span>
+    <h4>"How do I run, secure, upgrade and back this up?"</h4>
+    <p>Runs one container behind the hospital's HTTPS entry point, supplies five environment variables,
+    backs up the accounts file, applies upgrades by deploying a new image tag, and monitors
+    <code>/api/health</code>. Hospital single sign-on replaces NeoStay passwords where required.</p>
+  </div>
+
+  <h3>Service expectations each role can rely on</h3>
+  <table>
+    <thead><tr><th>Expectation</th><th>Target</th></tr></thead>
+    <tbody>
+      <tr><td>Page ready to use after sign-in</td><td>Under 3 seconds on a ward computer</td></tr>
+      <tr><td>Census recalculated after a change</td><td>Immediate — all calculation is local to the browser</td></tr>
+      <tr><td>Availability during a shift</td><td>99.5% monthly, excluding planned windows</td></tr>
+      <tr><td>Support response for a clinical-hours issue</td><td>Same working day</td></tr>
+      <tr><td>Account created or removed</td><td>Within one working day of an approved request</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================ 9 ============================ -->
+<section id="s9">
+  <div class="sec-head"><span class="sec-num">09</span><h2>Design and accessibility standards</h2>
+    <p>The rules the interface is held to, and why they matter at 03:00.</p></div>
+
+  <div class="grid2">
+    <div class="card"><h4>Clarity under pressure</h4><p>One primary action per screen. Numbers before
+      adjectives. Plain verdicts in words ("fully covered", "short by 0.1 nurses") beside every chart, so
+      a decision never depends on reading a graph correctly.</p></div>
+    <div class="card"><h4>Traceability</h4><p>Every derived number can be hovered or tapped to see what
+      produced it — the findings that set a ratio, the sample size behind a forecast.</p></div>
+    <div class="card"><h4>No silent failure</h4><p>Missing data, low confidence, an expired session or a
+      browser that cannot decrypt the published copy each produce a specific message and a next step.</p></div>
+    <div class="card"><h4>Accessibility</h4><p>Target <strong>WCAG 2.2 AA</strong>: contrast, focus
+      visibility, full keyboard operation, labelled controls, text that scales to 200%, and no meaning
+      carried by colour alone. Formal audit is a roadmap item.</p></div>
+    <div class="card"><h4>Works on ward hardware</h4><p>Responsive from 360 px upward; no dependency on
+      hover; touch targets sized for gloved hands; fonts fall back cleanly if external fonts are blocked.</p></div>
+    <div class="card"><h4>Consistency</h4><p>One design system across landing page, sign-in and the
+      application, so the product feels like one tool rather than three.</p></div>
+  </div>
+
+  <div class="note"><b>Usability engineering.</b> For a clinical tool, usability is a safety property.
+  The project follows the spirit of <strong>IEC 62366-1</strong>: named user groups, defined use
+  scenarios, identification of use errors that could cause harm (for example a misread ratio), and
+  testing with real users before wide release.</div>
+</section>
+
+<!-- ============================ 10 ============================ -->
+<section id="s10">
+  <div class="sec-head"><span class="sec-num">10</span><h2>Engineering standards and quality gates</h2>
+    <p>What must be true before any change reaches a ward.</p></div>
+
+  <table class="long">
+    <caption>Table 7 — Standards in force</caption>
+    <thead><tr><th style="width:40mm">Area</th><th>Standard applied</th><th>Evidence</th></tr></thead>
+    <tbody>
+      <tr><td>Application architecture</td><td>Twelve-factor service: configuration from the environment, stateless processes, logs to standard output, one build promoted across environments</td><td>Dockerfile, <code>docs/CLOUD.md</code></td></tr>
+      <tr><td>Source control</td><td>Trunk-based with short-lived branches; every change reviewed; signed, descriptive commits; semantic versioning for releases</td><td>Repository history</td></tr>
+      <tr><td>Testing</td><td>Automated suite covering sign-in and sessions, published-site encryption, page gating, cloud configuration, and engine parity between the browser and Python implementations</td><td>111 tests currently passing</td></tr>
+      <tr><td>Continuous integration</td><td>Tests plus a real container build, started and smoke-tested end to end on every push</td><td><code>.github/workflows/ci.yml</code></td></tr>
+      <tr><td>Security</td><td>Hashed credentials, signed expiring sessions, rate limiting, strict Content-Security-Policy, non-root container, read-only root filesystem, secrets never in images or Git</td><td><code>SECURITY.md</code></td></tr>
+      <tr><td>Supply chain</td><td>Pinned dependencies, automated dependency updates, multi-architecture images with provenance, image digests pinned in production</td><td>Workflows, <code>requirements*.txt</code></td></tr>
+      <tr><td>Documentation</td><td>User guide, deployment guide, cloud guide, architecture reference; every setting documented where it is defined</td><td><code>docs/</code></td></tr>
+      <tr><td>Clinical risk</td><td>Hazard log with severity, likelihood and mitigation, maintained with the clinical lead; aligned to the intent of <strong>DCB0129/DCB0160</strong> for health-IT risk management</td><td>Roadmap item, Section 15</td></tr>
+      <tr><td>Interoperability</td><td>Where integration is added, <strong>HL7 FHIR</strong> resources and <strong>SNOMED CT</strong> coding rather than bespoke formats</td><td>Roadmap item</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Definition of done, for any change</h3>
+  <ul class="check">
+    <li>Tests written and passing, including a case that would have caught the defect.</li>
+    <li>Browser and Python engines still agree, value for value.</li>
+    <li>Security review for anything touching accounts, sessions or published data.</li>
+    <li>Documentation updated in the same change, not afterwards.</li>
+    <li>Clinical lead's approval for anything that alters a displayed clinical number or wording.</li>
+    <li>Rollback path stated in the release note.</li>
+  </ul>
+</section>
+
+<!-- ============================ 11 ============================ -->
+<section id="s11">
+  <div class="sec-head"><span class="sec-num">11</span><h2>Installing across a multi-branch hospital group</h2>
+    <p>The part most often underestimated: several units, one service, different local policies.</p></div>
+
+  <h3>Choose a tenancy model first</h3>
+  <table>
+    <caption>Table 8 — Three ways to serve several branches</caption>
+    <thead><tr><th style="width:34mm">Model</th><th>How it works</th><th>Best when</th><th>Trade-off</th></tr></thead>
+    <tbody>
+      <tr><td><strong>A · One deployment per branch</strong></td>
+        <td>Each unit runs its own container and its own accounts; no shared data.</td>
+        <td>Branches are independent legal entities, or governance forbids any pooling.</td>
+        <td>No group-level view; upgrades repeated per site.</td></tr>
+      <tr><td><strong>B · One deployment, branch-scoped configuration</strong> <span class="tag t2">recommended</span></td>
+        <td>One service; each user belongs to a branch; policy, grades and ratios are per branch; data stays separated by branch.</td>
+        <td>A group with shared IT and a wish to compare units.</td>
+        <td>Requires the configuration work in Section 15, Phase 2.</td></tr>
+      <tr><td><strong>C · Central service, federated data</strong></td>
+        <td>Branches keep their own data; only aggregated statistics travel to the central service.</td>
+        <td>Cross-border groups, or where data residency differs by site.</td>
+        <td>Most complex; needed only if data cannot be centralised.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>What must be configured per branch</h3>
+  <div class="grid2">
+    <div class="card"><h4>Clinical policy</h4><ul>
+      <li>Nurse grade ladder and the mapping to the four levels</li>
+      <li>Ratios for each acuity column, and the local 1:1 criteria</li>
+      <li>Levels of care in use, and the mapping to minimum nurse level</li>
+      <li>Supervision rules: novice cap, preceptor requirement</li>
+      <li>Shift pattern (two 12-hour, three 8-hour, local variants)</li>
+    </ul></div>
+    <div class="card"><h4>Operational</h4><ul>
+      <li>Branch name, designated unit level, cot capacity</li>
+      <li>Accounts and roles, by branch</li>
+      <li>Host name and certificate</li>
+      <li>Which dataset the branch's forecasts use — its own, or the group's pooled statistics</li>
+      <li>Support contacts and escalation path</li>
+    </ul></div>
+  </div>
+
+  <h3>Installation checklist (per branch)</h3>
+  <div class="grid2">
+    <div class="card"><h4>Before install</h4><ul class="check">
+      <li>Information-governance approval recorded</li>
+      <li>Tenancy model agreed (A, B or C)</li>
+      <li>Host name allocated; TLS certificate issued</li>
+      <li>Nurse grade mapping signed off by the branch's nursing lead</li>
+      <li>Acuity policy confirmed, or the group policy adopted explicitly</li>
+      <li>Named administrator and deputy identified</li>
+      <li>Account list agreed with line managers</li>
+    </ul></div>
+    <div class="card"><h4>Install and verify</h4><ul class="check">
+      <li>Container deployed; health check green</li>
+      <li>HTTPS verified from a ward computer and a phone</li>
+      <li>First administrator account created; password delivered securely</li>
+      <li>End-to-end smoke test passed and recorded</li>
+      <li>Branch configuration applied and reviewed</li>
+      <li>Backup of the accounts file tested, including restore</li>
+      <li>Monitoring and alerting connected</li>
+    </ul></div>
+    <div class="card"><h4>Go live</h4><ul class="check">
+      <li>Two training sessions delivered per shift pattern (day and night)</li>
+      <li>Quick-reference card at each ward computer</li>
+      <li>Two weeks of parallel running against the current manual method</li>
+      <li>Daily check-in during week one; weekly thereafter</li>
+      <li>Feedback log open, with named owner</li>
+    </ul></div>
+    <div class="card"><h4>Steady state</h4><ul class="check">
+      <li>Quarterly review of policy configuration with the nursing lead</li>
+      <li>Access list reviewed every six months</li>
+      <li>Upgrades applied within one month of release</li>
+      <li>Incident and near-miss log reviewed with the clinical lead</li>
+      <li>Annual revalidation of forecasts against that branch's outcomes</li>
+    </ul></div>
+  </div>
+
+  <div class="warn"><b>The three mistakes that derail multi-site rollouts.</b> First, assuming one
+  branch's ratios are everyone's — they are not, and the mapping must be signed per site. Second,
+  creating accounts centrally without a local owner, so leavers keep access. Third, going live without
+  parallel running, which removes the only opportunity to compare the recommendation with what the unit
+  would have done anyway.</div>
+</section>
+
+<!-- ============================ 12 ============================ -->
+<section id="s12">
+  <div class="sec-head"><span class="sec-num">12</span><h2>Scaling as usage grows</h2>
+    <p>From one unit to a hospital group, without re-architecting.</p></div>
+
+  <p class="lead">NeoStay's calculations run in the browser, so user growth costs the server almost
+  nothing: each additional user adds a sign-in check and a few static file requests. The scaling work is
+  therefore about availability, data volume and the features that will add server-side state.</p>
+
+  <table>
+    <caption>Table 9 — Capacity plan</caption>
+    <thead><tr><th>Stage</th><th>Users</th><th>Shape</th><th>What changes</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Pilot</strong></td><td>Up to 50</td><td>One container, one replica, 0.5 vCPU, 512 MB</td><td>Nothing — today's deployment.</td></tr>
+      <tr><td><strong>One hospital</strong></td><td>50–300</td><td>2–3 replicas behind the hospital's load balancer; static files cached at the edge</td><td>Stateless mode with a shared session secret; health-based autoscaling.</td></tr>
+      <tr><td><strong>Group of branches</strong></td><td>300–2,000</td><td>Replicas per region or per branch; shared configuration service</td><td>Branch-scoped configuration and roles; a managed Postgres for saved censuses and audit; rate limiting moved to a shared store.</td></tr>
+      <tr><td><strong>Group with analytics</strong></td><td>2,000+</td><td>Separate read path for reporting; scheduled model retraining jobs</td><td>A warehouse for historical data; a job runner for forecasts; per-branch dashboards.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note"><b>Known constraint to fix before large scale.</b> The limit on failed sign-ins is
+  counted inside each server process, so several replicas allow proportionally more attempts. Moving
+  that counter to a shared store is a prerequisite for an internet-facing deployment at group scale.</div>
+
+  <h3>Performance budget</h3>
+  <table>
+    <thead><tr><th>Operation</th><th>Budget</th><th>Why that number</th></tr></thead>
+    <tbody>
+      <tr><td>Sign-in (server check)</td><td>&lt; 500 ms</td><td>Perceived as instant at handover.</td></tr>
+      <tr><td>Census recalculation after a change</td><td>&lt; 100 ms</td><td>Runs locally; must feel immediate while a nurse ticks findings.</td></tr>
+      <tr><td>Roster for 30 cots and 40 nurses</td><td>&lt; 1 s heuristic; &lt; 5 s solver</td><td>Beyond this, the planner stops trusting the tool and uses paper.</td></tr>
+      <tr><td>Forecast refresh (server job)</td><td>&lt; 15 min nightly</td><td>Must finish well before the early shift.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>What stays true as it grows</h3>
+  <ul>
+    <li><strong>Stateless web tier.</strong> Sessions are signed tokens, so any replica serves any user.</li>
+    <li><strong>One image everywhere.</strong> Branch differences are configuration, never a separate build.</li>
+    <li><strong>Data stays small.</strong> Statistics and policy files are kilobytes; only the optional
+      historical warehouse grows, outside the request path.</li>
+    <li><strong>Graceful degradation.</strong> If a model service is down, the deterministic method
+      still answers, labelled as such.</li>
+  </ul>
+
+</section>
+
+<!-- ============================ 13 ============================ -->
+<section id="s13">
+  <div class="sec-head"><span class="sec-num">13</span><h2>Information governance, safety and compliance</h2>
+    <p>What must be in place before patient-level data is used, and where the device boundary sits.</p></div>
+
+  <table class="long">
+    <caption>Table 10 — Governance requirements</caption>
+    <thead><tr><th style="width:38mm">Requirement</th><th>What it means here</th><th>Owner</th></tr></thead>
+    <tbody>
+      <tr><td>Lawful basis and approvals</td><td>Service evaluation or research classification agreed; ethics approval where required; Caldicott Guardian or equivalent sign-off for any patient-level extract.</td><td>Clinical Lead with hospital IG</td></tr>
+      <tr><td>Data protection impact assessment</td><td>Completed before the first patient-level extract; records data flows, minimisation, retention and risks.</td><td>Hospital IG with Technical Lead</td></tr>
+      <tr><td>Data sharing agreement</td><td>Scope, purpose, pseudonymisation, security measures, retention and destruction, named recipients.</td><td>Hospital legal / IG</td></tr>
+      <tr><td>Minimisation and pseudonymisation</td><td>No names, addresses, NHS or MRN numbers. A study identifier per infant; dates reduced to the granularity actually needed.</td><td>Data provider</td></tr>
+      <tr><td>Security of transfer and storage</td><td>Encrypted transfer, access limited to named analysts, encryption at rest, no copies on personal devices.</td><td>Technical Lead</td></tr>
+      <tr><td>Retention and destruction</td><td>Agreed period; certified destruction at the end; model artefacts retain no raw records.</td><td>Both leads</td></tr>
+      <tr><td>Clinical safety</td><td>Hazard log, clinical safety case and sign-off before any clinical use, in the spirit of DCB0129/DCB0160.</td><td>Clinical Lead</td></tr>
+      <tr><td>Security assurance</td><td>Penetration test and dependency audit before wide release; annual repeat.</td><td>Technical Lead</td></tr>
+      <tr><td>Accessibility</td><td>WCAG 2.2 AA audit and remediation before group-wide rollout.</td><td>Technical Lead</td></tr>
+    </tbody>
+  </table>
+
+  <div class="warn"><b>The regulatory boundary.</b> NeoStay today informs staffing and planning: it makes
+  no diagnostic or treatment claim and is therefore not a medical device. Three changes would cross that
+  line: predicting an individual baby's clinical outcome for clinical management, driving treatment
+  decisions automatically, or marketing it for diagnosis or prognosis. If the project chooses to cross
+  it, a quality management system (ISO 13485), software lifecycle process (IEC 62304), clinical
+  evaluation and regulatory submission become mandatory, and the roadmap must be replanned accordingly.</div>
+</section>
+
+<!-- ============================ 14 ============================ -->
+<section id="s14">
+  <div class="sec-head"><span class="sec-num">14</span><h2>Risks and how they are managed</h2>
+    <p>Named owners, concrete mitigations.</p></div>
+
+  <table class="long">
+    <caption>Table 11 — Risk register (extract)</caption>
+    <thead><tr><th style="width:40mm">Risk</th><th>Impact</th><th>Mitigation</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Data never arrives, or arrives incomplete</strong></td><td>Models cannot be built; the product stays deterministic.</td><td>The companion requirements document makes the ask concrete and staged; a minimum viable extract is defined so work can start small.</td></tr>
+      <tr><td><strong>Over-trust in a number</strong></td><td>Staffing set by a forecast that was wrong for this unit.</td><td>Ranges and confidence always shown; wording states the figure is advisory; parallel running before go-live; audit of overridden recommendations.</td></tr>
+      <tr><td><strong>One unit's practice baked into a model</strong></td><td>Poor transfer to other branches.</td><td>Leave-one-branch-out validation; hierarchical models with partial pooling; per-branch calibration reports.</td></tr>
+      <tr><td><strong>Policy drift</strong></td><td>Ratios or grades change locally and the tool silently disagrees.</td><td>Configuration is versioned and dated; quarterly review with the nursing lead; the application shows which policy version it is using.</td></tr>
+      <tr><td><strong>Access creep</strong></td><td>Leavers retain accounts.</td><td>Six-monthly access review; single sign-on where available; immediate revocation on request.</td></tr>
+      <tr><td><strong>Key-person dependency</strong></td><td>Project stalls if one person is unavailable.</td><td>Everything in version control with written guides; second administrator per branch; documented deployment anyone competent can repeat.</td></tr>
+      <tr><td><strong>Scope creep towards a medical device</strong></td><td>Unplanned regulatory burden.</td><td>Device boundary stated (Section 13); any proposal that crosses it triggers a formal decision, not a quiet implementation.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================ 15 ============================ -->
+<section id="s15">
+  <div class="sec-head"><span class="sec-num">15</span><h2>Delivery plan</h2>
+    <p>Three phases, each with an exit test.</p></div>
+
+  <div class="grid3">
+    <div class="phase"><span>Phase 1 · Foundations</span><b>Configure, pilot, measure</b>
+      <p class="small">Branch-level configuration of grades, ratios and policy; accessibility and security
+      audits; hazard log opened; pilot in one unit with parallel running; usage and task-time measured.</p>
+      <p class="small"><strong>Exit test:</strong> one unit uses NeoStay for every shift for four weeks,
+      with no safety incident and a majority of charge nurses preferring it to the manual method.</p></div>
+    <div class="phase"><span>Phase 2 · Evidence</span><b>Data, models, validation</b>
+      <p class="small">Patient-level extract under governance; P1 and P3 models built and compared with
+      the deterministic baseline; silent prospective run; TRIPOD+AI report; model cards reviewed and
+      signed.</p>
+      <p class="small"><strong>Exit test:</strong> a model beats the incumbent on the primary metric and
+      on calibration, in a temporal hold-out and in one external branch.</p></div>
+    <div class="phase"><span>Phase 3 · Scale</span><b>Group rollout</b>
+      <p class="small">Branch-scoped multi-tenancy; roster optimisation with constraints; saved censuses
+      and audit; single sign-on; dashboards per branch; annual revalidation cycle established.</p>
+      <p class="small"><strong>Exit test:</strong> a second and third branch onboarded by configuration
+      only, each inside two weeks.</p></div>
+  </div>
+
+  <table style="margin-top:5mm">
+    <caption>Table 12 — What is needed from whom</caption>
+    <thead><tr><th>From</th><th>What</th><th>When</th></tr></thead>
+    <tbody>
+      <tr><td>Hospital management</td><td>Agreement in principle; named data owner; access to historical data under governance</td><td>Phase 1 start</td></tr>
+      <tr><td>Nursing leadership</td><td>Grade mapping, ratio policy, supervision rules, pilot unit and champions</td><td>Phase 1</td></tr>
+      <tr><td>Clinical lead</td><td>Policy sign-off, error review, model card approval, hazard log</td><td>Throughout</td></tr>
+      <tr><td>Informatics / IT</td><td>Data extract, hosting, HTTPS, single sign-on, monitoring</td><td>Phases 1–2</td></tr>
+      <tr><td>Technical lead</td><td>Configuration, models, validation reports, deployment and documentation</td><td>Throughout</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================ 16 ============================ -->
+<section id="s16">
+  <div class="sec-head"><span class="sec-num">16</span><h2>Appendices</h2>
+    <p>Reference material for reviewers.</p></div>
+
+  <h3>A · Glossary of methods named in this document</h3>
+  <table class="long">
+    <thead><tr><th style="width:44mm">Term</th><th>Plain meaning</th></tr></thead>
+    <tbody>
+      <tr><td>Survival model (AFT, Cox)</td><td>A model for "how long until something happens" that copes with cases still ongoing when the data was extracted.</td></tr>
+      <tr><td>Competing risks</td><td>More than one way the stay can end. Treating death as if the baby were simply still inpatient would overstate length of stay.</td></tr>
+      <tr><td>Multi-state model</td><td>A model of movement between care levels, rather than a single endpoint.</td></tr>
+      <tr><td>Calibration</td><td>Whether predicted numbers match observed reality on average: if the tool says 100 days, do such babies stay about 100 days?</td></tr>
+      <tr><td>Concordance (C-index)</td><td>Whether the model ranks babies correctly: does the one it says will stay longer actually stay longer?</td></tr>
+      <tr><td>Pinball loss</td><td>A score for a predicted range rather than a single number.</td></tr>
+      <tr><td>Conformal prediction</td><td>A method that produces ranges with a guaranteed hit rate, whatever model sits underneath.</td></tr>
+      <tr><td>Hierarchical (partial pooling)</td><td>Letting a small unit borrow strength from the group while keeping its own signal.</td></tr>
+      <tr><td>Constraint programming</td><td>Describing the rules a roster must obey and letting a solver find an assignment that satisfies them.</td></tr>
+      <tr><td>Drift</td><td>The world changing after a model was built — different case mix, different practice — so its accuracy decays.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>B · Companion documents</h3>
+  <table>
+    <thead><tr><th>Document</th><th>Purpose</th><th>Audience</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Executive brief</strong></td><td>Four pages: the ask, the plan, the decisions needed.</td><td>Hospital executive, service managers</td></tr>
+      <tr><td><strong>Data &amp; feature requirements</strong></td><td>Exactly which data is requested, in what format and volume, with governance steps and sign-off.</td><td>Hospital management, informatics, via the Clinical Lead</td></tr>
+      <tr><td><strong>Architecture &amp; methods reference</strong></td><td>How the current system works, algorithm by algorithm, with worked examples.</td><td>Technical reviewers, new engineers</td></tr>
+      <tr><td><strong>Deployment and cloud guides</strong></td><td>Step-by-step installation on a hospital server or any cloud.</td><td>Hospital IT</td></tr>
+    </tbody>
+  </table>
+
+  <div class="end">
+    <strong>NeoStay — Project Dossier, version 1.0.</strong>
+    Project and Clinical Lead: Waseem Altaf, MD, Neonatologist.
+    Technical Lead, Lead Developer and Applied AI/Data Science Lead: Abdul Razak, PhD.
+    Decision support only — not for clinical use; not a medical device; not clinically validated.
+    © 2026 Waseem Altaf, MD. Licensed under the Apache License 2.0.
+    Source: <code>docs/architecture/neostay-project-dossier.html</code>.
+  </div>
+</section>
+
+</body>
+</html>

@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>NeoStay — Data and Feature Requirements</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="neostay-doc.css" />
+</head>
+<body>
+
+<div class="cover">
+  <div class="cover-art"></div>
+  <div class="cover-top">
+    <span class="cover-badge">Data &amp; Feature Requirements · Version 1.0 · October 2026</span>
+    <h1>What NeoStay needs<br /><em>from the hospital</em></h1>
+    <p class="sub">A request, field by field: what the platform already has, what must come from the
+    hospital's own records, how much of it is needed and why, how it should be prepared and
+    transferred, and what the hospital receives in return.</p>
+  </div>
+
+  <div class="cover-leads">
+    <div class="lead-card">
+      <b>For discussion with hospital management</b>
+      <span>Presented by Waseem Altaf, MD · Project and Clinical Lead, Neonatologist</span>
+      <span>Clinical direction, data stewardship, domain validation, hospital coordination.</span>
+    </div>
+    <div class="lead-card tech">
+      <b>Prepared by Abdul Razak, PhD</b>
+      <span>Technical Lead, Lead Developer and Applied AI/Data Science Lead</span>
+      <span>Data specification, modelling, validation and reporting.</span>
+    </div>
+  </div>
+
+  <dl class="cover-meta">
+    <div><dt>Purpose</dt><dd>Agree the data that turns a working prototype into a validated service</dd></div>
+    <div><dt>Audience</dt><dd>Hospital management, informatics, information governance</dd></div>
+    <div><dt>Data sought</dt><dd>Pseudonymised, aggregate where possible, no direct identifiers</dd></div>
+    <div><dt>Decision needed</dt><dd>Named data owner and approval to start the governance route</dd></div>
+  </dl>
+</div>
+
+<!-- ============================ CONTENTS ============================ -->
+<section class="flow">
+  <div class="sec-head"><span class="sec-num">00</span><h2>Contents and the ask in brief</h2>
+    <p>One page for a busy reader; the detail follows.</p></div>
+
+  <div class="toc">
+    <a href="#s1"><span>1 · The ask, in one page</span><span>3</span></a>
+    <a href="#s2"><span>2 · What NeoStay already holds</span><span>4</span></a>
+    <a href="#s3"><span>3 · Feature inventory: have, need, why</span><span>5</span></a>
+    <a href="#s4"><span>4 · Datasets requested, field by field</span><span>7</span></a>
+    <a href="#s5"><span>5 · How much data, and what each amount buys</span><span>11</span></a>
+    <a href="#s6"><span>6 · Data quality expectations</span><span>13</span></a>
+    <a href="#s7"><span>7 · Format, pseudonymisation and transfer</span><span>14</span></a>
+    <a href="#s8"><span>8 · Governance, approvals and responsibilities</span><span>15</span></a>
+    <a href="#s9"><span>9 · Timeline, and what the hospital receives back</span><span>16</span></a>
+    <a href="#s10"><span>10 · Sign-off and checklists</span><span>17</span></a>
+  </div>
+
+  <div class="plain" style="margin-top:8mm">
+    <b>The ask in three sentences.</b> NeoStay works today on aggregated statistics and the unit's own
+    acuity policy. To make its forecasts accurate for <em>this</em> hospital — and to prove they are —
+    it needs a pseudonymised extract of past neonatal admissions, the unit's census and staffing
+    history, and the local nursing policy. No names, addresses or record numbers are requested, and no
+    patient-level data is stored in the product itself.
+  </div>
+
+  <div class="grid3" style="margin-top:6mm">
+    <div class="kpi"><b>8</b><span>Datasets requested</span></div>
+    <div class="kpi"><b>5 yrs</b><span>Preferred history (2 minimum)</span></div>
+    <div class="kpi"><b>0</b><span>Direct identifiers needed</span></div>
+  </div>
+</section>
+
+<!-- ============================ 1 ============================ -->
+<section id="s1">
+  <div class="sec-head"><span class="sec-num">01</span><h2>The ask, in one page</h2>
+    <p>What we need, from whom, and by when.</p></div>
+
+  <table>
+    <caption>Table 1 — Summary of the request</caption>
+    <thead><tr><th style="width:36mm">Dataset</th><th>Granularity</th><th>Minimum</th><th>Preferred</th><th>Held by</th></tr></thead>
+    <tbody>
+      <tr><td><strong>D1 · Infant admissions</strong></td><td>One row per admission</td><td>2 years</td><td>5–10 years</td><td>Neonatal database / EHR</td></tr>
+      <tr><td><strong>D2 · Clinical course</strong></td><td>One row per infant per day</td><td>2 years</td><td>5 years</td><td>Neonatal database</td></tr>
+      <tr><td><strong>D3 · Acuity and level of care</strong></td><td>One row per infant per shift</td><td>3 months</td><td>12 months</td><td>Nursing records / acuity sheets</td></tr>
+      <tr><td><strong>D4 · Unit census and flow</strong></td><td>Hourly or per shift</td><td>12 months</td><td>2–3 years</td><td>Bed management / EHR</td></tr>
+      <tr><td><strong>D5 · Nursing establishment</strong></td><td>One row per grade per month</td><td>12 months</td><td>2 years</td><td>Workforce / rostering system</td></tr>
+      <tr><td><strong>D6 · Actual rosters</strong></td><td>One row per nurse per shift</td><td>6 months</td><td>12 months</td><td>Rostering system</td></tr>
+      <tr><td><strong>D7 · Local policy</strong></td><td>Documents</td><td>Current version</td><td>With change history</td><td>Nursing leadership</td></tr>
+      <tr><td><strong>D8 · Branch metadata</strong></td><td>One row per unit</td><td>Current</td><td>With historical changes</td><td>Service management</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note"><b>Start small if that is easier.</b> D7 and D8 are documents and can be agreed in a
+  single meeting; they unlock configuration immediately. D3 and D4 unlock the staffing work. D1, D2 and
+  D6 unlock the predictive models. Each dataset is useful on its own — nothing has to wait for
+  everything.</div>
+
+  <h3>What is explicitly not requested</h3>
+  <ul>
+    <li>Names, addresses, dates of birth, hospital or national identifiers of babies, mothers or staff.</li>
+    <li>Free-text clinical notes, images, or anything from which an individual could be recognised.</li>
+    <li>Payroll, pay bands as monetary values, individual performance records, or sickness reasons.</li>
+    <li>Any data about babies who did not receive care in the participating units.</li>
+  </ul>
+</section>
+
+<!-- ============================ 2 ============================ -->
+<section id="s2">
+  <div class="sec-head"><span class="sec-num">02</span><h2>What NeoStay already holds</h2>
+    <p>So the request is limited to what is genuinely missing.</p></div>
+
+  <table>
+    <caption>Table 2 — Data already in the platform</caption>
+    <thead><tr><th style="width:38mm">Source</th><th>Contents</th><th>Granularity</th><th>Used for</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Aggregated outcome tables</strong><br /><span class="small">2016–2026, one centre</span></td>
+        <td>For 11 birth-weight bands and 18 gestational-age groups: number of infants, median, Q1 and Q3 length of stay; the same split by discharge outcome (home, transfer, died). 712 infants in total.</td>
+        <td>Group statistics, no individual rows</td>
+        <td>Today's length-of-stay and outcome estimates</td></tr>
+      <tr><td><strong>Acuity tool and levels of care</strong></td>
+        <td>11 body systems with 108 selectable findings across four nurse:patient ratio columns, and 64 level-of-care criteria (45 general, 19 hyperbilirubinemia).</td>
+        <td>Policy document, transcribed</td>
+        <td>Classifying each cot; setting ratios and minimum nurse level</td></tr>
+      <tr><td><strong>Synthetic unit activity</strong></td>
+        <td>A deterministic simulation of 709 infants and 42 nurses over a decade, anchored to the real medians and outcome shares.</td>
+        <td>Hourly, synthetic</td>
+        <td>Demonstration of the timeline only — never used for prediction</td></tr>
+    </tbody>
+  </table>
+
+  <div class="warn"><b>The limitation this request addresses.</b> The aggregated tables cannot support a
+  fitted model: they contain no individual records, no clinical course, and nothing about staffing. They
+  also describe one centre over a decade, so they cannot tell another branch what to expect. Everything
+  requested below exists to remove those two limits.</div>
+</section>
+
+<!-- ============================ 3 ============================ -->
+<section id="s3">
+  <div class="sec-head"><span class="sec-num">03</span><h2>Feature inventory: have, need, why</h2>
+    <p>Every variable the models need, and where it stands today.</p></div>
+
+  <table class="long">
+    <caption>Table 3 — Feature inventory</caption>
+    <thead><tr><th style="width:40mm">Feature group</th><th>In NeoStay today</th><th>Needed from the hospital</th><th>Priority</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Birth characteristics</strong></td>
+        <td>Birth weight and gestational age, as band statistics only</td>
+        <td>Per infant: exact weight, gestation in weeks + days, sex, singleton or multiple, inborn or outborn, antenatal steroids, mode of delivery, Apgar at 1 and 5 minutes, admission temperature</td>
+        <td><span class="tag t4">Must</span></td></tr>
+      <tr><td><strong>Admission severity</strong></td>
+        <td>A proxy: a severity score computed from weight and gestational age, raised by condition and respiratory support</td>
+        <td>First-hour blood gas (pH, base excess), FiO₂, oxygenation index, blood pressure support, CRIB-II or SNAPPE-II if recorded, major congenital anomaly</td>
+        <td><span class="tag t4">Must</span></td></tr>
+      <tr><td><strong>Clinical course</strong></td>
+        <td>Nothing — the current model assumes a fixed three-phase pathway</td>
+        <td>By day: respiratory support type, surfactant, inotropes, sepsis episodes, NEC, IVH grade, PDA treatment, ROP treatment, BPD at 36 weeks, surgery, cooling</td>
+        <td><span class="tag t4">Must</span></td></tr>
+      <tr><td><strong>Feeding and growth</strong></td>
+        <td>Nothing</td>
+        <td>First enteral feed day, full feeds day, parenteral nutrition days, central line days, weights at 7/14/28 days and discharge</td>
+        <td><span class="tag t3">Should</span></td></tr>
+      <tr><td><strong>Acuity per shift</strong></td>
+        <td>The classification rules, and whatever a charge nurse enters live</td>
+        <td>Historical record: level of care and ratio applied per infant per shift, with the findings that justified it</td>
+        <td><span class="tag t4">Must</span></td></tr>
+      <tr><td><strong>Unit census and flow</strong></td>
+        <td>Synthetic only</td>
+        <td>Real census by hour or shift; admissions, discharges, transfers in and out, deaths with timestamps; cot capacity and closures; refused admissions</td>
+        <td><span class="tag t4">Must</span></td></tr>
+      <tr><td><strong>Workforce</strong></td>
+        <td>Four modelled levels with assumed weightings; the user types in how many are available</td>
+        <td>Establishment by grade; actual staffing per shift by grade; bank and agency use; vacancy and sickness rates; qualified-in-speciality proportion</td>
+        <td><span class="tag t4">Must</span></td></tr>
+      <tr><td><strong>Local policy</strong></td>
+        <td>One hospital's acuity tool and an assumed mapping to four nurse levels</td>
+        <td>This hospital's grade ladder, ratio policy, supervision rules, escalation policy, and the levels of care in use at each branch</td>
+        <td><span class="tag t4">Must</span></td></tr>
+      <tr><td><strong>Outcomes</strong></td>
+        <td>Discharge outcome shares per weight band</td>
+        <td>Per infant: discharge date and destination, death date, transfer destination and reason, readmission within 28 days</td>
+        <td><span class="tag t4">Must</span></td></tr>
+      <tr><td><strong>Calendar and context</strong></td>
+        <td>Nothing</td>
+        <td>Public holidays, known seasonal pressures, planned cot closures, service changes with dates</td>
+        <td><span class="tag t3">Should</span></td></tr>
+      <tr><td><strong>Quality indicators</strong></td>
+        <td>Nothing</td>
+        <td>Unit-level indicators already reported nationally (mortality, NEC, IVH, BPD, ROP, breast-milk rates), so the models can be checked against known benchmarks</td>
+        <td><span class="tag t1">Could</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================ 4 ============================ -->
+<section id="s4">
+  <div class="sec-head"><span class="sec-num">04</span><h2>Datasets requested, field by field</h2>
+    <p>Hand these tables to informatics: they are an extract specification.</p></div>
+
+  <h3>D1 · Infant admissions — one row per admission</h3>
+  <table class="long">
+    <thead><tr><th style="width:38mm">Field</th><th>Type / example</th><th>Why it is needed</th><th>Priority</th></tr></thead>
+    <tbody>
+      <tr><td><code>study_id</code></td><td>Text, e.g. <code>NS-000142</code></td><td>Pseudonymous key. Links D1, D2 and D3. The look-up table stays with the hospital.</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td><code>branch_id</code></td><td>Text, e.g. <code>BR-01</code></td><td>Which unit; enables per-branch validation.</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td><code>admission_datetime</code></td><td>ISO 8601, to the hour</td><td>Time origin for length of stay; drives census and seasonality.</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td><code>discharge_datetime</code></td><td>ISO 8601, blank if still inpatient</td><td>Outcome time; blanks are handled as censored, not discarded.</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td><code>discharge_destination</code></td><td><code>home | transfer | died | other</code></td><td>The competing outcomes.</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td><code>birth_weight_g</code></td><td>Integer grams</td><td>Strongest single predictor.</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td><code>gestational_age_weeks</code>, <code>_days</code></td><td>Integer, e.g. 25 + 3</td><td>Second strongest; days matter at the extremes.</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td><code>sex</code></td><td><code>male | female | indeterminate</code></td><td>Established prognostic factor.</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td><code>multiple_birth</code>, <code>birth_order</code></td><td>Boolean, integer</td><td>Twins and triplets behave differently and arrive together, which matters for staffing.</td><td><span class="tag t3">Should</span></td></tr>
+      <tr><td><code>inborn</code></td><td>Boolean</td><td>Outborn babies arrive sicker and later.</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td><code>antenatal_steroids</code></td><td><code>none | partial | complete</code></td><td>Changes respiratory course substantially.</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td><code>delivery_mode</code></td><td><code>vaginal | caesarean</code></td><td>Context for early course.</td><td><span class="tag t3">Should</span></td></tr>
+      <tr><td><code>apgar_1</code>, <code>apgar_5</code></td><td>Integer 0–10</td><td>Early severity.</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td><code>admission_temperature_c</code></td><td>Decimal</td><td>Known association with outcome; quality indicator.</td><td><span class="tag t3">Should</span></td></tr>
+      <tr><td><code>ph_first_hour</code>, <code>base_excess_first_hour</code></td><td>Decimal</td><td>Components of CRIB-II / SNAPPE-II.</td><td><span class="tag t3">Should</span></td></tr>
+      <tr><td><code>crib_ii</code> or <code>snappe_ii</code></td><td>Integer</td><td>If already computed, a strong single severity feature.</td><td><span class="tag t3">Should</span></td></tr>
+      <tr><td><code>major_anomaly</code></td><td>Boolean + SNOMED CT code</td><td>Changes pathway entirely; often excluded from comparisons.</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td><code>readmission_28d</code></td><td>Boolean</td><td>Quality signal, and affects true length of care.</td><td><span class="tag t1">Could</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>D2 · Clinical course — one row per infant per day</h3>
+  <table class="long">
+    <thead><tr><th style="width:38mm">Field</th><th>Type / example</th><th>Why it is needed</th><th>Priority</th></tr></thead>
+    <tbody>
+      <tr><td><code>study_id</code>, <code>day_of_stay</code></td><td>Text, integer</td><td>Links to D1; builds the daily trajectory.</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td><code>respiratory_support</code></td><td><code>ventilation | hfov | nippv | cpap | high_flow | cannula | room_air</code></td><td>Primary driver of nursing intensity and of stay.</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td><code>fio2_max</code></td><td>Decimal 0.21–1.0</td><td>Severity within a support type.</td><td><span class="tag t3">Should</span></td></tr>
+      <tr><td><code>surfactant_doses</code></td><td>Integer</td><td>Early respiratory severity.</td><td><span class="tag t3">Should</span></td></tr>
+      <tr><td><code>inotropes</code>, <code>sedation</code></td><td>Boolean</td><td>Instability; 1:1 criteria in many policies.</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td><code>central_line</code>, <code>line_type</code></td><td>Boolean, text</td><td>Nursing workload and infection risk.</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td><code>parenteral_nutrition</code>, <code>enteral_feeds</code></td><td>Boolean, <code>none | trophic | partial | full</code></td><td>Marks the step-down pathway.</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td><code>phototherapy</code>, <code>exchange_transfusion</code></td><td>Boolean</td><td>Directly in the acuity tool.</td><td><span class="tag t3">Should</span></td></tr>
+      <tr><td><code>sepsis_suspected</code>, <code>sepsis_confirmed</code></td><td>Boolean</td><td>Common cause of a sudden rise in acuity.</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td><code>nec_stage</code>, <code>ivh_grade</code>, <code>pda_treatment</code>, <code>rop_treatment</code>, <code>surgery</code>, <code>cooling</code></td><td>Coded</td><td>Major events that lengthen stay and raise acuity.</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td><code>weight_g</code></td><td>Integer</td><td>Growth trajectory; discharge readiness.</td><td><span class="tag t3">Should</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>D3 · Acuity and level of care — one row per infant per shift</h3>
+  <table>
+    <thead><tr><th style="width:38mm">Field</th><th>Type / example</th><th>Why it is needed</th><th>Priority</th></tr></thead>
+    <tbody>
+      <tr><td><code>study_id</code>, <code>shift_start</code></td><td>Text, ISO 8601</td><td>Links the clinical picture to the nursing requirement.</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td><code>level_of_care</code></td><td><code>N1 | N2 | N3 | N4</code> or local equivalent</td><td>The label the acuity model learns to predict.</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td><code>ratio_applied</code></td><td><code>1:1 | 1:2 | 1:3 | 1:4</code></td><td>What the unit actually did, versus what policy implies.</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td><code>one_to_one_reason</code></td><td>Coded or short text</td><td>Validates the footnoted 1:1 criteria.</td><td><span class="tag t3">Should</span></td></tr>
+      <tr><td><code>findings</code></td><td>List of acuity-tool items</td><td>Allows the classifier to be checked against real practice.</td><td><span class="tag t3">Should</span></td></tr>
+      <tr><td><code>nurse_grade_assigned</code></td><td>Local grade</td><td>Whether competence matched acuity in practice.</td><td><span class="tag t3">Should</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>D4 · Unit census and flow — hourly or per shift</h3>
+  <table>
+    <thead><tr><th style="width:38mm">Field</th><th>Type / example</th><th>Why it is needed</th><th>Priority</th></tr></thead>
+    <tbody>
+      <tr><td><code>branch_id</code>, <code>timestamp</code></td><td>Text, ISO 8601</td><td>The demand time series.</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td><code>census_total</code>, <code>census_by_level</code></td><td>Integers</td><td>Demand, and its acuity composition.</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td><code>admissions</code>, <code>discharges</code>, <code>transfers_in</code>, <code>transfers_out</code>, <code>deaths</code></td><td>Integers</td><td>Arrival and departure processes for forecasting and simulation.</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td><code>cots_open</code>, <code>cots_closed_reason</code></td><td>Integer, text</td><td>Capacity actually available.</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td><code>refused_admissions</code></td><td>Integer</td><td>Suppressed demand — invisible in census alone.</td><td><span class="tag t3">Should</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>D5 · Establishment · D6 · Actual rosters</h3>
+  <table>
+    <thead><tr><th style="width:38mm">Field</th><th>Type / example</th><th>Why it is needed</th><th>Priority</th></tr></thead>
+    <tbody>
+      <tr><td><code>branch_id</code>, <code>month</code>, <code>grade</code>, <code>wte_funded</code>, <code>wte_in_post</code></td><td>Text, date, decimal</td><td>What the unit is funded for versus what it has.</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td><code>qis_proportion</code></td><td>Decimal</td><td>Qualified in speciality: the skill-mix benchmark many units already report.</td><td><span class="tag t3">Should</span></td></tr>
+      <tr><td><code>staff_pseudo_id</code>, <code>shift_start</code>, <code>grade</code>, <code>role</code></td><td>Text, ISO 8601</td><td>Who was actually on, by grade and role (bedside, charge, float). No names.</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td><code>bank_or_agency</code>, <code>overtime</code></td><td>Boolean</td><td>Cost and sustainability of the current approach.</td><td><span class="tag t3">Should</span></td></tr>
+      <tr><td><code>absence</code></td><td>Boolean (no reason)</td><td>Short-notice gaps, for robustness planning. Reasons are not requested.</td><td><span class="tag t3">Should</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>D7 · Local policy · D8 · Branch metadata</h3>
+  <table>
+    <thead><tr><th style="width:38mm">Item</th><th>Form</th><th>Why it is needed</th><th>Priority</th></tr></thead>
+    <tbody>
+      <tr><td>Nurse grade ladder and its mapping to four competency levels</td><td>One page, signed by the nursing lead</td><td>Makes the tool speak the hospital's language rather than Benner's.</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td>Ratio policy, including local 1:1 criteria</td><td>Current policy document</td><td>Replaces the assumptions currently built in.</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td>Supervision rules (novice cap, preceptorship)</td><td>Policy or written confirmation</td><td>Drives the skill-mix warnings.</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td>Acuity tool in use at each branch</td><td>Document or spreadsheet</td><td>Branches may classify differently; the classifier reads this.</td><td><span class="tag t4">Must</span></td></tr>
+      <tr><td>Branch list: designated level, cot capacity by level, shift pattern</td><td>Table</td><td>Configuration, and the denominator for every comparison.</td><td><span class="tag t4">Must</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================ 5 ============================ -->
+<section id="s5">
+  <div class="sec-head"><span class="sec-num">05</span><h2>How much data, and what each amount buys</h2>
+    <p>Volumes are driven by statistics, not by appetite.</p></div>
+
+  <div class="plain"><b>The rule behind the numbers.</b> A prediction model needs roughly 10 to 20
+  outcome events for every variable it considers, plus a separate, untouched period to test on. With
+  about 25 candidate variables (Section 3), that means several hundred completed admissions as a floor,
+  and one to two thousand to produce stable estimates with subgroup results. Time-series forecasting is
+  governed differently: it needs enough repetitions of the seasonal cycle, which for a weekly and
+  annual pattern means at least one, and preferably two to three, full years.</div>
+
+  <table class="long">
+    <caption>Table 4 — Volume, and what it enables</caption>
+    <thead><tr><th style="width:30mm">Dataset</th><th>Minimum viable</th><th>What that allows</th><th>Preferred</th><th>What the extra buys</th></tr></thead>
+    <tbody>
+      <tr><td><strong>D1 + D2</strong> admissions and course</td>
+        <td>~300 completed admissions (about 2 years in a 150-admission unit)</td>
+        <td>A first length-of-stay model with a handful of variables; internal validation only; wide intervals.</td>
+        <td>1,000–2,000 admissions (5–10 years, or 2 years pooled across branches)</td>
+        <td>Competing-risks modelling, subgroup results by weight band, external validation, stable intervals.</td></tr>
+      <tr><td><strong>D3</strong> acuity per shift</td>
+        <td>3 months (~2,700 infant-shifts in a 15-cot unit)</td>
+        <td>Check the classifier against real practice; estimate transition rates between levels.</td>
+        <td>12 months (~11,000 infant-shifts)</td>
+        <td>Seasonal variation, reliable next-shift prediction, per-branch comparison.</td></tr>
+      <tr><td><strong>D4</strong> census and flow</td>
+        <td>12 months hourly (~8,800 rows per unit)</td>
+        <td>Weekday and seasonal pattern; a forecast that beats the naive baseline.</td>
+        <td>2–3 years</td>
+        <td>Confident seasonality, rare-event behaviour (surges, closures), simulation input.</td></tr>
+      <tr><td><strong>D5 + D6</strong> establishment and rosters</td>
+        <td>6 months of rosters</td>
+        <td>Compare recommended with actual staffing; calibrate the skill-mix rules.</td>
+        <td>12–24 months</td>
+        <td>Robust establishment case; fairness and continuity objectives for the roster optimiser.</td></tr>
+      <tr><td><strong>D7 + D8</strong> policy and branches</td>
+        <td>Current versions</td>
+        <td>Configure each branch correctly — needed before any pilot.</td>
+        <td>With change history</td>
+        <td>Explains shifts in practice over the period being modelled.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>If the data is thinner than the minimum</h3>
+  <ul>
+    <li><strong>Pool across branches</strong> with a hierarchical model, so a small unit borrows strength
+      without losing its own signal.</li>
+    <li><strong>Reduce the variable count</strong> deliberately, using clinical judgement rather than
+      automated selection, and report that the model is deliberately simple.</li>
+    <li><strong>Stay with the deterministic method</strong> and publish its error. A transparent, honest
+      baseline is better than an over-fitted model.</li>
+  </ul>
+
+  <div class="note"><b>What "enough" looks like in practice.</b> For a unit admitting about 150 very low
+  birth weight infants a year: five years of D1 and D2, one year of D3 and D6, and two years of D4 would
+  support everything described in the dossier, including per-branch validation.</div>
+</section>
+
+<!-- ============================ 6 ============================ -->
+<section id="s6">
+  <div class="sec-head"><span class="sec-num">06</span><h2>Data quality expectations</h2>
+    <p>What makes an extract usable, stated before the work starts.</p></div>
+
+  <table>
+    <caption>Table 5 — Quality criteria</caption>
+    <thead><tr><th style="width:38mm">Criterion</th><th>Expectation</th><th>If it cannot be met</th></tr></thead>
+    <tbody>
+      <tr><td>Completeness of key fields</td><td>Birth weight, gestation, admission and discharge dates, outcome: above 95% complete</td><td>We report results for the complete subset and quantify what is missing.</td></tr>
+      <tr><td>Completeness of secondary fields</td><td>Above 70%</td><td>Multiple imputation, with a sensitivity analysis reported.</td></tr>
+      <tr><td>Consistency</td><td>Discharge after admission; weights within plausible ranges; gestation 22–42 weeks</td><td>Rows flagged and returned to the hospital rather than silently corrected.</td></tr>
+      <tr><td>Coding</td><td>SNOMED CT or ICD-10 where codes exist; a documented local list otherwise</td><td>We map the local list once, and keep the mapping under version control.</td></tr>
+      <tr><td>Timestamps</td><td>Local time with a stated time zone; hour precision is enough</td><td>Shift-level aggregation instead of hourly.</td></tr>
+      <tr><td>Stability</td><td>A note of any service change, policy change or system migration during the period</td><td>Models include the change as a break point rather than learning a false trend.</td></tr>
+      <tr><td>Reproducibility</td><td>The extract query saved and re-runnable</td><td>Annual revalidation becomes manual and expensive.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============================ 7 ============================ -->
+<section id="s7">
+  <div class="sec-head"><span class="sec-num">07</span><h2>Format, pseudonymisation and transfer</h2>
+    <p>Practical instructions for whoever runs the extract.</p></div>
+
+  <div class="grid2">
+    <div class="card"><h4>File format</h4><p>One UTF-8 CSV (or Parquet) per dataset, with a header row
+      and the field names used in Section 4. One row per record; no merged cells; no colour coding; no
+      totals rows. A short data dictionary alongside, naming every coded value.</p></div>
+    <div class="card"><h4>Pseudonymisation</h4><p>Replace every patient and staff identifier with a
+      study identifier (<code>NS-000001</code>, <code>ST-0001</code>). The look-up table stays inside the
+      hospital, held by the data owner. Dates may be shifted by a constant per infant if required,
+      provided intervals are preserved.</p></div>
+    <div class="card"><h4>Transfer</h4><p>Through the hospital's approved secure mechanism — managed file
+      transfer, a secure shared workspace, or encrypted media. Not by personal email, consumer cloud
+      storage or messaging apps. A checksum for each file, verified on receipt.</p></div>
+    <div class="card"><h4>Handling once received</h4><p>Stored encrypted, inside the agreed boundary,
+      accessible only to named analysts, never copied to personal devices, and destroyed at the end of
+      the agreed retention period with written confirmation.</p></div>
+  </div>
+
+  <h3>Example header rows</h3>
+  <pre><span class="c"># D1_admissions.csv</span>
+study_id,branch_id,admission_datetime,discharge_datetime,discharge_destination,birth_weight_g,
+gestational_age_weeks,gestational_age_days,sex,multiple_birth,inborn,antenatal_steroids,
+delivery_mode,apgar_1,apgar_5,admission_temperature_c,major_anomaly
+
+<span class="c"># D4_census.csv</span>
+branch_id,timestamp,census_total,census_n1,census_n2,census_n3,census_n4,admissions,discharges,
+transfers_in,transfers_out,deaths,cots_open,refused_admissions</pre>
+</section>
+
+<!-- ============================ 8 ============================ -->
+<section id="s8">
+  <div class="sec-head"><span class="sec-num">08</span><h2>Governance, approvals and responsibilities</h2>
+    <p>The route that must be completed before any patient-level extract moves.</p></div>
+
+  <table class="long">
+    <caption>Table 6 — Approvals and owners</caption>
+    <thead><tr><th style="width:40mm">Step</th><th>What it involves</th><th>Owner</th><th>Before</th></tr></thead>
+    <tbody>
+      <tr><td>Classify the work</td><td>Service evaluation or research? Determines whether ethics approval is required.</td><td>Clinical Lead with research office</td><td>Everything else</td></tr>
+      <tr><td>Name a data owner</td><td>A single accountable person per branch for the extract and the identifier look-up.</td><td>Hospital management</td><td>Extract</td></tr>
+      <tr><td>Data protection impact assessment</td><td>Document flows, minimisation, risks, retention.</td><td>Information governance</td><td>Extract</td></tr>
+      <tr><td>Data sharing agreement</td><td>Purpose, scope, security, retention, destruction, named recipients.</td><td>Hospital legal / IG</td><td>Extract</td></tr>
+      <tr><td>Caldicott or equivalent sign-off</td><td>Confirms the minimum necessary data is being shared.</td><td>Caldicott Guardian</td><td>Extract</td></tr>
+      <tr><td>Security assurance</td><td>Where the data will live, who can reach it, how it is encrypted and destroyed.</td><td>Technical Lead with hospital IT</td><td>Extract</td></tr>
+      <tr><td>Publication agreement</td><td>Who approves any publication, and how branches are described.</td><td>Both leads</td><td>Analysis</td></tr>
+    </tbody>
+  </table>
+
+  <div class="warn"><b>No data moves before this is complete.</b> The technical team does not request,
+  receive or store any patient-level data until the data owner is named and the agreement is signed.
+  Configuration work (D7, D8) and the pilot can proceed in parallel, because they involve no patient
+  data at all.</div>
+</section>
+
+<!-- ============================ 9 ============================ -->
+<section id="s9">
+  <div class="sec-head"><span class="sec-num">09</span><h2>Timeline, and what the hospital receives back</h2>
+    <p>A fair exchange, with dates.</p></div>
+
+  <table>
+    <caption>Table 7 — Indicative timeline from approval</caption>
+    <thead><tr><th>Weeks</th><th>Hospital provides</th><th>Project delivers</th></tr></thead>
+    <tbody>
+      <tr><td><strong>0–2</strong></td><td>Policy documents (D7), branch list (D8), pilot unit and champions</td><td>Branch configuration; training session; quick-reference card</td></tr>
+      <tr><td><strong>2–6</strong></td><td>Governance route started; census and roster history (D4, D6)</td><td>Parallel-running report: recommended versus actual staffing, with the gaps named</td></tr>
+      <tr><td><strong>6–12</strong></td><td>Pseudonymised clinical extract (D1, D2, D3)</td><td>Data quality report; first length-of-stay and demand models with honest error figures</td></tr>
+      <tr><td><strong>12–20</strong></td><td>Questions answered; clinical review of error cases</td><td>Validation report to TRIPOD+AI; model cards; a decision recommendation — adopt, adapt or keep the simpler method</td></tr>
+      <tr><td><strong>20+</strong></td><td>Decision on wider rollout</td><td>Per-branch configuration, dashboards, annual revalidation cycle</td></tr>
+    </tbody>
+  </table>
+
+  <h3>What the hospital gets, regardless of what the models show</h3>
+  <ul>
+    <li>A written data quality report on its own neonatal records — often valuable in itself.</li>
+    <li>A description of its own demand: census by hour, day and season, and the acuity mix behind it.</li>
+    <li>A comparison of recommended and actual staffing, suitable for an establishment review.</li>
+    <li>Per-branch validation figures, published in full, including where the method performs poorly.</li>
+    <li>The configured application, running inside the hospital's own boundary.</li>
+  </ul>
+</section>
+
+<!-- ============================ 10 ============================ -->
+<section id="s10">
+  <div class="sec-head"><span class="sec-num">10</span><h2>Sign-off and checklists</h2>
+    <p>To be completed at the meeting, so nothing stalls afterwards.</p></div>
+
+  <h3>Decisions to record today</h3>
+  <ul class="check">
+    <li>Pilot unit agreed, with two named champions</li>
+    <li>Data owner named, per branch</li>
+    <li>Governance route started (classification, DPIA, sharing agreement)</li>
+    <li>Policy documents identified and owner named (D7, D8)</li>
+    <li>Extract feasibility confirmed with informatics, with a rough date</li>
+    <li>Hosting model chosen: hospital server, hospital cloud, or managed platform</li>
+    <li>Date set for the next review</li>
+  </ul>
+
+  <h3>Informatics checklist for the extract</h3>
+  <ul class="check">
+    <li>Field names and coded values follow Section 4</li>
+    <li>Study identifiers replace all patient and staff identifiers; look-up retained by the hospital</li>
+    <li>Period and branches agreed in writing</li>
+    <li>Still-inpatient records included, with a blank discharge date rather than being dropped</li>
+    <li>Data dictionary and extract query saved with the files</li>
+    <li>Checksums generated; transfer through the approved mechanism</li>
+    <li>Known data breaks (system migrations, policy changes) noted with dates</li>
+  </ul>
+
+  <table class="signoff" style="margin-top:6mm">
+    <caption>Table 8 — Sign-off</caption>
+    <thead><tr><th style="width:44mm">Role</th><th>Name</th><th>Date</th><th>Signature</th></tr></thead>
+    <tbody>
+      <tr><td>Clinical Lead (project)</td><td></td><td></td><td></td></tr>
+      <tr><td>Hospital management sponsor</td><td></td><td></td><td></td></tr>
+      <tr><td>Nursing leadership</td><td></td><td></td><td></td></tr>
+      <tr><td>Information governance</td><td></td><td></td><td></td></tr>
+      <tr><td>Informatics / data owner</td><td></td><td></td><td></td></tr>
+    </tbody>
+  </table>
+
+  <div class="end">
+    <strong>NeoStay — Data and Feature Requirements, version 1.0.</strong>
+    Prepared for discussion with hospital management by Waseem Altaf, MD, Project and Clinical Lead,
+    Neonatologist. Specification by Abdul Razak, PhD, Technical Lead, Lead Developer and Applied AI/Data
+    Science Lead. No patient-identifiable data is requested or stored. Decision support only — not for
+    clinical use. © 2026 Waseem Altaf, MD.
+    Source: <code>docs/architecture/neostay-data-requirements.html</code>.
+  </div>
+</section>
+
+</body>
+</html>
