@@ -99,6 +99,7 @@ td.num,th.num{ text-align:right; font-variant-numeric:tabular-nums; }
 
 figure{ margin:3mm 0 5mm; break-inside:avoid; break-before:avoid; }
 figure svg{ width:100%; height:auto; display:block; }
+figure img{ width:100%; height:auto; display:block; border:1px solid var(--border); border-radius:8px; }
 figcaption{ font-size:8pt; color:var(--muted); margin-top:2mm; }
 figcaption b{ color:var(--teal-deep); }
 .formula{ font-family:var(--mono); font-size:8.6pt; background:#fff; border:1px solid var(--border-strong);

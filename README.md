@@ -249,7 +249,10 @@ patient-nurse-schedule/
 │   └── predictor.py · nursing.py · acuity_tool.py · data_loader.py
 ├── datasets/
 │   ├── losdata/               ← source aggregated CSVs (N / median / Q1 / Q3)
-│   └── nurse-skills/          ← Dr. Altaf's classifier: scanned PDF + one CSV per page
+│   ├── nurse-skills/          ← Dr. Altaf's classifier: scanned PDF + one CSV per page
+│   └── nurse-poicies/         ← local policy documents (acuity tool, charge nurse duties)
+├── notebooks/
+│   └── 01_dataset_analysis.ipynb  ← what the datasets hold, measured
 ├── scripts/
 │   ├── build_frontend_data.py ← rebuilds frontend/data/ from the CSVs
 │   ├── build_pages_site.py    ← builds the (sealed) GitHub Pages site
@@ -375,6 +378,10 @@ kept what they saw.
   pages, for hospital executives.
 - **[docs/NeoStay-Data-Requirements.pdf](docs/NeoStay-Data-Requirements.pdf)** — the data request for
   hospital management: datasets field by field, how much is needed and why, governance and sign-off.
+- **[docs/NeoStay-Data-Analysis.pdf](docs/NeoStay-Data-Analysis.pdf)** — what the datasets hold today,
+  measured: completeness, the length-of-stay and outcome gradients, the acuity instrument's structure,
+  and which questions these data cannot answer. Reproduced by
+  [notebooks/01_dataset_analysis.ipynb](notebooks/01_dataset_analysis.ipynb).
 - **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** — installing NeoStay on a hospital
   server, HTTPS, and managing accounts.
 - **[docs/CLOUD.md](docs/CLOUD.md)** — deploying the same container to a cloud

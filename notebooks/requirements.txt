@@ -1,0 +1,19 @@
+# Dependencies for notebooks/01_dataset_analysis.ipynb.
+# Install into the project virtual environment:
+#     make setup && .venv/bin/pip install -r notebooks/requirements.txt
+#
+# The notebook reads only the files in datasets/ and writes figures into
+# docs/analysis/figures/. It needs no network access and no credentials.
+
+pandas==2.2.2
+numpy==1.26.4
+matplotlib==3.11.2
+
+# Running the notebook: ipykernel is enough for VS Code or any IDE;
+# nbconvert re-runs it from the command line.
+ipykernel==7.4.0
+nbformat==5.11.1
+nbconvert==7.17.2
+
+# Optional, for the classic browser interface:
+#   jupyterlab

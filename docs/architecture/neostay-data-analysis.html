@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>NeoStay — Dataset Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="neostay-doc.css" />
+</head>
+<body>
+
+<div class="cover">
+  <div class="cover-art"></div>
+  <div class="cover-top">
+    <span class="cover-badge">Dataset Analysis · Version 1.0 · October 2026</span>
+    <h1>What the data<br /><em>says today</em></h1>
+    <p class="sub">Every dataset the project holds, measured: how the outcome tables are built, whether
+    they agree with themselves, what the length-of-stay and discharge figures show, how the acuity
+    instrument is structured, and exactly which questions these data can and cannot answer.</p>
+  </div>
+
+  <div class="cover-leads">
+    <div class="lead-card">
+      <b>Project and Clinical Lead</b>
+      <span>Waseem Altaf, MD · Neonatologist</span>
+      <span>Clinical direction, data stewardship, domain validation, hospital coordination.</span>
+    </div>
+    <div class="lead-card tech">
+      <b>Prepared by Abdul Razak, PhD</b>
+      <span>Technical Lead, Lead Developer and Applied AI/Data Science Lead</span>
+      <span>Data analysis, figures, reproducible notebook and reporting.</span>
+    </div>
+  </div>
+
+  <dl class="cover-meta">
+    <div><dt>Source</dt><dd>Center 1, 2016–2026, aggregated — no patient-level records</dd></div>
+    <div><dt>Reproduced by</dt><dd><code>notebooks/01_dataset_analysis.ipynb</code></dd></div>
+    <div><dt>Synthetic data</dt><dd>None. Every figure comes from a file in <code>datasets/</code></dd></div>
+    <div><dt>Decision supported</dt><dd>What can be modelled now, and what must be requested</dd></div>
+  </dl>
+</div>
+
+<!-- ============================ CONTENTS ============================ -->
+<section class="flow">
+  <div class="sec-head"><span class="sec-num">00</span><h2>Contents, and the finding in brief</h2>
+    <p>One page for a busy reader; the detail follows.</p></div>
+
+  <div class="toc">
+    <a href="#s1"><span>1 · Everything the project holds</span><span>3</span></a>
+    <a href="#s2"><span>2 · How the outcome tables are built</span><span>5</span></a>
+    <a href="#s3"><span>3 · Completeness and internal consistency</span><span>6</span></a>
+    <a href="#s4"><span>4 · Length of stay by birth weight</span><span>7</span></a>
+    <a href="#s5"><span>5 · Discharge outcome and survival</span><span>9</span></a>
+    <a href="#s6"><span>6 · Length of stay by gestational age</span><span>11</span></a>
+    <a href="#s7"><span>7 · The predicted-stay measure in the extract</span><span>12</span></a>
+    <a href="#s8"><span>8 · The acuity instrument as data</span><span>13</span></a>
+    <a href="#s9"><span>9 · What these data support, and what they do not</span><span>15</span></a>
+    <a href="#s10"><span>10 · Reproducing this analysis</span><span>16</span></a>
+  </div>
+
+  <div class="plain" style="margin-top:8mm">
+    <b>The finding in three sentences.</b> The project holds two real bodies of data: a decade of one
+    centre's aggregated neonatal outcomes, and the unit's acuity instrument transcribed into tables. They
+    are internally consistent and strong enough to describe how length of stay and discharge outcome vary
+    with birth weight and gestation — which is what the application does today. They cannot support a
+    fitted model, a prediction for an individual infant, or any statement about staffing over time, because
+    they contain no individual records, no dates and no workforce data.
+  </div>
+
+  <div class="grid4" style="margin-top:6mm">
+    <div class="kpi"><b>7</b><span>Data files parsed</span></div>
+    <div class="kpi"><b>712</b><span>Admissions behind the figures</span></div>
+    <div class="kpi"><b>127</b><span>Published statistics</span></div>
+    <div class="kpi"><b>0</b><span>Synthetic rows</span></div>
+  </div>
+
+  <div class="note" style="margin-top:6mm"><b>Synthetic data has been removed from this project.</b> An
+  earlier version of NeoStay carried a simulated year of unit activity for demonstration. It has been
+  deleted from the repository, and nothing in this document, in the application or in the notebook is
+  generated, simulated or imputed.</div>
+</section>
+
+<!-- ============================ 1 ============================ -->
+<section id="s1">
+  <div class="sec-head"><span class="sec-num">01</span><h2>Everything the project holds</h2>
+    <p>Eighteen files, three folders, two bodies of evidence.</p></div>
+
+  <p class="lead">The source of truth is small and fully inspectable. Seven CSV files are read by the
+  application; the remainder are the centre's own charts of the same numbers, the scanned original of the
+  acuity instrument, and two local policy documents.</p>
+
+  <table class="long">
+    <caption>Table 1 — The datasets, and what reads them</caption>
+    <thead><tr><th style="width:62mm">File</th><th>What it contains</th><th style="width:36mm">Read by</th></tr></thead>
+    <tbody>
+      <tr><td><strong>losdata/</strong> …<code>_by-Birth Wgt 10 Levels-survival.csv</code></td>
+        <td>Six measures per birth-weight band: initial length of stay split by discharge outcome (home, transfer, died, all), a predicted length of stay, and total length of stay. N, median, Q1 and Q3 for each.</td>
+        <td><code>data_loader.py</code></td></tr>
+      <tr><td><strong>losdata/</strong> …<code>Total Length Of Stay…by-Birth Wgt 10 Levels.csv</code></td>
+        <td>Total length of stay across the same 11 birth-weight bands.</td>
+        <td><code>data_loader.py</code></td></tr>
+      <tr><td><strong>losdata/</strong> …<code>Total Length Of Stay…by-GA Week.csv</code></td>
+        <td>Total length of stay across 18 gestational-age groups, from under 22 weeks to over 37 weeks.</td>
+        <td><code>data_loader.py</code></td></tr>
+      <tr><td><strong>losdata/</strong> …<code>by-Birth Wgt 10 Levels.csv</code></td>
+        <td>Predicted and total length of stay by band. Every value duplicates a value in the survival file.</td>
+        <td><span class="small">not read — duplicate</span></td></tr>
+      <tr><td><strong>losdata/</strong> <code>*.png</code>, <code>*.pdf</code> <span class="small">(8 files)</span></td>
+        <td>The centre's own charts of the tables above, kept for provenance.</td>
+        <td><span class="small">not read</span></td></tr>
+      <tr><td><strong>nurse-skills/</strong> <code>page_1…csv</code>, <code>page_2…csv</code>, <code>page_3…csv</code></td>
+        <td>The Abrazo Arrowhead Neonatal Acuity Tool and the Nursing Levels of Care, transcribed from the scan into tables.</td>
+        <td><code>acuity_tool.py</code></td></tr>
+      <tr><td><strong>nurse-skills/</strong> <code>Nurse-skills-classifier….pdf</code></td>
+        <td>The original three-page scan, 11 MB. Its handwritten annotations are deliberately ignored.</td>
+        <td><span class="small">not read by the program</span></td></tr>
+      <tr><td><strong>nurse-poicies/</strong> <code>Abrazo_Acuity_Tool.docx</code></td>
+        <td>The same acuity tool as a Word document — a second, cleaner copy of the transcription source.</td>
+        <td><span class="small">not read</span></td></tr>
+      <tr><td><strong>nurse-poicies/</strong> <code>NICU_Charge_Nurse_Daily_Task_List.docx</code></td>
+        <td>The charge nurse's hour-by-hour duties across the AM and PM shifts.</td>
+        <td><span class="small">not read</span></td></tr>
+    </tbody>
+  </table>
+
+  <h3>The cohort behind the outcome tables</h3>
+  <p>All four outcome files describe the same population: <strong>very low birth weight infants admitted to
+  Center 1 between 2016 and 2026</strong>, summarised as counts, medians and quartiles. There is no row for
+  an individual infant anywhere, no admission date, and no clinical detail beyond birth weight and
+  gestational age.</p>
+
+  <div class="note"><b>An unused document worth reading.</b> The charge nurse task list is the only
+  description the project holds of how a shift is actually run. It names the local artefacts a future data
+  request should ask for by name: the <em>staffing matrix guides</em> used to make assignments, the
+  <em>Monthly Acuity Tracker</em>, the <em>NICU Denominator sheet</em>, the handoff report and the
+  first-admit / float / low-census note written at 15:00. Each is a record the unit already produces, which
+  makes it far cheaper to request than a new collection.</div>
+</section>
+
+<!-- ============================ 2 ============================ -->
+<section id="s2">
+  <div class="sec-head"><span class="sec-num">02</span><h2>How the outcome tables are built</h2>
+    <p>A wide shape, read into tidy rows, then checked against the application.</p></div>
+
+  <p>Each outcome CSV is a <em>wide</em> table. The first row names the groups — birth-weight bands, or
+  gestational-age weeks — and the second row repeats four sub-columns beneath every group. Each later row is
+  one measure.</p>
+
+  <table>
+    <caption>Table 2 — The shape of every outcome file</caption>
+    <thead><tr><th style="width:26mm">Row</th><th>Contents</th></tr></thead>
+    <tbody>
+      <tr><td>Row 1</td><td>Group labels: <code>&lt; 501 g</code>, <code>501-600 g</code> … <code>&gt; 1400 g</code>, <code>All</code> — each spanning four columns.</td></tr>
+      <tr><td>Row 2</td><td><code>N</code>, <code>Median</code>, <code>Q1</code>, <code>Q3</code>, repeated once per group.</td></tr>
+      <tr><td>Row 3+</td><td>One measure per row, for example <em>Total Length Of Stay</em> or <em>Initial Length of Stay (By Disposition) - Died</em>.</td></tr>
+    </tbody>
+  </table>
+
+  <p>The notebook parses this shape into one tidy row per measure and group — <strong>127 statistics in
+  all</strong> — using its own parser, deliberately independent of the application's loader. It then compares
+  40 of those rows against <code>backend/app/data_loader.py</code>. They agree exactly, so the figures in this
+  document and the numbers the application shows come from the same reading of the same files.</p>
+
+  <div class="plain"><b>Why quartiles matter more than means here.</b> The files publish medians and
+  quartiles, not means or standard deviations. Length of stay is strongly right-skewed — a few infants stay
+  for most of a year — so the median is the honest centre, and the distance from Q1 to Q3 is the only measure
+  of spread available. Every estimate the application makes carries that interquartile band with it rather
+  than quoting a single number.</p>
+</section>
+
+<!-- ============================ 3 ============================ -->
+<section id="s3">
+  <div class="sec-head"><span class="sec-num">03</span><h2>Completeness and internal consistency</h2>
+    <p>Four checks, run over every published statistic.</p></div>
+
+  <table>
+    <caption>Table 3 — Automated checks and their results</caption>
+    <thead><tr><th style="width:52mm">Check</th><th>Scope</th><th style="width:30mm">Result</th></tr></thead>
+    <tbody>
+      <tr><td>Every expected group present</td><td>11 weight bands or 18 gestational-age groups, in every measure of every file</td><td><span class="tag t5">pass</span> no gaps</td></tr>
+      <tr><td>Q1 ≤ median ≤ Q3</td><td>All 127 statistics</td><td><span class="tag t5">pass</span> 0 violations</td></tr>
+      <tr><td>Band counts sum to the <code>All</code> column</td><td>10 measure/file combinations</td><td><span class="tag t5">pass</span> 10 of 10</td></tr>
+      <tr><td>Values repeated across files agree</td><td>24 measure/group pairs published in two files</td><td><span class="tag t5">pass</span> 0 disagreements</td></tr>
+    </tbody>
+  </table>
+
+  <p>Structurally the tables are clean. The substantive finding is elsewhere: <strong>the measures do not
+  share a denominator.</strong></p>
+
+  <table>
+    <caption>Table 4 — How many infants stand behind each measure</caption>
+    <thead><tr><th>Measure</th><th class="num">Infants</th><th>Difference from the disposition total</th></tr></thead>
+    <tbody>
+      <tr><td>Initial length of stay — discharged home</td><td class="num">553</td><td>77.7% of all admissions</td></tr>
+      <tr><td>Initial length of stay — transferred</td><td class="num">73</td><td>10.3%</td></tr>
+      <tr><td>Initial length of stay — died</td><td class="num">83</td><td>11.7%</td></tr>
+      <tr><td><strong>Sum of the three outcomes</strong></td><td class="num">709</td><td>—</td></tr>
+      <tr><td><strong>Disposition total (the <code>All</code> row)</strong></td><td class="num">712</td><td>3 admissions carry no discharge outcome</td></tr>
+      <tr><td>Total length of stay</td><td class="num">708</td><td>4 fewer than the disposition total</td></tr>
+      <tr><td>Predicted length of stay</td><td class="num">618</td><td>94 fewer — a visibly smaller group</td></tr>
+    </tbody>
+  </table>
+
+  <div class="warn"><b>What this means for modelling.</b> Three admissions have no recorded outcome, four
+  have no total stay, and the predicted-stay measure covers 94 fewer infants than the cohort. With
+  aggregated data there is no way to tell <em>which</em> infants are missing, or whether they differ from the
+  rest. Rates in this document therefore always name the denominator used, and any future model will need
+  the individual records to resolve the gap rather than assume it is random.</div>
+
+  <p>The missing values are also unevenly spread: the three unattributed admissions fall in the
+  <code>&lt; 501 g</code>, <code>501-600 g</code> and <code>&gt; 1400 g</code> bands, one each. That pattern
+  is consistent with infants still admitted when the extract was taken, but the files do not say so, and it
+  is a question worth putting to the centre.</p>
+</section>
+
+<!-- ============================ 4 ============================ -->
+<section id="s4">
+  <div class="sec-head"><span class="sec-num">04</span><h2>Length of stay by birth weight</h2>
+    <p>The gradient the application's forecast rests on.</p></div>
+
+  <figure>
+    <img src="../analysis/figures/los_by_weight.png" alt="Median and interquartile length of stay by birth-weight band" />
+    <figcaption><b>Figure 1 — Total length of stay by birth-weight band.</b> The bar spans Q1 to Q3; the line
+    tracks the median; the count behind each band is printed at its foot. Center 1, 2016–2026, 708 infants.</figcaption>
+  </figure>
+
+  <table>
+    <caption>Table 5 — Total length of stay, in days, by birth-weight band</caption>
+    <thead><tr><th>Band</th><th class="num">Infants</th><th class="num">Median</th><th class="num">Q1</th><th class="num">Q3</th><th class="num">IQR width</th></tr></thead>
+    <tbody>
+      <tr><td>&lt; 501 g</td><td class="num">38</td><td class="num">43.5</td><td class="num">10.0</td><td class="num">149.0</td><td class="num">139.0</td></tr>
+      <tr><td>501–600 g</td><td class="num">44</td><td class="num">119.5</td><td class="num">67.0</td><td class="num">145.3</td><td class="num">78.3</td></tr>
+      <tr><td>601–700 g</td><td class="num">55</td><td class="num">112.0</td><td class="num">99.0</td><td class="num">135.5</td><td class="num">36.5</td></tr>
+      <tr><td>701–800 g</td><td class="num">64</td><td class="num">100.0</td><td class="num">77.3</td><td class="num">124.8</td><td class="num">47.5</td></tr>
+      <tr><td>801–900 g</td><td class="num">62</td><td class="num">88.0</td><td class="num">63.0</td><td class="num">103.0</td><td class="num">40.0</td></tr>
+      <tr><td>901–1000 g</td><td class="num">63</td><td class="num">73.0</td><td class="num">57.0</td><td class="num">94.0</td><td class="num">37.0</td></tr>
+      <tr><td>1001–1100 g</td><td class="num">65</td><td class="num">63.0</td><td class="num">50.0</td><td class="num">74.0</td><td class="num">24.0</td></tr>
+      <tr><td>1101–1200 g</td><td class="num">56</td><td class="num">61.0</td><td class="num">48.8</td><td class="num">73.0</td><td class="num">24.3</td></tr>
+      <tr><td>1201–1300 g</td><td class="num">63</td><td class="num">52.0</td><td class="num">35.5</td><td class="num">64.5</td><td class="num">29.0</td></tr>
+      <tr><td>1301–1400 g</td><td class="num">93</td><td class="num">42.0</td><td class="num">35.0</td><td class="num">52.0</td><td class="num">17.0</td></tr>
+      <tr><td>&gt; 1400 g</td><td class="num">105</td><td class="num">42.0</td><td class="num">25.0</td><td class="num">54.0</td><td class="num">29.0</td></tr>
+      <tr><td><strong>All</strong></td><td class="num"><strong>708</strong></td><td class="num"><strong>60.0</strong></td><td class="num"><strong>40.0</strong></td><td class="num"><strong>95.0</strong></td><td class="num"><strong>55.0</strong></td></tr>
+    </tbody>
+  </table>
+
+  <p>Three readings matter:</p>
+  <ul>
+    <li><strong>The gradient is steep and orderly.</strong> From 501–600 g to over 1400 g the median stay
+    falls from about four months to six weeks, monotonically, with no reversal.</li>
+    <li><strong>Uncertainty shrinks as weight rises.</strong> The interquartile width narrows from 78 days in
+    the 501–600 g band to 17 days at 1301–1400 g: heavier infants are not only quicker to go home, they are
+    more predictable.</li>
+    <li><strong>The smallest band breaks the pattern.</strong> At under 501 g the median is the second
+    <em>lowest</em> of all eleven bands, and the interquartile range is the widest at 139 days. Section 5
+    explains why — and why a model must treat survival and stay together.</li>
+  </ul>
+</section>
+
+<!-- ============================ 5 ============================ -->
+<section id="s5">
+  <div class="sec-head"><span class="sec-num">05</span><h2>Discharge outcome and survival</h2>
+    <p>Three different processes behind one length of stay.</p></div>
+
+  <figure>
+    <img src="../analysis/figures/disposition_by_weight.png" alt="Discharge outcome shares and median stay by outcome, across birth-weight bands" />
+    <figcaption><b>Figure 2 — How admissions ended, and how long each ending took.</b> Left: the share of each
+    band discharged home, transferred or died. Right: the median initial stay for each of those three endings.</figcaption>
+  </figure>
+
+  <table>
+    <caption>Table 6 — Discharge outcome by birth-weight band (counts, and % of the band)</caption>
+    <thead><tr><th>Band</th><th class="num">Home</th><th class="num">Transfer</th><th class="num">Died</th><th class="num">All</th><th class="num">Home %</th><th class="num">Died %</th></tr></thead>
+    <tbody>
+      <tr><td>&lt; 501 g</td><td class="num">15</td><td class="num">3</td><td class="num">20</td><td class="num">39</td><td class="num">38.5</td><td class="num">51.3</td></tr>
+      <tr><td>501–600 g</td><td class="num">25</td><td class="num">8</td><td class="num">11</td><td class="num">45</td><td class="num">55.6</td><td class="num">24.4</td></tr>
+      <tr><td>601–700 g</td><td class="num">34</td><td class="num">13</td><td class="num">8</td><td class="num">55</td><td class="num">61.8</td><td class="num">14.5</td></tr>
+      <tr><td>701–800 g</td><td class="num">44</td><td class="num">11</td><td class="num">9</td><td class="num">64</td><td class="num">68.8</td><td class="num">14.1</td></tr>
+      <tr><td>801–900 g</td><td class="num">49</td><td class="num">6</td><td class="num">7</td><td class="num">62</td><td class="num">79.0</td><td class="num">11.3</td></tr>
+      <tr><td>901–1000 g</td><td class="num">55</td><td class="num">5</td><td class="num">3</td><td class="num">63</td><td class="num">87.3</td><td class="num">4.8</td></tr>
+      <tr><td>1001–1100 g</td><td class="num">56</td><td class="num">7</td><td class="num">3</td><td class="num">66</td><td class="num">84.8</td><td class="num">4.5</td></tr>
+      <tr><td>1101–1200 g</td><td class="num">45</td><td class="num">8</td><td class="num">3</td><td class="num">56</td><td class="num">80.4</td><td class="num">5.4</td></tr>
+      <tr><td>1201–1300 g</td><td class="num">54</td><td class="num">3</td><td class="num">6</td><td class="num">63</td><td class="num">85.7</td><td class="num">9.5</td></tr>
+      <tr><td>1301–1400 g</td><td class="num">86</td><td class="num">3</td><td class="num">4</td><td class="num">93</td><td class="num">92.5</td><td class="num">4.3</td></tr>
+      <tr><td>&gt; 1400 g</td><td class="num">90</td><td class="num">6</td><td class="num">9</td><td class="num">106</td><td class="num">84.9</td><td class="num">8.5</td></tr>
+      <tr><td><strong>All</strong></td><td class="num"><strong>553</strong></td><td class="num"><strong>73</strong></td><td class="num"><strong>83</strong></td><td class="num"><strong>712</strong></td><td class="num"><strong>77.7</strong></td><td class="num"><strong>11.7</strong></td></tr>
+    </tbody>
+  </table>
+
+  <p><strong>Mortality is concentrated at the smallest sizes.</strong> Half of the admissions under 501 g did
+  not survive, against roughly one in twenty from 901 g upward. Because a death usually ends an admission
+  early — the median stay for infants who died is 6 days, against 63 days for those discharged home — the
+  smallest band's apparently short stay is a survival effect, not a clinical one.</p>
+
+  <div class="plain"><b>Why the application reports both together.</b> A single length-of-stay figure averages
+  three different processes: going home, being transferred, and dying. NeoStay shows the discharge mix beside
+  every forecast for exactly this reason, and any fitted model will have to treat these as competing risks
+  rather than as one event.</div>
+
+  <p class="small">Above 901 g the remaining variation in mortality (4.3% to 9.5%) rests on three to nine
+  deaths per band. Those counts are too small to read as a trend, and the figure should not be used to rank
+  bands against one another in that range.</p>
+</section>
+
+<!-- ============================ 6 ============================ -->
+<section id="s6">
+  <div class="sec-head"><span class="sec-num">06</span><h2>Length of stay by gestational age</h2>
+    <p>The same message, with much thinner tails.</p></div>
+
+  <figure>
+    <img src="../analysis/figures/los_by_ga.png" alt="Median and interquartile length of stay by gestational age, with group sizes" />
+    <figcaption><b>Figure 3 — Total length of stay by gestational age.</b> The shaded band is Q1 to Q3; grey
+    bars behind the line show how many infants sit in each group; circled points mark groups with fewer than
+    ten infants.</figcaption>
+  </figure>
+
+  <p>The gestational-age view carries the same gradient as the weight view — each additional week before birth
+  shortens the expected stay — but its ends are thin. Five groups hold fewer than ten infants:</p>
+
+  <table>
+    <caption>Table 7 — Groups too small to estimate separately</caption>
+    <thead><tr><th>Group</th><th class="num">Infants</th><th class="num">Median stay</th><th>Reading</th></tr></thead>
+    <tbody>
+      <tr><td>&lt; 22 weeks</td><td class="num">4</td><td class="num">1.0</td><td>Four infants; almost all die within a day.</td></tr>
+      <tr><td>35 weeks</td><td class="num">1</td><td class="num">25.0</td><td>A single infant. No spread can be estimated.</td></tr>
+      <tr><td>36 weeks</td><td class="num">4</td><td class="num">16.5</td><td>Growth-restricted infants; very low birth weight at 36 weeks is unusual.</td></tr>
+      <tr><td>37 weeks</td><td class="num">2</td><td class="num">26.0</td><td>Two infants.</td></tr>
+      <tr><td>&gt; 37 weeks</td><td class="num">2</td><td class="num">24.5</td><td>Two infants.</td></tr>
+    </tbody>
+  </table>
+
+  <p>The evidence sits in the middle of the distribution: 28 weeks (101 infants), 30 weeks (98), 29 weeks
+  (98) and 25 weeks (81). The application's confidence grade is driven by exactly this count, so a thin group
+  is reported as low-confidence rather than hidden.</p>
+
+  <div class="warn"><b>A limit worth stating plainly.</b> The weight table and the gestational-age table
+  describe the <em>same</em> 708 infants in two different ways, and no cross-tabulation is published. The joint
+  effect of weight and gestation therefore cannot be measured — only approximated by blending the two margins,
+  which is what NeoStay does and says it does. Resolving it needs individual records.</div>
+</section>
+
+<!-- ============================ 7 ============================ -->
+<section id="s7">
+  <div class="sec-head"><span class="sec-num">07</span><h2>The predicted-stay measure in the extract</h2>
+    <p>A measure the files carry, which the application does not use.</p></div>
+
+  <figure>
+    <img src="../analysis/figures/predicted_vs_observed.png" alt="Predicted median stay compared with observed median stay by band" />
+    <figcaption><b>Figure 4 — A predicted length of stay is supplied with the extract.</b> It sits above the
+    observed median in every band except the heaviest, and covers 618 infants rather than 712.</figcaption>
+  </figure>
+
+  <p>Alongside the observed figures, the extract carries a measure named <em>Predicted Length of Stay</em>.
+  Its method is not documented in the files. Three observations:</p>
+
+  <ul>
+    <li><strong>It covers a smaller group.</strong> 618 infants against the 712 in the disposition table — and
+    the shortfall is largest in the smallest band (15 of 38).</li>
+    <li><strong>It runs high.</strong> In ten of eleven bands its median exceeds the observed median, by 6 to
+    19 days in the bands above 501 g.</li>
+    <li><strong>It diverges sharply at the extreme.</strong> In the <code>&lt; 501 g</code> band it gives 141
+    days against an observed 43.5 — consistent with a measure that projects the stay of a surviving infant and
+    therefore excludes early deaths.</li>
+  </ul>
+
+  <div class="note"><b>Not used, and deliberately so.</b> NeoStay builds its own forecast from the observed
+  medians and quartiles. This measure is described here because any reader of the raw files will find it, and
+  because asking the centre how it was produced — and on which infants — is a cheap question with a useful
+  answer: if it is a validated vendor model, it becomes a benchmark to compare against.</div>
+</section>
+
+<!-- ============================ 8 ============================ -->
+<section id="s8">
+  <div class="sec-head"><span class="sec-num">08</span><h2>The acuity instrument as data</h2>
+    <p>A policy, not a sample — and what can still be measured about it.</p></div>
+
+  <p class="lead">The second dataset is the unit's own acuity policy — the Abrazo Arrowhead Neonatal Acuity
+  Tool and the Nursing Levels of Care — transcribed from a three-page scan into tables and parsed by
+  <code>backend/app/acuity_tool.py</code>. The scan's handwritten annotations are deliberately ignored.</p>
+
+  <div class="warn"><b>What cannot be measured.</b> The instrument carries no counts and no outcomes, so
+  nothing held today shows how often each finding occurs, how the case mix distributes across the levels of
+  care, or whether the prescribed ratios match the nursing effort actually spent. That needs the shift-level
+  acuity record (D5) and actual staffing (D6).</div>
+
+  <div class="grid4">
+    <div class="kpi"><b>11</b><span>Body systems</span></div>
+    <div class="kpi"><b>43</b><span>Findings in the grid</span></div>
+    <div class="kpi"><b>64</b><span>Level-of-care criteria</span></div>
+    <div class="kpi"><b>108</b><span>Selectable items in all</span></div>
+  </div>
+
+
+
+  <p>Two structural facts follow:</p>
+  <ul>
+    <li><strong>Respiratory, nutrition and neurological care carry the most detail</strong> — seven, seven
+    and six findings — where a charge nurse's judgement is most often needed.</li>
+    <li><strong>Four findings trigger the footnoted 1:1 rule:</strong> therapeutic hypothermia for HIE,
+    multiple bili-lights with IV hydration or exchange transfusion, a bedside surgical procedure, and the
+    haemodynamically unstable infant needing intervention every 15 minutes.</li>
+  </ul>
+
+  <table>
+    <caption>Table 8 — The levels of care, by level</caption>
+    <thead><tr><th>Criteria group</th><th class="num">N1</th><th class="num">N2</th><th class="num">N3</th><th class="num">N4</th><th class="num">Total</th></tr></thead>
+    <tbody>
+      <tr><td>General criteria</td><td class="num">4</td><td class="num">13</td><td class="num">15</td><td class="num">13</td><td class="num">45</td></tr>
+      <tr><td>Hyperbilirubinemia criteria</td><td class="num">6</td><td class="num">5</td><td class="num">4</td><td class="num">4</td><td class="num">19</td></tr>
+      <tr><td><strong>All criteria</strong></td><td class="num"><strong>10</strong></td><td class="num"><strong>18</strong></td><td class="num"><strong>19</strong></td><td class="num"><strong>17</strong></td><td class="num"><strong>64</strong></td></tr>
+    </tbody>
+  </table>
+
+  <figure style="margin-top:4mm; break-before:auto">
+    <img src="../analysis/figures/acuity_structure.png" style="width:100%;" alt="Findings per body system by care column, and the minimum nurse level each item alone demands" />
+    <figcaption><b>Figure 5 — The shape of the instrument.</b> Left: where the clinical detail sits, by body
+    system and care column. Right: the minimum nurse level demanded by each selectable item on its own — 35 of
+    the 108 items require a proficient nurse on their own, and 21 require an expert.</figcaption>
+  </figure>
+
+</section>
+
+<!-- ============================ 9 ============================ -->
+<section id="s9">
+  <div class="sec-head"><span class="sec-num">09</span><h2>What these data support, and what they do not</h2>
+    <p>Four of eleven questions can be answered today.</p></div>
+
+  <table class="long">
+    <caption>Table 9 — Questions against the data held today</caption>
+    <thead><tr><th style="width:62mm">Question</th><th style="width:20mm">Today</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td>Expected stay for a group of similar infants</td><td><span class="tag t5">yes</span></td><td>Medians and quartiles per weight band and per gestational week.</td></tr>
+      <tr><td>Chance of home, transfer or death for a group</td><td><span class="tag t5">yes</span></td><td>Counts per band in the disposition table.</td></tr>
+      <tr><td>How much evidence stands behind an estimate</td><td><span class="tag t5">yes</span></td><td>N is published with every statistic, and drives the confidence grade.</td></tr>
+      <tr><td>Nurse:patient ratio and minimum competency per infant</td><td><span class="tag t5">yes</span></td><td>The acuity instrument is complete and executable.</td></tr>
+      <tr><td>A stay prediction for an individual infant</td><td><span class="tag t4">no</span></td><td>Needs patient-level records (D1). No individual rows exist.</td></tr>
+      <tr><td>Effect of a clinical course on the stay</td><td><span class="tag t4">no</span></td><td>Needs the daily course (D2). Weight and gestation are the only covariates held.</td></tr>
+      <tr><td>Joint effect of weight and gestation</td><td><span class="tag t4">no</span></td><td>The two tables describe the same cohort separately; no cross-tabulation is published.</td></tr>
+      <tr><td>Calibration, discrimination, external validation</td><td><span class="tag t4">no</span></td><td>Needs individual outcomes to compare predictions against.</td></tr>
+      <tr><td>Unit demand over time, seasonality, surges</td><td><span class="tag t4">no</span></td><td>Needs census and flow (D4). The files hold no dates.</td></tr>
+      <tr><td>Whether the acuity tool matches real nursing effort</td><td><span class="tag t4">no</span></td><td>Needs acuity per shift (D5) and actual staffing (D6).</td></tr>
+      <tr><td>Rostering real named nurses</td><td><span class="tag t4">no</span></td><td>Needs the workforce list (D6). No staff data is held.</td></tr>
+    </tbody>
+  </table>
+
+  <p>The pattern is consistent: <strong>what the data supports, the application already does</strong> — group
+  estimates with honest ranges, outcome mix, evidence counts and acuity-driven staffing. Everything in the
+  "no" column waits on an extract from the hospital, not on development work. The six datasets, their fields
+  and the volumes needed are specified in <em>docs/NeoStay-Data-Requirements.pdf</em>.</p>
+
+  <div class="plain"><b>The cheapest next step.</b> Three of the four modelling blockers are resolved by one
+  extract: a pseudonymised row per admission with birth weight, gestational age, admission and discharge dates
+  and outcome. That single file converts group estimates into a fitted model, makes competing-risk analysis
+  possible, and gives the joint weight-and-gestation effect that cannot be recovered from the margins.</div>
+</section>
+
+<!-- ============================ 10 ============================ -->
+<section id="s10">
+  <div class="sec-head"><span class="sec-num">10</span><h2>Reproducing this analysis</h2>
+    <p>One notebook, no hidden steps.</p></div>
+
+  <p>Every number, table and figure in this document is produced by
+  <code>notebooks/01_dataset_analysis.ipynb</code>, which reads only the files in <code>datasets/</code> and
+  writes its figures into <code>docs/analysis/figures/</code>.</p>
+
+  <div class="formula">make setup<br />
+  .venv/bin/pip install -r notebooks/requirements.txt<br />
+  <span class="small"># open notebooks/01_dataset_analysis.ipynb in VS Code, or re-run it from the command line:</span><br />
+  .venv/bin/python -m jupyter nbconvert --to notebook --execute --inplace \<br />
+  &nbsp;&nbsp;&nbsp;&nbsp;notebooks/01_dataset_analysis.ipynb</div>
+
+  <table>
+    <caption>Table 10 — What the notebook contains</caption>
+    <thead><tr><th style="width:52mm">Section</th><th>Output</th></tr></thead>
+    <tbody>
+      <tr><td>1 · Inventory</td><td>Every file in <code>datasets/</code>, its size, and what reads it.</td></tr>
+      <tr><td>2 · Reading the tables</td><td>An independent parser, cross-checked against the application's loader.</td></tr>
+      <tr><td>3 · Consistency</td><td>The four checks in Table 3, and the denominator reconciliation in Table 4.</td></tr>
+      <tr><td>4–7 · Outcomes</td><td>Figures 1 to 4 with the tables behind them.</td></tr>
+      <tr><td>8 · Acuity instrument</td><td>Figure 5, the structure table, and the classification of every item.</td></tr>
+      <tr><td>9 · Limits</td><td>Table 9, generated rather than written by hand.</td></tr>
+      <tr><td>10 · Provenance</td><td>A SHA-256 digest of every source CSV, so a reader can confirm the files have not changed.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="end"><b>Scope of this document.</b> It describes the data held by the project on
+  25 October 2026 and nothing else. It makes no clinical claim, and it is not a validation of the
+  application: NeoStay remains a research and decision-support prototype, not a medical device.</div>
+</section>
+
+</body>
+</html>

@@ -22,3 +22,6 @@ site/
 # Certificates and keys for the bundled HTTPS proxy
 deploy/certs/*
 !deploy/certs/README.md
+
+# Notebook scratch state (outputs stay in the committed notebook)
+.ipynb_checkpoints/
