@@ -26,6 +26,9 @@ refuses to start without sign-in and a strong session secret -- see ``main.py``.
 ``NEOSTAY_EXPOSE_DOCS``            Serve ``/docs`` and ``/openapi.json``. Default: off.
 ``NEOSTAY_FRONTEND_DIR``           Web application served at ``/``.
                                    Default: ``<repo>/frontend``.
+``NEOSTAY_MODEL_FILE``             Patient-journey model bundle (from acuity-models).
+                                   Default: ``<instance>/models/neostay-journey.json``.
+                                   Without it the journey routes answer 503.
 ================================  ======================================================
 """
 from __future__ import annotations
@@ -82,6 +85,8 @@ USERS_FILE: Path = _path("NEOSTAY_USERS_FILE", INSTANCE_DIR / "access" / "users.
 # no writable storage at all, which is what serverless container hosts offer.
 USERS_JSON: str = os.environ.get("NEOSTAY_USERS_JSON", "").strip()
 SESSION_SECRET: str = _secret("NEOSTAY_SESSION_SECRET", "NEOSTAY_SESSION_SECRET_FILE")
+# Fitted to hospital data, so it lives with the other server-private state.
+MODEL_FILE: Path = _path("NEOSTAY_MODEL_FILE", INSTANCE_DIR / "models" / "neostay-journey.json")
 try:
     SESSION_HOURS: int = max(1, min(int(os.environ.get("NEOSTAY_SESSION_HOURS", "12")), 24 * 30))
 except ValueError:

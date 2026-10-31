@@ -59,13 +59,14 @@ from real historical outcomes.
 
 ---
 
-## 🖥️ The five pages
+## 🖥️ The six pages
 
 | Page | What you do there | Who it helps |
 |------|-------------------|--------------|
 | **Home** | Overview, headline statistics, "unit at a glance" | Everyone |
 | **Predict** | Enter one baby's weight, age & condition → get stay / survival / nursing forecast | Neonatologists, counsellors, families |
 | **Scheduling** | Classify each baby on the acuity tool to build the census → get nurses needed per shift | Charge nurses, managers |
+| **Journey** | Enter a baby's board entry → remaining stay and nurse:patient ratio over the next 7 days, from a model trained on the unit's acuity boards ([docs/JOURNEY_MODEL.md](docs/JOURNEY_MODEL.md)) | Charge nurses, managers |
 | **Acuity tool** | Read Dr. Altaf's nurse skills classifier: acuity tool and levels of care | Charge nurses, educators |
 | **Analytics** | Interactive population charts across all weight bands & weeks | Researchers, QI teams |
 
@@ -233,12 +234,13 @@ classifications, unit schedules and rosters with the Python engine, value for va
 ```
 patient-nurse-schedule/
 ├── frontend/                  ← the web app
-│   ├── index.html · predict.html · schedule.html
+│   ├── index.html · predict.html · schedule.html · journey.html
 │   │   acuity.html · analytics.html · about.html
 │   ├── access.js              ← sign-in gate: loads data + engine after sign-in
 │   ├── access-config.js       ← "server" here; the Pages build writes "sealed"
 │   ├── sealed.js              ← opens the encrypted GitHub Pages data
 │   ├── engine.js              ← browser-side prediction & staffing engine
+│   ├── journey-engine.js      ← browser-side patient-journey model runtime
 │   ├── components.js          ← shared nav / footer / icons / toasts
 │   ├── styles.css             ← design system
 │   ├── data/                  ← pre-built data bundles (served only after sign-in)
@@ -246,7 +248,8 @@ patient-nurse-schedule/
 ├── backend/app/               ← FastAPI server
 │   ├── main.py · config.py    ← app, security headers, settings
 │   ├── auth.py · accounts.py  ← sign-in, sessions, accounts command line
-│   └── predictor.py · nursing.py · acuity_tool.py · data_loader.py
+│   ├── predictor.py · nursing.py · acuity_tool.py · data_loader.py
+│   └── journey.py · journey_runtime.py  ← patient-journey model (bundle from acuity-models)
 ├── datasets/
 │   ├── losdata/               ← source aggregated CSVs (N / median / Q1 / Q3)
 │   ├── nurse-skills/          ← Dr. Altaf's classifier: scanned PDF + one CSV per page
@@ -257,7 +260,8 @@ patient-nurse-schedule/
 │   ├── build_frontend_data.py ← rebuilds frontend/data/ from the CSVs
 │   ├── build_pages_site.py    ← builds the (sealed) GitHub Pages site
 │   └── smoke_test.sh          ← checks a running server end to end
-├── tests/                     ← sign-in, Pages build, page gating, engine parity
+├── tests/                     ← sign-in, Pages build, page gating, engine parity, journey
+│   └── fixtures/journey/      ← journey bundles fitted to made-up data (no hospital data)
 ├── Dockerfile · docker-compose.yml · deploy/   ← hospital server (docs/DEPLOYMENT.md)
 ├── Makefile                   ← common commands: make run, make test, make user-add…
 └── .github/workflows/         ← CI (tests + container) and GitHub Pages deploy
@@ -314,6 +318,10 @@ Every endpoint except `/api/health` and `/api/auth/*` requires a signed-in sessi
 | POST | `/api/predict` | Per-infant forecast `{weight_g, ga_weeks, condition, resp_support}` |
 | GET | `/api/acuity-tool` | Dr. Altaf's classifier, with the finding ids `/api/schedule` accepts |
 | POST | `/api/schedule` | Unit staffing from a census `{infants:[{..., findings}], shifts_per_day}` |
+| GET | `/api/journey/model` | The installed patient-journey model: version, performance, allowed inputs (503 if none) |
+| GET | `/api/journey/bundle` | The whole journey model bundle, for the browser engine |
+| POST | `/api/journey` | Remaining stay and ratio journey of one baby `{record, history}` |
+| POST | `/api/journey/unit` | Expected census and nurses over the coming shifts for the babies in the unit now |
 
 ---
 
@@ -384,6 +392,8 @@ kept what they saw.
   [notebooks/01_dataset_analysis.ipynb](notebooks/01_dataset_analysis.ipynb).
 - **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** — installing NeoStay on a hospital
   server, HTTPS, and managing accounts.
+- **[docs/JOURNEY_MODEL.md](docs/JOURNEY_MODEL.md)** — the patient-journey model: installing a
+  bundle, the API for web, mobile and desktop apps, and the governance steps before clinical use.
 - **[docs/CLOUD.md](docs/CLOUD.md)** — deploying the same container to a cloud
   platform, and what keeps it portable between providers.
 - **[docs/NeoStay-Feature-Inventory.xlsx](docs/NeoStay-Feature-Inventory.xlsx)** — all 95

@@ -18,6 +18,7 @@ Run it from ``backend/``::
 from __future__ import annotations
 
 import hmac
+from typing import Any
 from urllib.parse import urlsplit
 
 from fastapi import APIRouter, FastAPI, HTTPException
@@ -28,7 +29,7 @@ from fastapi.responses import JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from . import auth, config
+from . import auth, config, journey
 from .acuity_tool import TOOL as ACUITY_TOOL
 from .data_loader import DATASET, GA_BINS, WEIGHT_BINS
 from .nursing import NURSE_LEVELS, build_roster, estimate_staffing, schedule_unit
@@ -83,10 +84,37 @@ class ScheduleRequest(BaseModel):
     )
 
 
+class JourneyRequest(BaseModel):
+    record: dict[str, Any] = Field(
+        ...,
+        description="The baby's current board entry. Fields and allowed values: GET /api/journey/model "
+        "(inputs); see docs/JOURNEY_MODEL.md.",
+    )
+    history: list[dict[str, Any]] = Field(
+        default_factory=list,
+        max_length=14,
+        description="Earlier entries of the same stay, each with shifts_ago (1 = 12 hours earlier ... 14).",
+    )
+
+
+class JourneyUnitRequest(BaseModel):
+    babies: list[JourneyRequest] = Field(default_factory=list, max_length=64)
+
+
 # ---------------------------------------------------------------------------
 # API endpoints
 # ---------------------------------------------------------------------------
 api = APIRouter()
+
+
+def _journey(call):
+    """Run a journey call: 503 without a usable model, 422 for input it cannot read."""
+    try:
+        return call()
+    except journey.ModelUnavailable as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except journey.InputError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 @api.get("/api/health")
@@ -169,6 +197,30 @@ def api_predict(req: PredictionRequest) -> dict:
     result["condition"] = req.condition
     result["resp_support"] = req.resp_support
     return result
+
+
+@api.get("/api/journey/model")
+def api_journey_model() -> dict:
+    """The installed journey model: version, training data, performance and inputs."""
+    return _journey(journey.card)
+
+
+@api.get("/api/journey/bundle")
+def api_journey_bundle() -> dict:
+    """The whole model bundle, for the browser engine (frontend/journey-engine.js)."""
+    return _journey(journey.current)
+
+
+@api.post("/api/journey")
+def api_journey(req: JourneyRequest) -> dict:
+    """Remaining stay and nurse-ratio journey of one baby already in the unit."""
+    return _journey(lambda: journey.predict(req.record, req.history))
+
+
+@api.post("/api/journey/unit")
+def api_journey_unit(req: JourneyUnitRequest) -> dict:
+    """Expected census and nurses over the coming shifts, from the babies in the unit now."""
+    return _journey(lambda: journey.unit([b.model_dump() for b in req.babies]))
 
 
 @api.post("/api/schedule")

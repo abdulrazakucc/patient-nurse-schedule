@@ -898,3 +898,22 @@ body:not(.neo-unlocked) > main { display: none !important; }
   .hs-num { font-size: 26px; }
   .rc-value { font-size: 38px; }
 }
+
+/* ---------------- patient journey ---------------- */
+.journey-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.journey-lines { border: 0; padding: 0; margin: 0; }
+.journey-lines > div, .journey-checks { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 13.5px; color: var(--ink-soft); }
+.journey-lines label, .journey-checks label { display: inline-flex; align-items: center; gap: 6px; }
+.journey-history { width: 100%; border-collapse: collapse; font-size: 13px; }
+.journey-history th, .journey-history td { padding: 4px 4px; text-align: left; }
+.journey-history select, .journey-history input { padding: 7px 8px; font-size: 13px; border-radius: 8px; }
+.journey-gone { display: grid; grid-template-columns: repeat(auto-fit, minmax(70px, 1fr)); gap: 10px; margin-top: 12px; }
+.journey-gone div { display: flex; flex-direction: column; gap: 2px; }
+.journey-gone span { font-size: 12px; color: var(--muted); }
+.journey-gone b { font-family: var(--font-display); font-size: 26px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.journey-table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+.journey-table th, .journey-table td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: right; }
+.journey-table th:first-child { text-align: left; }
+.journey-table-toggle { margin-top: 14px; font-size: 13px; color: var(--ink-soft); }
+.journey-card p { font-size: 14px; color: var(--ink-soft); line-height: 1.6; margin: 0 0 8px; }
+@media (max-width: 560px) { .journey-pair { grid-template-columns: 1fr; } }

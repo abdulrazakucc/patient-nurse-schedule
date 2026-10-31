@@ -180,6 +180,31 @@ the exact reinforcement needed — for example *"+2 × L3 Proficient"*. Those co
 turn red in the census table too. Press **Auto-fill to meet demand** and the app
 raises staffing until every infant is covered.
 
+### 🧭 Journey — *"How much longer, and how much nursing, for this baby?"*
+
+For a baby **already in the unit**. Enter what today's acuity board says about the
+baby: gestational age and birth weight, day of life, today's weight, how many
+shifts the baby has been in the unit, the nurse:patient ratio, breathing support,
+feeds, lines, spells and so on. You can also enter the ratio, breathing support
+and weight from up to four earlier shifts. Press **Show the journey**.
+
+- **Expected remaining stay**: half of similar babies left within this many
+  days. The "middle half" range shows the spread.
+- **No longer in the unit by**: the chance the baby has left within 1, 3, 7, 14
+  and 28 days.
+- **Still in the unit**: the same as a curve over the next 28 days.
+- **Nurse:patient ratio over the next 7 days**: each bar is one shift ahead. It
+  shows the chance of each ratio, and of having left. **Show as a table** lists
+  the numbers, including the expected nurses at both ends of the 1:2-3 and 1:3-4
+  ranges.
+
+The model behind this page was trained on this unit's own acuity boards. Its
+version, training period and test results are under **About this model**. It
+runs in your browser: what you type is not sent anywhere. When no model has been
+installed on the server, the page says so. Like every page, it supports
+planning and is not a basis for decisions about an individual baby's care. See
+[JOURNEY_MODEL.md](JOURNEY_MODEL.md) for the details.
+
 ### 📊 Analytics — *"What does a decade of outcomes look like?"*
 
 Three interactive charts. The consistent message:

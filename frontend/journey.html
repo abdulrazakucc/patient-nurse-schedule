@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; base-uri 'self'; form-action 'self'" />
+  <title>Patient journey · NeoStay</title>
+  <meta name="description" content="Remaining stay and nurse-ratio journey of a baby already in the unit, from models trained on the unit's acuity boards." />
+  <meta name="theme-color" content="#0e8a8f" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="access-config.js" defer></script>
+  <script src="sealed.js" defer></script>
+  <script src="access.js" defer data-app="vendor/chart.umd.min.js engine.js journey-engine.js components.js journey.js"></script>
+</head>
+<body data-page="journey">
+  <noscript><p class="noscript">NeoStay needs JavaScript switched on in your browser.</p></noscript>
+  <main>
+    <section class="panel">
+      <div class="panel-head">
+        <h3>Patient journey</h3>
+        <p>For a baby already in the unit: how much longer the stay is likely to last, and the
+        nurse:patient ratio it is likely to need over the coming shifts. Computed in your browser
+        from a model trained on this unit's acuity boards.</p>
+      </div>
+
+      <p class="lead-note" id="journeyStatus">Loading the journey model…</p>
+
+      <div class="predict-grid" id="journeyGrid" hidden>
+        <form class="predict-form card" id="journeyForm" novalidate>
+          <div class="section-label form-title" data-icon="baby">The baby</div>
+          <div class="journey-pair">
+            <label class="field"><span data-tip="Gestational age at birth, in weeks (31.5 means 31 weeks 3.5 days; use decimals of a week).">GA at birth (weeks)</span>
+              <input type="number" id="ga" min="22" max="44" step="0.1" value="30" required /></label>
+            <label class="field"><span>Birth weight (g)</span>
+              <input type="number" id="bw" min="300" max="6500" step="10" value="1300" required /></label>
+          </div>
+          <div class="journey-pair">
+            <label class="field"><span>Day of life</span>
+              <input type="number" id="dol" min="0" max="400" step="1" value="10" /></label>
+            <label class="field"><span>Weight today (g) <em class="optional">optional</em></span>
+              <input type="number" id="weight" min="300" max="8000" step="10" /></label>
+          </div>
+
+          <div class="section-label form-title" data-icon="calendar">This shift</div>
+          <div class="journey-pair">
+            <label class="field"><span>Shift</span>
+              <select id="shift"><option value="AM">Day (07:00)</option><option value="PM">Night (19:00)</option></select></label>
+            <label class="field"><span>Day</span><select id="day"></select></label>
+          </div>
+          <label class="field"><span data-tip="12-hour shifts since admission: 0 on the admission shift, 2 a day after that.">Shifts in the unit so far</span>
+            <input type="number" id="shifts" min="0" step="1" value="20" required /></label>
+
+          <div class="section-label form-title" data-icon="pulse">Board entry now</div>
+          <label class="field"><span>Nurse:patient ratio</span><select id="ratio"></select></label>
+          <label class="field"><span>Respiratory</span><select id="resp"></select></label>
+          <label class="field"><span>Feeds</span><select id="feeds"></select></label>
+          <fieldset class="field journey-lines"><span>IV lines</span><div id="lines"></div></fieldset>
+          <div class="journey-checks">
+            <label><input type="checkbox" id="ivFluids" /> IV fluids</label>
+            <label><input type="checkbox" id="salineLock" /> Saline lock</label>
+            <label><input type="checkbox" id="education" /> Education need</label>
+          </div>
+          <label class="field"><span>Spells</span><select id="spells"></select></label>
+          <div class="journey-pair">
+            <label class="field"><span>NAS score</span><select id="nas"></select></label>
+            <label class="field"><span>Care area</span><select id="area"></select></label>
+          </div>
+          <label class="field"><span>Procedure</span><select id="procedure"></select></label>
+
+          <div class="section-label form-title" data-icon="clock">Earlier shifts <em class="optional">optional</em></div>
+          <div class="table-scroll">
+            <table class="journey-history" id="history"></table>
+          </div>
+
+          <button type="submit" class="btn-primary"><span>Show the journey</span></button>
+          <p class="disclaimer">Planning support only: not a basis for any decision about an individual baby's care.</p>
+        </form>
+
+        <div class="results">
+          <div class="results-placeholder" id="journeyPlaceholder">
+            <span data-icon="pulse" data-icon-size="44"></span>
+            <span><b>Ready when you are.</b><br />Enter the board entry and show the journey.</span>
+          </div>
+
+          <div class="results" id="journeyResults" hidden>
+            <div class="result-cards">
+              <div class="rc rc-los" data-tip="Half of similar babies were still on the board for at most this many more days. Counted to the last board the baby appears on.">
+                <div class="rc-label">Expected remaining stay</div>
+                <div class="rc-value"><span id="medianDays">–</span><small>days</small></div>
+                <div class="rc-sub">Middle half: <b id="iqrDays">–</b></div>
+              </div>
+              <div class="rc rc-survival" data-tip="Chance the baby is no longer on the board this many days from now.">
+                <div class="rc-label">No longer in the unit by</div>
+                <div class="journey-gone" id="goneBy"></div>
+              </div>
+            </div>
+
+            <div class="card chart-card">
+              <h4>Still in the unit</h4>
+              <p class="chart-sub">Chance the baby is still on the board at each 12-hour board ahead.</p>
+              <div class="chart-box"><canvas id="chartStay" aria-label="Chance of still being in the unit over the coming days"></canvas></div>
+            </div>
+
+            <div class="card chart-card">
+              <h4>Nurse:patient ratio over the next 7 days</h4>
+              <p class="chart-sub">Each bar is one board ahead: the chance of each ratio, or of having left the unit.</p>
+              <div class="chart-box tall"><canvas id="chartRatio" aria-label="Chance of each nurse:patient ratio over the next 7 days"></canvas></div>
+              <details class="journey-table-toggle">
+                <summary>Show as a table</summary>
+                <div class="table-scroll"><table class="journey-table" id="ratioTable"></table></div>
+              </details>
+            </div>
+
+            <div class="card">
+              <div class="disp-head" data-icon="shield">About this model</div>
+              <div id="modelCard" class="journey-card"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
